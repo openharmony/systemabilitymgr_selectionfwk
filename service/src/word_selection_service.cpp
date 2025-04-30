@@ -39,6 +39,12 @@ int WordSelectionService::AddVolume(int volume)
     return (volume + 1);
 }
 
+int32_t WordSelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
+{
+    dprintf(fd, "---------------------WordSelectionService::Dump--------------------\n");
+    return OHOS::NO_ERROR;
+}
+
 void WordSelectionService::OnStart()
 {
     LOG_INFO("[YMZ][WordSelectionService][OnStart]begin");

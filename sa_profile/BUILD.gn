@@ -17,5 +17,5 @@ import("../word_selection.gni")
 ohos_sa_profile("word_selection_sa_profile") {
   sources = [ "8567.json" ]
 
-  part_name = "word_selection"
+  part_name = "selectionfwk"
 }
