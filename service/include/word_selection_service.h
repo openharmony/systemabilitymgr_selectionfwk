@@ -33,6 +33,7 @@ public:
     ~WordSelectionService();
 
     int AddVolume(int volume) override;
+    int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
 protected:
     void OnStart() override;
     void OnStop() override;
