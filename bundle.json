@@ -1,40 +1,42 @@
 {
-    "name": "@ohos/word_selection",
-    "description": "Provide word selection capabilities",
-    "version": "1.0",
-    "license": "Apache License 2.0",
-    "segment": {
-      "destPath": "foundation/systemabilitymgr/word_selection"
-    },
-    "component": {
-      "name": "selectionfwk",
-      "subsystem": "systemabilitymgr",
-      "syscap": [],
-      "features": [],
-      "adapted_system_type": [
-        "standard"
+  "name": "@ohos/selection_service",
+  "description": "Provide word selection capabilities",
+  "version": "1.0",
+  "license": "Apache License 2.0",
+  "segment": {
+    "destPath": "foundation/systemabilitymgr/selection_service"
+  },
+  "component": {
+    "name": "selectionfwk",
+    "subsystem": "systemabilitymgr",
+    "syscap": [],
+    "features": [],
+    "adapted_system_type": [
+      "standard"
+    ],
+    "rom": "5831KB",
+    "ram": "5831KB",
+    "deps": {
+      "components": [
+        "c_utils",
+        "ipc",
+        "safwk",
+        "hilog",
+        "samgr",
+        "input"
       ],
-      "rom": "5120KB",
-      "ram": "5120KB",
-      "deps": {
-        "components": [
-          "c_utils",
-          "ipc",
-          "safwk",
-          "hilog",
-          "samgr",
-          "input"
-        ],
-        "third_party": [
-        ]
-      },
-      "build": {
-        "sub_component": [
-          "//foundation/systemabilitymgr/selection_fwk/etc/init:word_selection_cfg",
-          "//foundation/systemabilitymgr/selection_fwk/service:word_selection_base",
-          "//foundation/systemabilitymgr/selection_fwk/sa_profile:word_selection_sa_profile"
-        ],
-        "inner_kits": []
-      }
+      "third_party": [
+      ]
+    },
+    "build": {
+      "sub_component": [
+        "//foundation/systemabilitymgr/selection_fwk/etc/init:selection_service_cfg",
+        "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para",
+        "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para_dac",
+        "//foundation/systemabilitymgr/selection_fwk/service:selection_service",
+        "//foundation/systemabilitymgr/selection_fwk/sa_profile:selection_service_sa_profile"
+      ],
+      "inner_kits": []
     }
   }
+}

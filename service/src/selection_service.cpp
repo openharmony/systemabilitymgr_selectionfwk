@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,67 +13,87 @@
  * limitations under the License.
  */
 
-#include "word_selection_service.h"
+#include "selection_service.h"
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
-#include "word_selection_log.h"
+#include "selection_log.h"
 #include <input_manager.h>
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
-REGISTER_SYSTEM_ABILITY_BY_ID(WordSelectionService, WORD_SELECTION_SA_ID, true);
 
-WordSelectionService::WordSelectionService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
+const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(SelectionService::GetInstance().GetRefPtr());
+std::shared_mutex SelectionService::adminLock_;
+sptr<SelectionService> SelectionService::instance_;
+
+sptr<SelectionService> SelectionService::GetInstance()
 {
-    LOG_INFO("[YMZ][WordSelectionService] saID=%{public}d runOnCreate=%{public}d", saId, runOnCreate);
+    if (instance_ == nullptr) {
+        std::unique_lock<std::shared_mutex> autoLock(adminLock_);
+        if (instance_ == nullptr) {
+            SELECTION_HILOGI("SelectionService:GetInstance instance = new SelectionService()");
+            instance_ = new (std::nothrow) SelectionService();
+        }
+    }
+    return instance_;
 }
 
-WordSelectionService::~WordSelectionService()
+SelectionService::SelectionService() : SystemAbility(SELECTION_SA_ID, true)
 {
-    LOG_INFO("[YMZ][~WordSelectionService]");
+    SELECTION_HILOGI("[SelectionService] SelectionService()");
 }
 
-ErrCode WordSelectionService::AddVolume(int32_t volume, int32_t& funcResult)
+SelectionService::SelectionService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
 {
-    LOG_INFO("[YMZ][WordSelectionService][AddVolume]begin");
+    SELECTION_HILOGI("[SelectionService] saID=%{public}d runOnCreate=%{public}d", saId, runOnCreate);
+}
+
+SelectionService::~SelectionService()
+{
+    SELECTION_HILOGI("[~SelectionService]");
+}
+
+ErrCode SelectionService::AddVolume(int32_t volume, int32_t& funcResult)
+{
+    SELECTION_HILOGI("[SelectionService][AddVolume]begin");
     return (volume + 1);
 }
 
-int32_t WordSelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
+int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
-    dprintf(fd, "---------------------WordSelectionService::Dump--------------------\n");
+    dprintf(fd, "---------------------SelectionService::Dump--------------------\n");
     return OHOS::NO_ERROR;
 }
 
-void WordSelectionService::OnStart()
+void SelectionService::OnStart()
 {
-    LOG_INFO("[YMZ][WordSelectionService][OnStart]begin");
+    SELECTION_HILOGI("[SelectionService][OnStart]begin");
     Publish(this);
     InputMonitorInit();
-    LOG_INFO("[YMZ][WordSelectionService][OnStart]end");
+    SELECTION_HILOGI("[SelectionService][OnStart]end");
 }
 
-void WordSelectionService::OnStop()
+void SelectionService::OnStop()
 {
-    LOG_INFO("[YMZ][WordSelectionService][OnStop]begin");
+    SELECTION_HILOGI("[SelectionService][OnStop]begin");
     InputMonitorCancel();
-    LOG_INFO("[YMZ][WordSelectionService][OnStop]end");
+    SELECTION_HILOGI("[SelectionService][OnStop]end");
 }
 
-void WordSelectionService::InputMonitorInit()
+void SelectionService::InputMonitorInit()
 {
-    LOG_INFO("[YMZ]WordSelection service input monitor init");
-    std::shared_ptr<WordSelectionInputMonitor> inputMonitor = std::make_shared<WordSelectionInputMonitor>();
+    SELECTION_HILOGI("[SelectionService] input monitor init");
+    std::shared_ptr<SelectionInputMonitor> inputMonitor = std::make_shared<SelectionInputMonitor>();
     if (inputMonitorId_ < 0) {
         inputMonitorId_ =
             InputManager::GetInstance()->AddMonitor(std::static_pointer_cast<IInputEventConsumer>(inputMonitor));
     }
 }
 
-void WordSelectionService::InputMonitorCancel()
+void SelectionService::InputMonitorCancel()
 {
-    LOG_INFO("[YMZ]WordSelection service input monitor cancel");
+    SELECTION_HILOGI("[SelectionService] input monitor cancel");
     InputManager* inputManager = InputManager::GetInstance();
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);
@@ -81,10 +101,10 @@ void WordSelectionService::InputMonitorCancel()
     }
 }
 
-void WordSelectionService::HandleKeyEvent(int32_t keyCode)
+void SelectionService::HandleKeyEvent(int32_t keyCode)
 {
 #ifdef HAS_MULTIMODALINPUT_INPUT_PART
-    LOG_INFO("[YMZ] keyCode: %{public}d", keyCode);
+    SELECTION_HILOGI("[YMZ] keyCode: %{public}d", keyCode);
     int64_t now = static_cast<int64_t>(time(nullptr));
     if (IsScreenOn()) {
         this->RefreshActivityInner(now, UserActivityType::USER_ACTIVITY_TYPE_BUTTON, false);
@@ -104,10 +124,10 @@ void WordSelectionService::HandleKeyEvent(int32_t keyCode)
 #endif
 }
 
-void WordSelectionService::HandlePointEvent(int32_t type)
+void SelectionService::HandlePointEvent(int32_t type)
 {
 #ifdef HAS_MULTIMODALINPUT_INPUT_PART
-    LOG_INFO("type: %{public}d", type);
+    SELECTION_HILOGI("type: %{public}d", type);
     int64_t now = static_cast<int64_t>(time(nullptr));
     if (this->IsScreenOn()) {
         this->RefreshActivityInner(now, UserActivityType::USER_ACTIVITY_TYPE_ATTENTION, false);
@@ -122,14 +142,14 @@ void WordSelectionService::HandlePointEvent(int32_t type)
 }
 
 // foundation/multimodalinput/input/interfaces/native/innerkits/event/include/key_event.h
-void WordSelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
+void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
-    LOG_INFO("[YMZ]keyId: %{public}d", keyEvent->GetKeyCode());
+    SELECTION_HILOGI("[SelectionService] keyId: %{public}d", keyEvent->GetKeyCode());
 }
 
-void WordSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
+void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
-    LOG_INFO("[YMZ]pointerEvent: %{public}d", (int32_t)pointerEvent->GetPointerAction());
+    SELECTION_HILOGI("[SelectionService] pointerEvent: %{public}d", (int32_t)pointerEvent->GetPointerAction());
 }
 
-void WordSelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const {};
+void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const {};
