@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef WORD_SELECTION_LOG_H
-#define WORD_SELECTION_LOG_H
+#ifndef SELECTION_LOG_H
+#define SELECTION_LOG_H
 #include "hilog/log.h"
 #include <string>
 
@@ -23,28 +23,28 @@ extern "C" {
 #endif
 
 #undef LOG_TAG
-#define LOG_TAG "WORD_SELETION"
+#define LOG_TAG "SELETION_SERVICE"
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD002901
 
-#ifndef WORD_SELETION_DEBUG_ENABLE
-#define WORD_SELETION_DEBUG_ENABLE 0
+#ifndef SELETION_DEBUG_ENABLE
+#define SELETION_DEBUG_ENABLE 0
 #endif
 
 #define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define DEMO_LOG(func, fmt, args...)                                                                             \
+#define HILOG_PRINT(func, fmt, args...)                                                                             \
     do {                                                                                                       \
         func(LOG_CORE, "{%{public}s:%{public}d %{public}s()} " fmt, FILENAME, __LINE__, __FUNCTION__, ##args); \
     } while (false)
 
-#define LOG_DEBUG(fmt, ...) DEMO_LOG(HILOG_DEBUG, fmt, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...) DEMO_LOG(HILOG_INFO, fmt, ##__VA_ARGS__)
-#define LOG_WARN(fmt, ...) DEMO_LOG(HILOG_WARN, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) DEMO_LOG(HILOG_ERROR, fmt, ##__VA_ARGS__)
-#define LOG_FATAL(fmt, ...) DEMO_LOG(HILOG_FATAL, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGD(fmt, ...) HILOG_PRINT(HILOG_DEBUG, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGI(fmt, ...) HILOG_PRINT(HILOG_INFO, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGW(fmt, ...) HILOG_PRINT(HILOG_WARN, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGE(fmt, ...) HILOG_PRINT(HILOG_ERROR, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGF(fmt, ...) HILOG_PRINT(HILOG_FATAL, fmt, ##__VA_ARGS__)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // WORD_SELECTION_LOG_H
+#endif // SELECTION_LOG_H

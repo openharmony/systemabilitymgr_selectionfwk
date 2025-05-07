@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//build/config/components/idl_tool/idl.gni")
 
-config("word_selection_sa_config") {
+config("selection_sa_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
@@ -24,26 +24,26 @@ config("word_selection_sa_config") {
 }
 
 idl_interface_sources = [
-  "${target_gen_dir}/word_selection_service_proxy.cpp",
-  "${target_gen_dir}/word_selection_service_stub.cpp",
+  "${target_gen_dir}/selection_service_proxy.cpp",
+  "${target_gen_dir}/selection_service_stub.cpp",
 ]
 
-idl_gen_interface("word_selection_service_interface") {
-  src_idl = rebase_path("IWordSelectionService.idl")
+idl_gen_interface("selection_service_interface") {
+  src_idl = rebase_path("ISelectionService.idl")
   dst_file = string_join(",", idl_interface_sources)
 }
 
-ohos_shared_library("word_selection_base") {
-  configs = [ ":word_selection_sa_config", ]
+ohos_shared_library("selection_service") {
+  configs = [ ":selection_sa_config", ]
   shlib_type = "sa"
-  version_script = "libword_selection_service.map"
-  output_values = get_target_outputs(":word_selection_service_interface")
+  version_script = "libselection_service.map"
+  output_values = get_target_outputs(":selection_service_interface")
 
   sources = [
-    "src/word_selection_service.cpp",
+    "src/selection_service.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
-  deps = [ ":word_selection_service_interface" ]
+  deps = [ ":selection_service_interface" ]
 
   external_deps = [
     "c_utils:utils",

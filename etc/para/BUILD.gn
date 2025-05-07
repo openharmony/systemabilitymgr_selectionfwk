@@ -10,11 +10,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import("//build/ohos.gni")
 
-ohos_prebuilt_etc("selection_service_cfg") {
-  source = "selection_service.cfg"
-  relative_install_dir = "init"
+ohos_prebuilt_etc("selection_para") {
+  source = "./selection.para"
+  module_install_dir = "etc/param"
+  part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
+}
+
+ohos_prebuilt_etc("selection_para_dac") {
+  source = "./selection.para.dac"
+  module_install_dir = "etc/param"
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"
 }

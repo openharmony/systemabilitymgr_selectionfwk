@@ -12,10 +12,10 @@
 # limitations under the License.
 
 import("//build/ohos/sa_profile/sa_profile.gni")
-import("../word_selection.gni")
+import("../selection_service.gni")
 
-ohos_sa_profile("word_selection_sa_profile") {
-  sources = [ "8567.json" ]
+ohos_sa_profile("selection_service_sa_profile") {
+  sources = [ "8500.json" ]
 
   part_name = "selectionfwk"
 }
