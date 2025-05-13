@@ -26,6 +26,23 @@
 
 namespace OHOS::SelectionFwk {
 using namespace MMI;
+
+constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "sys.selection.switch.username";
+constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "sys.selection.trigger.username";
+constexpr const char *SYS_SELECTION_APP_USERNAM = "sys.selection.app.username";
+
+typedef enum SelectInputState {
+    SELECT_INPUT_INITIAL = 0,
+    SELECT_INPUT_WORD_BEGIN = 1,
+    SELECT_INPUT_WAIT_LEFT_MOVE = 2,
+    SELECT_INPUT_LEFT_MOVE = 3,
+    SELECT_INPUT_WAIT_DOUBLE_CLICK = 4,
+    SELECT_INPUT_WAIT_TRIBLE_CLICK = 5,
+    SELECT_INPUT_DOUBLE_CLICKED = 6,
+
+    SELECT_INPUT_WAIT_CTRL
+
+} SelectInputState;
 class SelectionService : public SystemAbility, public SelectionServiceStub {
     DECLARE_SYSTEM_ABILITY(SelectionService);
 
@@ -56,6 +73,13 @@ public:
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
+
+private:
+    void InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InjectCtrlC() const;
+    static uint32_t curSelectState;
 };
 
 }
