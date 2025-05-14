@@ -55,6 +55,8 @@ public:
 
     ErrCode AddVolume(int32_t volume, int32_t& funcResult) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
+    int32_t StartNewAbility(const std::string& bundleName, const std::string& abilityName);
+    void StopCurrentAbility();
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -66,6 +68,9 @@ private:
     void WatchParams();
 
     int32_t inputMonitorId_ {-1};
+    std::mutex abilityMutex_;
+    std::string currentBundleName_ = "";
+    std::string currentAbilityName_ = "";
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
 };

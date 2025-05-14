@@ -26,4 +26,4 @@ public:
     virtual ~SelectionExtensionContext() = default;
 };
 } // namespace OHOS::AbilityRuntime
-#endif
+#endif // SELECTION_EXTENSION_CONTEXT_H

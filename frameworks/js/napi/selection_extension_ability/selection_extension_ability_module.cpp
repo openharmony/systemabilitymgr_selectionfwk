@@ -21,8 +21,8 @@ extern const char _binary_selection_extension_ability_abc_start[];
 extern const char _binary_selection_extension_ability_abc_end[];
 
 static napi_module _module = {
-    .nm_filename = "app/ability/libselectionextensionability_napi.so/selection_extension_ability.js",
-    .nm_modname = "app.ability.SelectionExtensionAbility",
+    .nm_filename = "libselectionextensionability_napi.so/selection_extension_ability.js",
+    .nm_modname = "SelectionExtensionAbility",
 };
 
 extern "C" __attribute__((constructor)) void NAPI_app_ability_SelectionExtensionAbility_AutoRegister()

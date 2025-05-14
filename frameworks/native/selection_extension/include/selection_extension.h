@@ -26,6 +26,14 @@ public:
     virtual ~SelectionExtension() = default;
 
     /**
+     * @brief Create Extension.
+     *
+     * @param runtime The runtime.
+     * @return The InputMethodExtension instance.
+     */
+    static SelectionExtension* Create(const std::unique_ptr<Runtime>& runtime);
+
+    /**
      * @brief Init the extension.
      *
      * @param record the extension record.
@@ -37,14 +45,6 @@ public:
                       const std::shared_ptr<OHOSApplication>& application,
                       std::shared_ptr<AbilityHandler>& handler,
                       const sptr<IRemoteObject>& token) override;
-
-    /**
-     * @brief Create Extension.
-     *
-     * @param runtime The runtime.
-     * @return The InputMethodExtension instance.
-     */
-    static SelectionExtension* Create(const std::unique_ptr<Runtime>& runtime);
 };
 } // namespace OHOS::AbilityRuntime
 

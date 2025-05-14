@@ -38,7 +38,8 @@ ohos_shared_library("selection_extension_ability_native") {
   sources = [
     "src/selection_extension.cpp",
     "src/selection_extension_context.cpp",
-    "src/selection_extension_module_loader.cpp"
+    "src/selection_extension_module_loader.cpp",
+    "src/js_selection_extension.cpp",
   ]
 
 
