@@ -17,6 +17,7 @@
 
 #include "ability_manager_client.h"
 #include "iremote_object.h"
+#include "callback_handler.h"
 #include "system_ability_definition.h"
 #include "selection_log.h"
 #include <input_manager.h>
@@ -30,6 +31,8 @@ using namespace OHOS::MMI;
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(SelectionService::GetInstance().GetRefPtr());
 std::shared_mutex SelectionService::adminLock_;
 sptr<SelectionService> SelectionService::instance_;
+std::mutex SelectionService::eventHandlerMutex_;
+std::shared_ptr<AppExecFwk::EventHandler> SelectionService::handler_{ nullptr };
 
 uint32_t SelectionInputMonitor::curSelectState = SELECT_INPUT_INITIAL;
 uint32_t SelectionInputMonitor::subSelectState = SUB_INITIAL;
@@ -201,6 +204,11 @@ void SelectionService::InputMonitorInit()
         inputMonitorId_ =
             InputManager::GetInstance()->AddMonitor(std::static_pointer_cast<IInputEventConsumer>(inputMonitor));
             SELECTION_HILOGI("[SelectionService] input monitor init end");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+        handler_ = AppExecFwk::EventHandler::Current();
     }
 }
 
@@ -420,4 +428,54 @@ void SelectionInputMonitor::InjectCtrlC() const
         keyDownEvent->AddPressedKeyItems(downItem[i]);
     }
     InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
+}
+
+std::shared_ptr<AppExecFwk::EventHandler> SelectionService::GetEventHandler()
+{
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    return handler_;
+}
+
+
+int32_t SelectionService::OnSelectionEvent(std::string &selectionData)
+{
+    SELECTION_HILOGI("OnSelectionEvent begin");
+    std::string type = "selectionEvent";
+
+    if (selectionData.empty()) {
+        SELECTION_HILOGE("selectionData is empty");
+        return 1;
+    }
+
+    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) { entry.text = selectionData; });
+    if (entry == nullptr) {
+        SELECTION_HILOGE("failed to get uv entry!");
+        return 1;
+    }
+
+    auto eventHandler = GetEventHandler();
+    if (eventHandler == nullptr) {
+        SELECTION_HILOGE("eventHandler is nullptr!");
+        return 1;
+    }
+
+    SELECTION_HILOGI("selectionData is [%{public}s]", selectionData.c_str());
+
+
+    auto task = [entry]() {
+        auto getTextChangeProperty = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
+            if (argc == 0) {
+                return false;
+            }
+            // 0 means the first param of callback.
+            napi_create_string_utf8(env, entry->text.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            return true;
+        };
+        // 1 means callback has one param.
+        JsCallbackHandler::Traverse(entry->vecCopy, { 1, getTextChangeProperty });
+    };
+    eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
+
+    SELECTION_HILOGI("OnSelectionEvent end");
+    return 0;
 }

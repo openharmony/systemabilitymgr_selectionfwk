@@ -1,33 +1,59 @@
-#include "js_selection_ability.h"
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#include "event_checker.h"
-#include "js_utils.h"
-#include "napi/native_node_api.h"
+#undef LOG_TAG
+#define LOG_TAG "SELECTION_ABILITY"
+
+#include "js_selection_ability_engine.h"
 #include "selection_log.h"
 #include "util.h"
+#include "event_checker.h"
+#include "js_utils.h"
+
+
 
 namespace OHOS {
 namespace SelectionFwk {
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 
-const std::string JsSelectionAbility::KDS_CLASS_NAME = "SelectionAbility";
-thread_local napi_ref JsSelectionAbility::KDSRef_ = nullptr;
-std::mutex JsSelectionAbility::selectionMutex_;
-std::shared_ptr<JsSelectionAbility> JsSelectionAbility::selectionDelegate_{ nullptr };
+const std::string JsSelectionAbilityEngine::KDS_CLASS_NAME = "SelectionAbility";
+thread_local napi_ref JsSelectionAbilityEngine::KDSRef_ = nullptr;
+std::mutex JsSelectionAbilityEngine::selectionMutex_;
+std::shared_ptr<JsSelectionAbilityEngine> JsSelectionAbilityEngine::selectionDelegate_{ nullptr };
 
-napi_value JsSelectionAbility::GetSelectionAbility(napi_env env, napi_callback_info info)
+napi_value JsSelectionAbilityEngine::Init(napi_env env, napi_value exports)
 {
-    SELECTION_HILOGI("GetSelectionAbility");
-    return nullptr;
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("on", Subscribe),
+        DECLARE_NAPI_FUNCTION("off", UnSubscribe),
+    };
+    napi_value cons = nullptr;
+    NAPI_CALL(env, napi_define_class(env, KDS_CLASS_NAME.c_str(), KDS_CLASS_NAME.size(), JsConstructor, nullptr,
+                       sizeof(properties) / sizeof(napi_property_descriptor), properties, &cons));
+    NAPI_CALL(env, napi_create_reference(env, cons, 1, &KDSRef_));
+    NAPI_CALL(env, napi_set_named_property(env, exports, KDS_CLASS_NAME.c_str(), cons));
+    return exports;
 }
 
-std::shared_ptr<JsSelectionAbility> JsSelectionAbility::GetJsSelectionAbility()
+std::shared_ptr<JsSelectionAbilityEngine> JsSelectionAbilityEngine::GetSelectionAbilityEngine()
 {
     if (selectionDelegate_ == nullptr) {
         std::lock_guard<std::mutex> lock(selectionMutex_);
         if (selectionDelegate_ == nullptr) {
-            auto delegate = std::make_shared<JsSelectionAbility>();
+            auto delegate = std::make_shared<JsSelectionAbilityEngine>();
             if (delegate == nullptr) {
                 SELECTION_HILOGE("keyboard delegate is nullptr!");
                 return nullptr;
@@ -38,11 +64,11 @@ std::shared_ptr<JsSelectionAbility> JsSelectionAbility::GetJsSelectionAbility()
     return selectionDelegate_;
 }
 
-napi_value JsSelectionAbility::JsConstructor(napi_env env, napi_callback_info cbinfo)
+napi_value JsSelectionAbilityEngine::JsConstructor(napi_env env, napi_callback_info cbinfo)
 {
     napi_value thisVar = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, cbinfo, nullptr, nullptr, &thisVar, nullptr));
-    auto delegate = GetJsSelectionAbility();
+    auto delegate = GetSelectionAbilityEngine();
     if (delegate == nullptr) {
         SELECTION_HILOGE("failed to get delegate!");
         napi_value result = nullptr;
@@ -58,7 +84,7 @@ napi_value JsSelectionAbility::JsConstructor(napi_env env, napi_callback_info cb
     return thisVar;
 };
 
-napi_value JsSelectionAbility::Subscribe(napi_env env, napi_callback_info info)
+napi_value JsSelectionAbilityEngine::Subscribe(napi_env env, napi_callback_info info)
 {
     size_t argc = ARGC_TWO;
     napi_value argv[ARGC_TWO] = { nullptr };
@@ -74,14 +100,14 @@ napi_value JsSelectionAbility::Subscribe(napi_env env, napi_callback_info info)
         return nullptr;
     }
     SELECTION_HILOGE("subscribe type: %{public}s.", type.c_str());
-    auto selectionAbility = reinterpret_cast<JsSelectionAbility *>(JsUtils::GetNativeSelf(env, info));
-    if (selectionAbility == nullptr) {
+    auto engine = reinterpret_cast<JsSelectionAbilityEngine *>(JsUtils::GetNativeSelf(env, info));
+    if (engine == nullptr) {
         return nullptr;
     }
     std::shared_ptr<JSCallbackObject> callback =
         std::make_shared<JSCallbackObject>(env, argv[1], std::this_thread::get_id(),
             AppExecFwk::EventHandler::Current());
-    selectionAbility->RegisterListener(argv[ARGC_ONE], type, callback);
+    engine->RegisterListener(argv[ARGC_ONE], type, callback);
 
     napi_value result = nullptr;
     napi_get_null(env, &result);
@@ -89,7 +115,7 @@ napi_value JsSelectionAbility::Subscribe(napi_env env, napi_callback_info info)
 }
 
 
-napi_value JsSelectionAbility::UnSubscribe(napi_env env, napi_callback_info info)
+napi_value JsSelectionAbilityEngine::UnSubscribe(napi_env env, napi_callback_info info)
 {
     size_t argc = ARGC_TWO;
     napi_value argv[ARGC_TWO] = { nullptr };
@@ -113,7 +139,7 @@ napi_value JsSelectionAbility::UnSubscribe(napi_env env, napi_callback_info info
     argv[1] = paramType == napi_function ? argv[1] : nullptr;
 
     SELECTION_HILOGD("unsubscribe type: %{public}s.", type.c_str());
-    auto delegate = reinterpret_cast<JsSelectionAbility *>(JsUtils::GetNativeSelf(env, info));
+    auto delegate = reinterpret_cast<JsSelectionAbilityEngine *>(JsUtils::GetNativeSelf(env, info));
     if (delegate == nullptr) {
         return nullptr;
     }
@@ -123,7 +149,7 @@ napi_value JsSelectionAbility::UnSubscribe(napi_env env, napi_callback_info info
     return result;
 }
 
-void JsSelectionAbility::RegisterListener(napi_value callback, std::string type,
+void JsSelectionAbilityEngine::RegisterListener(napi_value callback, std::string type,
     std::shared_ptr<JSCallbackObject> callbackObj)
 {
     SELECTION_HILOGD("RegisterListener %{public}s", type.c_str());
@@ -136,7 +162,7 @@ void JsSelectionAbility::RegisterListener(napi_value callback, std::string type,
         return JsUtils::Equals(cb->env_, callback, cb->callback_, cb->threadId_);
     });
     if (ret) {
-        SELECTION_HILOGD("JsSelectionAbility callback already registered!");
+        SELECTION_HILOGD("JsSelectionAbilityEngine callback already registered!");
         return;
     }
 
@@ -144,7 +170,7 @@ void JsSelectionAbility::RegisterListener(napi_value callback, std::string type,
     jsCbMap_[type].push_back(std::move(callbackObj));
 }
 
-void JsSelectionAbility::UnRegisterListener(napi_value callback, std::string type)
+void JsSelectionAbilityEngine::UnRegisterListener(napi_value callback, std::string type)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -169,23 +195,6 @@ void JsSelectionAbility::UnRegisterListener(napi_value callback, std::string typ
     if (jsCbMap_[type].empty()) {
         jsCbMap_.erase(type);
     }
-}
-
-napi_value JsSelectionAbility::Init(napi_env env, napi_value exports)
-{
-    SELECTION_HILOGI("napi init");
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("getSelectionAbility", GetSelectionAbility),
-        DECLARE_NAPI_FUNCTION("on", Subscribe),
-        DECLARE_NAPI_FUNCTION("off", UnSubscribe),
-    };
-
-    napi_value cons = nullptr;
-    NAPI_CALL(env, napi_define_class(env, KDS_CLASS_NAME.c_str(), KDS_CLASS_NAME.size(), JsConstructor, nullptr,
-                       sizeof(properties) / sizeof(napi_property_descriptor), properties, &cons));
-    NAPI_CALL(env, napi_create_reference(env, cons, 1, &KDSRef_));
-    NAPI_CALL(env, napi_set_named_property(env, exports, KDS_CLASS_NAME.c_str(), cons));
-    return exports;
 }
 } // namespace OHOS::SelectionFwk
 } // namespace OHOS

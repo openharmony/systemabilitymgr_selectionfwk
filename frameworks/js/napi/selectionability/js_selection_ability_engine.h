@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JS_SELECTION_ABILITY_H
-#define JS_SELECTION_ABILITY_H
-
+#ifndef INTERFACE_KITS_JS_SELECTION_ABILITY_ENGINE_H
+#define INTERFACE_KITS_JS_SELECTION_ABILITY_ENGINE_H
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,20 +23,20 @@
 #include "util.h"
 #include "callback_object.h"
 
+
 namespace OHOS {
 namespace SelectionFwk {
-class JsSelectionAbility {
+class JsSelectionAbilityEngine {
 public:
-    JsSelectionAbility() = default;
-    ~JsSelectionAbility() = default;
+    JsSelectionAbilityEngine() = default;
+    ~JsSelectionAbilityEngine() = default;
     static napi_value Init(napi_env env, napi_value exports);
-    static napi_value GetSelectionAbility(napi_env env, napi_callback_info info);
     static napi_value Subscribe(napi_env env, napi_callback_info info);
     static napi_value UnSubscribe(napi_env env, napi_callback_info info);
 
 private:
     static napi_value JsConstructor(napi_env env, napi_callback_info cbinfo);
-    static std::shared_ptr<JsSelectionAbility> GetJsSelectionAbility();
+    static std::shared_ptr<JsSelectionAbilityEngine> GetSelectionAbilityEngine();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
 
@@ -46,10 +45,9 @@ private:
     static thread_local napi_ref KDSRef_;
     std::map<std::string, std::vector<std::shared_ptr<JSCallbackObject>>> jsCbMap_;
     static std::mutex selectionMutex_;
-    static std::shared_ptr<JsSelectionAbility> selectionDelegate_;
+    static std::shared_ptr<JsSelectionAbilityEngine> selectionDelegate_;
     std::recursive_mutex mutex_;
-
 };
-} //SelectionFwk
-} //OHOS
-#endif //JS_SELECTION_ABILITY_H
+} // namespace SelectionFwk
+} // namespace OHOS
+#endif // INTERFACE_KITS_JS_SELECTION_ABILITY_ENGINE_H
