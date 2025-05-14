@@ -24,7 +24,10 @@
         "hilog",
         "samgr",
         "init",
-        "input"
+        "input",
+        "napi",
+        "ability_base",
+        "ability_runtime"
       ],
       "third_party": [
       ]
@@ -35,7 +38,9 @@
         "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para",
         "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para_dac",
         "//foundation/systemabilitymgr/selection_fwk/service:selection_service",
-        "//foundation/systemabilitymgr/selection_fwk/sa_profile:selection_service_sa_profile"
+        "//foundation/systemabilitymgr/selection_fwk/sa_profile:selection_service_sa_profile",
+        "//foundation/systemabilitymgr/selection_fwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",
+        "//foundation/systemabilitymgr/selection_fwk/frameworks/native/selection_extension:selection_extension_ability_native"
       ],
       "inner_kits": []
     }
