@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Copyright (C) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
 import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
+import("//build/ohos.gni")
 
-ohos_shared_library("selectionability_napi") {
+ohos_shared_library("selectionabilityengine") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     boundary_sanitize = true
@@ -24,15 +24,21 @@ ohos_shared_library("selectionability_napi") {
     integer_overflow = true
     ubsan = true
   }
-  sources = [
-    "js_selection_ability.cpp",
-    "selection_ability_module.cpp",
-  ]
 
   include_dirs = [
-    ".",
-    "../../../../utils/include",
-    "${target_gen_dir}",
+    "${selection_fwk_root_path}/utils/include",
+  ]
+  ldflags = [ "-Wl,--exclude-libs=ALL" ]
+  cflags_cc = [
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  sources = [
+    "js_selection_ability_engine.cpp",
+    "selection_engine_module.cpp",
   ]
 
   deps = [
@@ -56,7 +62,8 @@ ohos_shared_library("selectionability_napi") {
     "ability_runtime:app_context",
   ]
 
+
   relative_install_dir = "module"
-  subsystem_name = "systemabilitymgr"
   part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
 }

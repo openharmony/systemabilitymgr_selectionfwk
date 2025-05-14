@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//build/config/components/idl_tool/idl.gni")
+import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
 
 config("selection_sa_config") {
   visibility = [ ":*" ]
@@ -43,12 +44,16 @@ ohos_shared_library("selection_service") {
     "src/selection_service.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
-  deps = [ ":selection_service_interface" ]
+  deps = [
+    ":selection_service_interface",
+    "${selection_fwk_root_path}/common:selection_common"
+  ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
     "c_utils:utils",
+    "napi:ace_napi",
     "ipc:ipc_single",
     "init:libbeget_proxy",
     "hilog:libhilog",
