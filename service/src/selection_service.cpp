@@ -15,6 +15,7 @@
 
 #include "selection_service.h"
 
+#include "ability_manager_client.h"
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "selection_log.h"
@@ -84,11 +85,69 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
 }
 
+void SelectionService::StopCurrentAbility()
+{
+    std::lock_guard<std::mutex> lock(abilityMutex_);
+    if (currentBundleName_.empty() || currentAbilityName_.empty()) {
+        SELECTION_HILOGD("No ability running");
+        return;
+    }
+    SELECTION_HILOGD("Stop current ability: %{public}s/%{public}s", currentBundleName_.c_str(),
+        currentAbilityName_.c_str());
+
+    AAFwk::Want want;
+    want.SetElementName(currentBundleName_, currentAbilityName_);
+    int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->StopExtensionAbility(want, nullptr);
+    if (ret != ERR_OK) {
+        SELECTION_HILOGE("StopServiceAbility failed, ret: %{public}d", ret);
+        return;
+    }
+
+    currentBundleName_.clear();
+    currentAbilityName_.clear();
+}
+
+int32_t SelectionService::StartNewAbility( const std::string& bundleName, const std::string& abilityName)
+{
+    SELECTION_HILOGD("Start new SelectionExtension, bundleName:%{public}s, abilityName:%{public}s", bundleName.c_str(),
+        abilityName.c_str());
+    AAFwk::Want want;
+    want.SetElementName(bundleName, abilityName);
+
+    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(want, nullptr);
+    if (ret != 0) {
+        SELECTION_HILOGE("StartExtensionAbility failed %{public}d", ret);
+        return ret;
+    }
+
+    currentBundleName_ = bundleName;
+    currentAbilityName_ = abilityName;
+    SELECTION_HILOGD("StartExtensionAbility success");
+    return 0;
+}
+
 static void WatchAppSwitch(const char *key, const char *value, void *context)
 {
-    (void)context;
-    SELECTION_HILOGI("WatchParameterFunc begin");
-    SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
+    SELECTION_HILOGD("WatchAppSwitch begin");
+    SELECTION_HILOGD("%{public}s: value=%{public}s", key, value);
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    if (selectionService == nullptr) {
+        SELECTION_HILOGE("selectionService is nullptr");
+        return;
+    }
+
+    const std::string appInfo = value;
+    auto pos = appInfo.find('/');
+    if (pos == std::string::npos || pos + 1 >= appInfo.size()) {
+        SELECTION_HILOGE("app info: %{public}s is abnormal!", appInfo.c_str());
+        return;
+    }
+    const std::string bundleName = appInfo.substr(0, pos);
+    const std::string extName = appInfo.substr(pos + 1);
+    SELECTION_HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
+    selectionService->StopCurrentAbility();
+    auto ret = selectionService->StartNewAbility(bundleName, extName);
+    SELECTION_HILOGD("StartExtensionAbility ret = %{public}d", ret);
 }
 
 void SelectionService::WatchParams()
@@ -96,7 +155,7 @@ void SelectionService::WatchParams()
     SELECTION_HILOGI("WatchParams begin");
     WatchParameter("persist.sys.selection.switch.username", WatchParameterFunc, nullptr);
     WatchParameter("persist.sys.selection.trigger.username", WatchTriggerMode, nullptr);
-    WatchParameter("persist.sys.selection.app.username", WatchAppSwitch, nullptr);
+    WatchParameter("persist.sys.selection.app.username", WatchAppSwitch, this);
     SELECTION_HILOGI("WatchParams end");
 }
 

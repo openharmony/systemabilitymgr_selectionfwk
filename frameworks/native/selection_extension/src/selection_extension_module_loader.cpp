@@ -20,6 +20,7 @@ namespace OHOS::AbilityRuntime {
 
 SelectionExtensionModuleLoader::SelectionExtensionModuleLoader() = default;
 SelectionExtensionModuleLoader::~SelectionExtensionModuleLoader() = default;
+
 Extension* SelectionExtensionModuleLoader::Create(const std::unique_ptr<Runtime>& runtime) const
 {
     return SelectionExtension::Create(runtime);
@@ -27,13 +28,8 @@ Extension* SelectionExtensionModuleLoader::Create(const std::unique_ptr<Runtime>
 
 std::map<std::string, std::string> SelectionExtensionModuleLoader::GetParams()
 {
-    // TODO:确定type和name
-    std::map<std::string, std::string> params;
     // type means extension type in ExtensionAbilityType of extension_ability_info.h
-    // params.insert(std::pair<std::string, std::string>("type", "2"));
-    // extension name
-    // params.insert(std::pair<std::string, std::string>("name", "SelectionExtensionAbility"));
-    return params;
+    return {{"type", "509"}, {"name", "SelectionExtensionAbility"}};
 }
 
 extern "C" __attribute__((visibility("default"))) void* OHOS_EXTENSION_GetExtensionModule()
