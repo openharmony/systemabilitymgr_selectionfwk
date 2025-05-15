@@ -27,9 +27,10 @@
 namespace OHOS::SelectionFwk {
 using namespace MMI;
 
-constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "sys.selection.switch.username";
-constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "sys.selection.trigger.username";
-constexpr const char *SYS_SELECTION_APP_USERNAM = "sys.selection.app.username";
+constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "persist.sys.selection.switch.username";
+constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "persist.sys.selection.trigger.username";
+constexpr const char *SYS_SELECTION_APP_USERNAM = "persist.sys.selection.app.username";
+constexpr const char *SYS_SELECTION_TRIGGER_VAL = "ctrl";
 
 typedef enum SelectInputState {
     SELECT_INPUT_INITIAL = 0,
@@ -81,6 +82,8 @@ public:
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
 
+public:
+    static bool ctrlSelectFlag;
 private:
     void InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
