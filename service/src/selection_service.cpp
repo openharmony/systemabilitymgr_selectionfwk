@@ -31,6 +31,7 @@ std::shared_mutex SelectionService::adminLock_;
 sptr<SelectionService> SelectionService::instance_;
 
 uint32_t SelectionInputMonitor::curSelectState = SELECT_INPUT_INITIAL;
+bool SelectionInputMonitor::ctrlSelectFlag = false;
 
 sptr<SelectionService> SelectionService::GetInstance()
 {
@@ -83,6 +84,14 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
     (void)context;
     SELECTION_HILOGI("WatchParameterFunc begin");
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
+    if (strcmp(key, SYS_SELECTION_TRIGGER_USERNAM) == 0) {
+        if (strcmp(value, SYS_SELECTION_TRIGGER_VAL) == 0) {
+            SelectionInputMonitor::ctrlSelectFlag = true;
+        } else {
+            SelectionInputMonitor::ctrlSelectFlag = false;
+        }
+        SELECTION_HILOGI("ctrlSelectFlag is %{public}d", SelectionInputMonitor::ctrlSelectFlag);
+    }
 }
 
 void SelectionService::StopCurrentAbility()
@@ -153,9 +162,9 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
 void SelectionService::WatchParams()
 {
     SELECTION_HILOGI("WatchParams begin");
-    WatchParameter("persist.sys.selection.switch.username", WatchParameterFunc, nullptr);
-    WatchParameter("persist.sys.selection.trigger.username", WatchTriggerMode, nullptr);
-    WatchParameter("persist.sys.selection.app.username", WatchAppSwitch, this);
+    WatchParameter(SYS_SELECTION_SWITCH_USERNAM, WatchParameterFunc, nullptr);
+    WatchParameter(SYS_SELECTION_TRIGGER_USERNAM, WatchTriggerMode, nullptr);
+    WatchParameter(SYS_SELECTION_APP_USERNAM, WatchAppSwitch, this);
     SELECTION_HILOGI("WatchParams end");
 }
 
@@ -238,67 +247,31 @@ void SelectionService::HandlePointEvent(int32_t type)
 // foundation/multimodalinput/input/interfaces/native/innerkits/event/include/key_event.h
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
+    SELECTION_HILOGI("[SelectionService] into keyEvent");
+    int32_t keyCode = keyEvent->GetKeyCode();
     SELECTION_HILOGI("[SelectionService] keyId: %{public}d", keyEvent->GetKeyCode());
-}
-
-void SelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
-{
-    int32_t action = pointerEvent->GetPointerAction();
-    int32_t buttonId = pointerEvent->GetButtonId();
-    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && buttonId == PointerEvent::MOUSE_BUTTON_LEFT) {
-        curSelectState = SELECT_INPUT_WORD_BEGIN;
+    if (keyCode == KeyEvent::KEYCODE_CTRL_LEFT || keyCode == KeyEvent::KEYCODE_CTRL_RIGHT) {
+        SELECTION_HILOGI("[SelectionService] Processed ctrl key.");
+        if (ctrlSelectFlag && curSelectState == SELECT_INPUT_WAIT_CTRL) {
+            curSelectState = SELECT_INPUT_LEFT_MOVE;
+            SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_LEFT_MOVE.");
+        }
     }
-    return;
-}
 
-void SelectionInputMonitor::InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const
-{
-    int32_t action = pointerEvent->GetPointerAction();
-    if (action == PointerEvent::POINTER_ACTION_MOVE) {
-        curSelectState = SELECT_INPUT_WAIT_LEFT_MOVE;
-    } else if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
-        curSelectState = SELECT_INPUT_WAIT_DOUBLE_CLICK;
-    }
-    return;
-}
-
-void SelectionInputMonitor::InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const
-{
-    int32_t action = pointerEvent->GetPointerAction();
-    if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
-        curSelectState = SELECT_INPUT_LEFT_MOVE;
-    }
-    return;
-}
-
-void SelectionInputMonitor::InjectCtrlC() const
-{
-    auto keyDownEvent = KeyEvent::Create();
-    keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    std::vector<int32_t> downKey;
-    downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
-    downKey.push_back(KeyEvent::KEYCODE_C);
-    keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    
-    KeyEvent::KeyItem downItem[downKey.size()];
-    for (size_t i = 0; i < downKey.size(); i++) {
-        downItem[i].SetKeyCode(downKey[i]);
-        downItem[i].SetPressed(true);
-        downItem[i].SetDownTime(500);
-        keyDownEvent->AddPressedKeyItems(downItem[i]);
-    }
-    InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
+    SELECTION_HILOGI("[SelectionService] into PointerEvent");
     int32_t action = pointerEvent->GetPointerAction();
     int32_t buttonId = pointerEvent->GetButtonId();
     SELECTION_HILOGI("[SelectionService] pointerEvent: %{public}d", action);
     SELECTION_HILOGI("[SelectionService] buttonId: %{public}d", buttonId);
     if (curSelectState == SELECT_INPUT_INITIAL && buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
+    }
+    if (curSelectState == SELECT_INPUT_WAIT_CTRL) {
+        curSelectState = SELECT_INPUT_INITIAL;
     }
 
     switch (curSelectState)
@@ -329,4 +302,62 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
     return;
 }
 
-void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const {};
+void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const
+{
+    SELECTION_HILOGI("[SelectionService] into axisEvent");
+};
+
+
+void SelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    int32_t buttonId = pointerEvent->GetButtonId();
+    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && buttonId == PointerEvent::MOUSE_BUTTON_LEFT) {
+        curSelectState = SELECT_INPUT_WORD_BEGIN;
+    }
+    return;
+}
+
+void SelectionInputMonitor::InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    if (action == PointerEvent::POINTER_ACTION_MOVE) {
+        curSelectState = SELECT_INPUT_WAIT_LEFT_MOVE;
+    } else if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
+        curSelectState = SELECT_INPUT_WAIT_DOUBLE_CLICK;
+    }
+    return;
+}
+
+void SelectionInputMonitor::InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
+        if (ctrlSelectFlag) {
+            curSelectState = SELECT_INPUT_WAIT_CTRL;
+        } else {
+            curSelectState = SELECT_INPUT_LEFT_MOVE;
+        }
+    }
+    return;
+}
+
+void SelectionInputMonitor::InjectCtrlC() const
+{
+    auto keyDownEvent = KeyEvent::Create();
+    keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
+    std::vector<int32_t> downKey;
+    downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
+    downKey.push_back(KeyEvent::KEYCODE_C);
+    keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    
+    KeyEvent::KeyItem downItem[downKey.size()];
+    for (size_t i = 0; i < downKey.size(); i++) {
+        downItem[i].SetKeyCode(downKey[i]);
+        downItem[i].SetPressed(true);
+        downItem[i].SetDownTime(500);
+        keyDownEvent->AddPressedKeyItems(downItem[i]);
+    }
+    InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
+}
