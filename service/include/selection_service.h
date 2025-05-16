@@ -31,8 +31,9 @@ constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "persist.sys.selection.swit
 constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "persist.sys.selection.trigger.username";
 constexpr const char *SYS_SELECTION_APP_USERNAM = "persist.sys.selection.app.username";
 constexpr const char *SYS_SELECTION_TRIGGER_VAL = "ctrl";
+constexpr const uint32_t DOUBLE_CLICK_TIME = 400;
 
-typedef enum SelectInputState {
+typedef enum {
     SELECT_INPUT_INITIAL = 0,
     SELECT_INPUT_WORD_BEGIN = 1,
     SELECT_INPUT_WAIT_LEFT_MOVE = 2,
@@ -44,6 +45,13 @@ typedef enum SelectInputState {
     SELECT_INPUT_WAIT_CTRL
 
 } SelectInputState;
+
+typedef enum {
+    SUB_INITIAL = 0,
+    SUB_WAIT_PRESS_DOWN = 1,
+    SUB_WAIT_PRESS_MOVE = 2,
+    SUB_WAIT_PRESS_UP   = 3,
+} SelectInputSubState;
 
 class SelectionService : public SystemAbility, public SelectionServiceStub {
     DECLARE_SYSTEM_ABILITY(SelectionService);
@@ -88,8 +96,11 @@ private:
     void InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InputWordWaitDoubleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InjectCtrlC() const;
     static uint32_t curSelectState;
+    static uint32_t subSelectState;
+    static int64_t lastClickTime;
 };
 }
 
