@@ -262,28 +262,46 @@ void SelectionService::HandlePointEvent(int32_t type)
 #endif
 }
 
-// foundation/multimodalinput/input/interfaces/native/innerkits/event/include/key_event.h
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
     SELECTION_HILOGD("[SelectionService] into keyEvent");
-    int32_t keyCode = keyEvent->GetKeyCode();
-    SELECTION_HILOGD("[SelectionService] keyId: %{public}d", keyCode);
-    if (keyCode == KeyEvent::KEYCODE_CTRL_LEFT || keyCode == KeyEvent::KEYCODE_CTRL_RIGHT) {
-        SELECTION_HILOGI("[SelectionService] Processed ctrl key.");
-        if (ctrlSelectFlag && curSelectState == SELECT_INPUT_WAIT_LEFT_MOVE && subSelectState == SUB_WAIT_CTRL) {
-            curSelectState = SELECT_INPUT_LEFT_MOVE;
-            subSelectState = SUB_INITIAL;
-            SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_LEFT_MOVE.");
-            return;
-        }
-        if (ctrlSelectFlag && curSelectState == SELECT_INPUT_WAIT_DOUBLE_CLICK && subSelectState == SUB_WAIT_CTRL) {
-            curSelectState = SELECT_INPUT_DOUBLE_CLICKED;
-            subSelectState = SUB_INITIAL;
-            SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_LEFT_MOVE.");
-            return;
-        }
+    if (!ctrlSelectFlag) {
+        return;
     }
 
+    if (subSelectState != SUB_WAIT_CTRL_DOWN && subSelectState != SUB_WAIT_CTRL_UP) {
+        return;
+    }
+
+    int32_t keyCode = keyEvent->GetKeyCode();
+    int32_t action = keyEvent->GetKeyAction();
+    if (keyCode != KeyEvent::KEYCODE_CTRL_LEFT && keyCode != KeyEvent::KEYCODE_CTRL_RIGHT) {
+        curSelectState = SELECT_INPUT_INITIAL;
+        subSelectState = SUB_INITIAL;
+        SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_INITIAL.");
+        return;
+    }
+    SELECTION_HILOGI("[SelectionService] Processed ctrl key.");
+    if (subSelectState == SUB_WAIT_CTRL_DOWN && action == KeyEvent::KEY_ACTION_DOWN) {
+        subSelectState = SUB_WAIT_CTRL_UP;
+        return;
+    } else if (subSelectState == SUB_WAIT_CTRL_UP && action == KeyEvent::KEY_ACTION_UP) {
+        if (curSelectState == SELECT_INPUT_WAIT_LEFT_MOVE) {
+            curSelectState = SELECT_INPUT_LEFT_MOVE;
+            SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_LEFT_MOVE.");
+        }
+        if (curSelectState == SELECT_INPUT_WAIT_DOUBLE_CLICK) {
+            curSelectState = SELECT_INPUT_DOUBLE_CLICKED;
+            SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_DOUBLE_CLICKED.");
+        }
+        subSelectState = SUB_INITIAL;
+        return;
+    } else {
+        curSelectState = SELECT_INPUT_INITIAL;
+        subSelectState = SUB_INITIAL;
+        SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_INITIAL.");
+    }
+    return;
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
@@ -296,7 +314,7 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
     if (curSelectState == SELECT_INPUT_INITIAL && buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
     }
-    if (subSelectState == SUB_WAIT_CTRL) {
+    if (subSelectState == SUB_WAIT_CTRL_DOWN || subSelectState == SUB_WAIT_CTRL_UP) {
         SELECTION_HILOGI("[SelectionService] pointerEvent: curSelectState == SELECT_INPUT_WAIT_CTRL. return.");
         curSelectState = SELECT_INPUT_INITIAL;
         subSelectState = SUB_INITIAL;
@@ -374,7 +392,7 @@ void SelectionInputMonitor::InputWordWaitLeftMoveProcess(std::shared_ptr<Pointer
     int32_t action = pointerEvent->GetPointerAction();
     if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
         if (ctrlSelectFlag) {
-            subSelectState = SUB_WAIT_CTRL;
+            subSelectState = SUB_WAIT_CTRL_DOWN;
             SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL.");
         } else {
             curSelectState = SELECT_INPUT_LEFT_MOVE;
@@ -403,7 +421,7 @@ void SelectionInputMonitor::InputWordWaitDoubleClickProcess(std::shared_ptr<Poin
         auto curTime = GetCurrentTimeMillis();
         if (curTime - lastClickTime < DOUBLE_CLICK_TIME) {
             if (ctrlSelectFlag) {
-                subSelectState = SUB_WAIT_CTRL;
+                subSelectState = SUB_WAIT_CTRL_DOWN;
                 SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL.");
             } else {
                 curSelectState = SELECT_INPUT_DOUBLE_CLICKED;
