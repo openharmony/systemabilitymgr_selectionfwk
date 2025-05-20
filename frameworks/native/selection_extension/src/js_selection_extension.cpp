@@ -14,7 +14,6 @@
  */
 
 #include "js_selection_extension.h"
-#include "hilog_wrapper.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
 #include "napi/native_api.h"
@@ -64,8 +63,8 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
 
 void JsSelectionExtension::OnStart(const AAFwk::Want& want)
 {
-    Extension::OnStart(want);
     HILOG_INFO("JsSelectionExtension OnStart begin.");
+    Extension::OnStart(want);
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = {napiWant};
@@ -75,6 +74,8 @@ void JsSelectionExtension::OnStart(const AAFwk::Want& want)
 
 sptr<IRemoteObject> JsSelectionExtension::OnConnect(const AAFwk::Want& want)
 {
+    HILOG_INFO("JsSelectionExtension OnConnect begin.");
+    Extension::OnConnect(want);
     return nullptr;
 }
 
@@ -137,26 +138,6 @@ void JsSelectionExtension::GetSrcPath(std::string& srcPath)
 void JsSelectionExtension::BindContext()
 {
     // TODO:
-    
-    // auto env = jsRuntime_.GetNapiEnv();
-    // napi_value obj = jsObj_->GetNapiValue();
-    // if (!CheckTypeForNapiValue(env, obj, napi_object)) {
-    //     HILOG_ERROR("check type failed");
-    //     return;
-    // }
-
-    // auto context = GetContext();
-    // if (context == nullptr) {
-    //     HILOG_ERROR("failed to get context!");
-    //     return;
-    // }
-
-    // napi_value contextObj = CreateJsSelectionExtensionContext(env, context);
-    // auto contextRef = jsRuntime_.LoadSystemModule("SelectionExtensionContext", &contextObj, ARGC_ONE);
-    // if (!contextRef) {
-    //     HILOG_ERROR("context is nullptr");
-    //     return;
-    // }
 }
 
 } // namespace OHOS::AbilityRuntime
