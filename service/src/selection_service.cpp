@@ -295,12 +295,12 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
             SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_DOUBLE_CLICKED.");
         }
         subSelectState = SUB_INITIAL;
-        return;
     } else {
         curSelectState = SELECT_INPUT_INITIAL;
         subSelectState = SUB_INITIAL;
         SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_INITIAL.");
     }
+    FinishedWordSelection();
     return;
 }
 
@@ -308,14 +308,17 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
 {
     SELECTION_HILOGD("[SelectionService] into PointerEvent");
     int32_t action = pointerEvent->GetPointerAction();
-    int32_t buttonId = pointerEvent->GetButtonId();
+    int32_t pointerId = pointerEvent->GetPointerId();
     SELECTION_HILOGD("[SelectionService] pointerEvent: %{public}d", action);
-    SELECTION_HILOGD("[SelectionService] buttonId: %{public}d", buttonId);
-    if (curSelectState == SELECT_INPUT_INITIAL && buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
+    SELECTION_HILOGD("[SelectionService] pointerId: %{public}d", pointerId);
+    if (curSelectState == SELECT_INPUT_INITIAL && pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
     }
-    if (subSelectState == SUB_WAIT_CTRL_DOWN || subSelectState == SUB_WAIT_CTRL_UP) {
+    if ((subSelectState == SUB_WAIT_CTRL_DOWN || subSelectState == SUB_WAIT_CTRL_UP)
+        && (action != PointerEvent::POINTER_ACTION_MOVE)) {
         SELECTION_HILOGI("[SelectionService] pointerEvent: curSelectState == SELECT_INPUT_WAIT_CTRL. return.");
+        SELECTION_HILOGI("[SelectionService] pointerEvent: %{public}d", action);
+        SELECTION_HILOGI("[SelectionService] pointerId: %{public}d", pointerId);
         curSelectState = SELECT_INPUT_INITIAL;
         subSelectState = SUB_INITIAL;
         return;
@@ -342,14 +345,7 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         default:
             break;
     }
-    if (curSelectState == SELECT_INPUT_LEFT_MOVE || curSelectState == SELECT_INPUT_DOUBLE_CLICKED) {
-        // world selection action
-        SELECTION_HILOGI("[SelectionService] first, end word selection action.");
-        InjectCtrlC();
-        SELECTION_HILOGI("[SelectionService] first, end inject ctrl + c.");
-        curSelectState = SELECT_INPUT_INITIAL;
-    }
-
+    FinishedWordSelection();
     return;
 }
 
@@ -393,7 +389,7 @@ void SelectionInputMonitor::InputWordWaitLeftMoveProcess(std::shared_ptr<Pointer
     if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
         if (ctrlSelectFlag) {
             subSelectState = SUB_WAIT_CTRL_DOWN;
-            SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL.");
+            SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL_DOWN.");
         } else {
             curSelectState = SELECT_INPUT_LEFT_MOVE;
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_LEFT_MOVE.");
@@ -422,7 +418,7 @@ void SelectionInputMonitor::InputWordWaitDoubleClickProcess(std::shared_ptr<Poin
         if (curTime - lastClickTime < DOUBLE_CLICK_TIME) {
             if (ctrlSelectFlag) {
                 subSelectState = SUB_WAIT_CTRL_DOWN;
-                SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL.");
+                SELECTION_HILOGI("set subSelectState to SUB_WAIT_CTRL_DOWN.");
             } else {
                 curSelectState = SELECT_INPUT_DOUBLE_CLICKED;
                 subSelectState = SUB_INITIAL;
@@ -443,24 +439,90 @@ void SelectionInputMonitor::InputWordWaitDoubleClickProcess(std::shared_ptr<Poin
     return;
 }
 
+void SelectionInputMonitor::FinishedWordSelection() const
+{
+    if (curSelectState == SELECT_INPUT_LEFT_MOVE || curSelectState == SELECT_INPUT_DOUBLE_CLICKED) {
+        // world selection action
+        SELECTION_HILOGI("[SelectionService] first, end word selection action.");
+        InjectCtrlC();
+        SELECTION_HILOGI("[SelectionService] first, end inject ctrl + c.");
+        curSelectState = SELECT_INPUT_INITIAL;
+    }
+    return;
+}
+
 void SelectionInputMonitor::InjectCtrlC() const
 {
+    // auto keyDownEvent = KeyEvent::Create();
+    // keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
+    // std::vector<int32_t> downKey;
+    // downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
+    // downKey.push_back(KeyEvent::KEYCODE_C);
+    // keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    // keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    
+    // KeyEvent::KeyItem downItem[downKey.size()];
+    // for (size_t i = 0; i < downKey.size(); i++) {
+    //     downItem[i].SetKeyCode(downKey[i]);
+    //     downItem[i].SetPressed(true);
+    //     downItem[i].SetDownTime(500);
+    //     keyDownEvent->AddPressedKeyItems(downItem[i]);
+    // }
+    // InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
+    // 创建KeyEvent对象
+    // auto keyEvent = KeyEvent::Create();
+
+    // // 设置Ctrl键按下
+    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入Ctrl按下
+
+    // // 设置C键按下
+    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_C);
+    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入C按下
+
+    // // 设置C键释放
+    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_UP);
+    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入C释放
+
+    // // 设置Ctrl键释放
+    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_UP);
+    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入Ctrl释放
     auto keyDownEvent = KeyEvent::Create();
     keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
     std::vector<int32_t> downKey;
     downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
     downKey.push_back(KeyEvent::KEYCODE_C);
-    keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    
+
     KeyEvent::KeyItem downItem[downKey.size()];
     for (size_t i = 0; i < downKey.size(); i++) {
+        keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+        keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
         downItem[i].SetKeyCode(downKey[i]);
         downItem[i].SetPressed(true);
         downItem[i].SetDownTime(500);
         keyDownEvent->AddPressedKeyItems(downItem[i]);
     }
     InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
+
+    auto keyUpEvent = KeyEvent::Create();
+    keyUpEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
+    std::vector<int32_t> upKey;
+    upKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
+    upKey.push_back(KeyEvent::KEYCODE_C);
+
+    KeyEvent::KeyItem upItem[upKey.size()];
+    for (size_t i = 0; i < upKey.size(); i++) {
+        keyUpEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+        keyUpEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+        upItem[i].SetKeyCode(upKey[i]);
+        upItem[i].SetPressed(true);
+        upItem[i].SetDownTime(0);
+        keyUpEvent->RemoveReleasedKeyItems(upItem[i]);
+    }
+    InputManager::GetInstance()->SimulateInputEvent(keyUpEvent);
 }
 
 std::shared_ptr<AppExecFwk::EventHandler> SelectionService::GetEventHandler()

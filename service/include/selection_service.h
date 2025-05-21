@@ -116,6 +116,7 @@ private:
     void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitDoubleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void FinishedWordSelection() const;
     void InjectCtrlC() const;
     static uint32_t curSelectState;
     static uint32_t subSelectState;
