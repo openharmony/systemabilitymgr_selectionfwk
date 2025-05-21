@@ -13,9 +13,22 @@
  * limitations under the License.
  */
 
-sequenceable OHOS.IRemoteObject;
-interface OHOS.SelectionFwk.ISelectionService {
-    int AddVolume([in] int volume);
-    void RegisterListener([in] IRemoteObject listener);
-    void UnregisterListener([in] IRemoteObject listener);
+#ifndef SELECTION_LISTENER_IMPL_H
+#define SELECTION_LISTENER_IMPL_H
+#include "refbase.h"
+#include "selection_listener_stub.h"
+#include "selection_interface.h"
+
+namespace OHOS {
+namespace SelectionFwk {
+class SelectionListenerImpl : public SelectionListenerStub {
+public:
+    SelectionListenerImpl(std::shared_ptr<SelectionInterface> selectionI) : selectionI_(selectionI) {}
+    ~SelectionListenerImpl() override = default;
+    ErrCode OnSelectionChange(const std::string& text) override;
+private:
+    std::shared_ptr<SelectionInterface> selectionI_;
+};
 }
+}
+#endif // SELECTION_LISTENER_IMPL_H

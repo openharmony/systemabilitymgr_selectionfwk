@@ -1,11 +1,16 @@
 #include "js_selection_engine_setting.h"
 
 #include "event_checker.h"
+#include "iservice_registry.h"
 #include "js_utils.h"
+#include "callback_handler.h"
 #include "napi/native_node_api.h"
+#include "selection_listener_impl.h"
 #include "selection_log.h"
+#include "system_ability_definition.h"
 #include "util.h"
 
+using namespace OHOS;
 using namespace OHOS::SelectionFwk;
 
 constexpr size_t ARGC_ONE = 1;
@@ -15,6 +20,8 @@ const std::string JsSelectionEngineSetting::KDS_CLASS_NAME = "SelectionAbility";
 thread_local napi_ref JsSelectionEngineSetting::KDSRef_ = nullptr;
 std::mutex JsSelectionEngineSetting::selectionMutex_;
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::selectionDelegate_{ nullptr };
+std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
+std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
 
 
 napi_value JsSelectionEngineSetting::GetSelectionAbility(napi_env env, napi_callback_info info)
@@ -96,6 +103,25 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
     return nullptr;
 }
 
+sptr<ISelectionService> JsSelectionEngineSetting::GetSelectionSystemAbility()
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        SELECTION_HILOGE("system ability manager is nullptr!");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> systemAbility = nullptr;
+    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
+    if (systemAbility == nullptr) {
+        SELECTION_HILOGE("get system ability is nullptr!");
+        return nullptr;
+    }
+
+    abilityManager_ = iface_cast<ISelectionService>(systemAbility);
+    return abilityManager_;
+}
+
 void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string type,
     std::shared_ptr<JSCallbackObject> callbackObj)
 {
@@ -115,6 +141,16 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
 
     SELECTION_HILOGI("add %{public}s callbackObj into jsCbMap_.", type.c_str());
     jsCbMap_[type].push_back(std::move(callbackObj));
+
+    auto proxy = GetSelectionSystemAbility();
+    if (proxy == nullptr) {
+        SELECTION_HILOGE("selection system ability is nullptr!");
+        return;
+    }
+    auto selectionInterface = GetJsSelectionEngineSetting();
+    listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
+    SELECTION_HILOGI("Begin to call SA RegisterListener");
+    proxy->RegisterListener(listenerStub_->AsObject());
 }
 
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
@@ -172,6 +208,10 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
             selectionDelegate_ = delegate;
         }
     }
+    {
+        std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+        handler_ = AppExecFwk::EventHandler::Current();
+    }
     return selectionDelegate_;
 }
 
@@ -221,3 +261,72 @@ napi_value JsSelectionEngineSetting::InitProperty(napi_env env, napi_value expor
     NAPI_CALL(env, napi_set_named_property(env, exports, KDS_CLASS_NAME.c_str(), cons));
     return exports;
 }
+
+std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::GetEventHandler()
+{
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    return handler_;
+}
+
+std::shared_ptr<JsSelectionEngineSetting::SelectionEntry> JsSelectionEngineSetting::GetEntry(const std::string &type,
+    EntrySetter entrySetter)
+{
+    SELECTION_HILOGI("start, type: %{public}s", type.c_str());
+    std::shared_ptr<SelectionEntry> entry = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (jsCbMap_[type].empty()) {
+            SELECTION_HILOGI("%{public}s cb-vector is empty.", type.c_str());
+            return nullptr;
+        }
+        entry = std::make_shared<SelectionEntry>(jsCbMap_[type], type);
+    }
+    if (entrySetter != nullptr) {
+        entrySetter(*entry);
+    }
+    return entry;
+}
+
+int32_t JsSelectionEngineSetting::OnSelectionEvent(const std::string &selectionData)
+{
+    SELECTION_HILOGI("OnSelectionEvent begin");
+    std::string type = "selectionEvent";
+
+    if (selectionData.empty()) {
+        SELECTION_HILOGE("selectionData is empty");
+        return 1;
+    }
+
+    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) { entry.text = selectionData; });
+    if (entry == nullptr) {
+        SELECTION_HILOGE("failed to get uv entry!");
+        return 1;
+    }
+
+    auto eventHandler = GetEventHandler();
+    if (eventHandler == nullptr) {
+        SELECTION_HILOGE("eventHandler is nullptr!");
+        return 1;
+    }
+
+    SELECTION_HILOGI("selectionData is [%{public}s]", selectionData.c_str());
+
+
+    auto task = [entry]() {
+        auto getTextChangeProperty = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
+            if (argc == 0) {
+                return false;
+            }
+            // 0 means the first param of callback.
+            napi_create_string_utf8(env, entry->text.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            return true;
+        };
+        // 1 means callback has one param.
+        JsCallbackHandler::Traverse(entry->vecCopy, { 1, getTextChangeProperty });
+    };
+    eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
+
+    SELECTION_HILOGI("OnSelectionEvent end");
+    return 0;
+}
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,21 @@
  * limitations under the License.
  */
 
-sequenceable OHOS.IRemoteObject;
-interface OHOS.SelectionFwk.ISelectionService {
-    int AddVolume([in] int volume);
-    void RegisterListener([in] IRemoteObject listener);
-    void UnregisterListener([in] IRemoteObject listener);
-}
+#ifndef SELECTION_INTERFACE_H
+#define SELECTION_INTERFACE_H
+
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+
+namespace OHOS {
+namespace SelectionFwk {
+class SelectionInterface {
+public:
+    virtual ~SelectionInterface() = default;
+    virtual int32_t OnSelectionEvent(const std::string &selectionData) = 0;
+};
+} // namespace SelectionFwk
+}  // namespace OHOS
+#endif // SELECTION_INTERFACE_H

@@ -12,33 +12,69 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//build/config/components/idl_tool/idl.gni")
+import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
 
-ohos_shared_library("selectionability") {
-  branch_protector_ret = "pac_ret"
+config("selection_listener_config") {
+  include_dirs = [
+    "include",
+    "../../../utils/include",
+    "${target_gen_dir}",
+    "${selection_fwk_root_path}/common",
+  ]
+}
+
+idl_interface_sources = [
+  "${target_gen_dir}/selection_listener_proxy.cpp",
+  "${target_gen_dir}/selection_listener_stub.cpp",
+]
+
+idl_gen_interface("selection_listener_interface") {
+  src_idl = rebase_path("ISelectionListener.idl")
+  dst_file = string_join(",", idl_interface_sources)
+}
+
+ohos_source_set("selection_listener_proxy") {
   sanitize = {
-    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
-    integer_overflow = true
-    ubsan = true
   }
-  sources = [ 
-    "src/selection_ability.cpp",
-  ]
-
   include_dirs = [
-    ".",
-    "../../../utils/include",
     "${target_gen_dir}",
   ]
 
+  public_configs = [":selection_listener_config"]
+  output_values = get_target_outputs(":selection_listener_interface")
+  sources = filter_include(output_values, [ "*_proxy.cpp" ])
+  deps = [ ":selection_listener_interface" ]
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
-    "napi:ace_napi",
+    "ipc:ipc_single",
+  ]
+  part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
+}
+
+ohos_shared_library("selection_ability") {
+  configs = [ ":selection_listener_config", ]
+  output_values = get_target_outputs(":selection_listener_interface")
+
+  sources = [
+    "src/selection_listener_impl.cpp",
+  ]
+  sources += filter_include(output_values, [ "*.cpp" ])
+  deps = [
+    ":selection_listener_interface",
   ]
 
-  relative_install_dir = "module"
-  subsystem_name = "systemabilitymgr"
+  external_deps = [
+    "c_utils:utils",
+    "ipc:ipc_single",
+    "hilog:libhilog",
+  ]
+
   part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
 }
