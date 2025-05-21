@@ -20,6 +20,7 @@
 #include <string>
 
 #include "callback_object.h"
+#include "iselection_listener.h"
 #include "selection_service_stub.h"
 #include "refbase.h"
 #include "system_ability.h"
@@ -64,6 +65,8 @@ public:
     ~SelectionService();
 
     ErrCode AddVolume(int32_t volume, int32_t& funcResult) override;
+    ErrCode RegisterListener(const sptr<IRemoteObject> &listener) override;
+    ErrCode UnregisterListener(const sptr<IRemoteObject> &listener) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t StartNewAbility(const std::string& bundleName, const std::string& abilityName);
     void StopCurrentAbility();
@@ -73,22 +76,6 @@ protected:
     void HandleKeyEvent(int32_t keyCode);
     void HandlePointEvent(int32_t type);
 private:
-
-    struct SelectionEntry {
-        std::vector<std::shared_ptr<JSCallbackObject>> vecCopy;
-        std::string type;
-        std::string text;
-        SelectionEntry(const std::vector<std::shared_ptr<JSCallbackObject>> &cbVec, const std::string &type)
-            : vecCopy(cbVec), type(type)
-        {
-        }
-    };
-
-    using EntrySetter = std::function<void(SelectionEntry &)>;
-    int32_t OnSelectionEvent(std::string &selectionData);
-    std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);
-    static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
-
     void InputMonitorInit();
     void InputMonitorCancel();
     void WatchParams();
@@ -99,8 +86,6 @@ private:
     std::string currentAbilityName_ = "";
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
-    static std::mutex eventHandlerMutex_;
-    static std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 
 class SelectionInputMonitor : public IInputEventConsumer {

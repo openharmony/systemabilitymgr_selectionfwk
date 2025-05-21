@@ -2,6 +2,8 @@
   global:
     extern "C++" {
       OHOS::SelectionFwk::SelectionService::AddVolume*;
+      OHOS::SelectionFwk::SelectionService::RegisterListener*;
+      OHOS::SelectionFwk::SelectionService::UnregisterListener*;
     };
   local:
     *;

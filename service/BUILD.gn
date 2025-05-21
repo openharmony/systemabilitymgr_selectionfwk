@@ -16,7 +16,7 @@ import("//build/config/components/idl_tool/idl.gni")
 import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
 
 config("selection_sa_config") {
-  visibility = [ ":*" ]
+  # visibility = [ ":*" ]
   include_dirs = [
     "include",
     "../utils/include",
@@ -34,6 +34,29 @@ idl_gen_interface("selection_service_interface") {
   dst_file = string_join(",", idl_interface_sources)
 }
 
+ohos_source_set("selection_service_proxy") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  include_dirs = [
+    "${target_gen_dir}",
+  ]
+
+  public_configs = [":selection_sa_config"]
+  output_values = get_target_outputs(":selection_service_interface")
+  sources = filter_include(output_values, [ "*_proxy.cpp" ])
+  deps = [ ":selection_service_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+  part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
+}
+
 ohos_shared_library("selection_service") {
   configs = [ ":selection_sa_config", ]
   shlib_type = "sa"
@@ -46,7 +69,8 @@ ohos_shared_library("selection_service") {
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
     ":selection_service_interface",
-    "${selection_fwk_root_path}/common:selection_common"
+    "${selection_fwk_root_path}/common:selection_common",
+    "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_listener_proxy",
   ]
 
   external_deps = [

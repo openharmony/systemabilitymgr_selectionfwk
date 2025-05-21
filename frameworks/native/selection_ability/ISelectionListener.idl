@@ -12,10 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-sequenceable OHOS.IRemoteObject;
-interface OHOS.SelectionFwk.ISelectionService {
-    int AddVolume([in] int volume);
-    void RegisterListener([in] IRemoteObject listener);
-    void UnregisterListener([in] IRemoteObject listener);
+interface OHOS.SelectionFwk.ISelectionListener {
+    void OnSelectionChange([in] String text);
 }

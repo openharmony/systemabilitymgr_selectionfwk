@@ -37,6 +37,9 @@ ohos_shared_library("selectionengine_napi") {
 
   deps = [
     "${selection_fwk_root_path}/common:selection_common",
+    "${selection_fwk_root_path}/service:selection_service_proxy",
+    "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_listener_proxy",
+    "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",
   ]
 
   external_deps = [

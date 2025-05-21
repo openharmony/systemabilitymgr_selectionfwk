@@ -23,16 +23,16 @@
 #include <input_manager.h>
 #include "parameter.h"
 #include <chrono>
+#include "common_event_manager.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
 using namespace OHOS::MMI;
+using namespace OHOS::EventFwk;
 
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(SelectionService::GetInstance().GetRefPtr());
 std::shared_mutex SelectionService::adminLock_;
 sptr<SelectionService> SelectionService::instance_;
-std::mutex SelectionService::eventHandlerMutex_;
-std::shared_ptr<AppExecFwk::EventHandler> SelectionService::handler_{ nullptr };
 
 uint32_t SelectionInputMonitor::curSelectState = SELECT_INPUT_INITIAL;
 uint32_t SelectionInputMonitor::subSelectState = SUB_INITIAL;
@@ -70,6 +70,23 @@ ErrCode SelectionService::AddVolume(int32_t volume, int32_t& funcResult)
 {
     SELECTION_HILOGI("[SelectionService][AddVolume]begin");
     return (volume + 1);
+}
+
+ErrCode SelectionService::UnregisterListener(const sptr<IRemoteObject> &listener)
+{
+    return 0;
+}
+
+ErrCode SelectionService::RegisterListener(const sptr<IRemoteObject> &listener)
+{
+    SELECTION_HILOGI("Begin to call SA RegisterListener");
+    auto proxy = iface_cast<ISelectionListener>(listener);
+    if (proxy == nullptr) {
+        SELECTION_HILOGE("RegisterListener: listener is nullptr");
+        return -1;
+    }
+    proxy->OnSelectionChange("HELLO FANZHE");
+    return 0;
 }
 
 int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
@@ -204,11 +221,6 @@ void SelectionService::InputMonitorInit()
         inputMonitorId_ =
             InputManager::GetInstance()->AddMonitor(std::static_pointer_cast<IInputEventConsumer>(inputMonitor));
             SELECTION_HILOGI("[SelectionService] input monitor init end");
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(eventHandlerMutex_);
-        handler_ = AppExecFwk::EventHandler::Current();
     }
 }
 
@@ -345,6 +357,7 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         default:
             break;
     }
+
     FinishedWordSelection();
     return;
 }
@@ -523,54 +536,4 @@ void SelectionInputMonitor::InjectCtrlC() const
         keyUpEvent->RemoveReleasedKeyItems(upItem[i]);
     }
     InputManager::GetInstance()->SimulateInputEvent(keyUpEvent);
-}
-
-std::shared_ptr<AppExecFwk::EventHandler> SelectionService::GetEventHandler()
-{
-    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
-    return handler_;
-}
-
-
-int32_t SelectionService::OnSelectionEvent(std::string &selectionData)
-{
-    SELECTION_HILOGI("OnSelectionEvent begin");
-    std::string type = "selectionEvent";
-
-    if (selectionData.empty()) {
-        SELECTION_HILOGE("selectionData is empty");
-        return 1;
-    }
-
-    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) { entry.text = selectionData; });
-    if (entry == nullptr) {
-        SELECTION_HILOGE("failed to get uv entry!");
-        return 1;
-    }
-
-    auto eventHandler = GetEventHandler();
-    if (eventHandler == nullptr) {
-        SELECTION_HILOGE("eventHandler is nullptr!");
-        return 1;
-    }
-
-    SELECTION_HILOGI("selectionData is [%{public}s]", selectionData.c_str());
-
-
-    auto task = [entry]() {
-        auto getTextChangeProperty = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
-            if (argc == 0) {
-                return false;
-            }
-            // 0 means the first param of callback.
-            napi_create_string_utf8(env, entry->text.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-            return true;
-        };
-        // 1 means callback has one param.
-        JsCallbackHandler::Traverse(entry->vecCopy, { 1, getTextChangeProperty });
-    };
-    eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
-
-    SELECTION_HILOGI("OnSelectionEvent end");
-    return 0;
 }
