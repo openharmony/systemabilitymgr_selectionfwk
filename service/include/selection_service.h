@@ -33,7 +33,7 @@ constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "persist.sys.selection.swit
 constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "persist.sys.selection.trigger.username";
 constexpr const char *SYS_SELECTION_APP_USERNAM = "persist.sys.selection.app.username";
 constexpr const char *SYS_SELECTION_TRIGGER_VAL = "ctrl";
-constexpr const uint32_t DOUBLE_CLICK_TIME = 400;
+constexpr const uint32_t DOUBLE_CLICK_TIME = 500;
 
 typedef enum {
     SELECT_INPUT_INITIAL = 0,
@@ -43,16 +43,15 @@ typedef enum {
     SELECT_INPUT_WAIT_DOUBLE_CLICK = 4,
     SELECT_INPUT_WAIT_TRIBLE_CLICK = 5,
     SELECT_INPUT_DOUBLE_CLICKED = 6,
-
+    SELECT_INPUT_TRIPLE_CLICKED = 7,
 } SelectInputState;
 
 typedef enum {
     SUB_INITIAL = 0,
-    SUB_WAIT_PRESS_DOWN = 1,
-    SUB_WAIT_PRESS_MOVE = 2,
-    SUB_WAIT_PRESS_UP   = 3,
-    SUB_WAIT_CTRL_DOWN = 4,
-    SUB_WAIT_CTRL_UP = 5,
+    SUB_WAIT_POINTER_ACTION_BUTTON_DOWN = 1,
+    SUB_WAIT_POINTER_ACTION_BUTTON_UP   = 2,
+    SUB_WAIT_KEY_CTRL_DOWN = 3,
+    SUB_WAIT_KEY_CTRL_UP = 4,
 } SelectInputSubState;
 
 class SelectionService : public SystemAbility, public SelectionServiceStub {
@@ -101,8 +100,12 @@ private:
     void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitLeftMoveProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitDoubleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InputWordJudgeTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void InputWordWaitTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void FinishedWordSelection() const;
     void InjectCtrlC() const;
+    void ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void JudgeTripleClick() const;
     static uint32_t curSelectState;
     static uint32_t subSelectState;
     static int64_t lastClickTime;
