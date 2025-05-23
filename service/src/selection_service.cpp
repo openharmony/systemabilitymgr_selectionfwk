@@ -77,15 +77,31 @@ ErrCode SelectionService::UnregisterListener(const sptr<IRemoteObject> &listener
     return 0;
 }
 
+sptr<ISelectionListener> SelectionService::GetListenerStub() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return listenerStub_;
+}
+
 ErrCode SelectionService::RegisterListener(const sptr<IRemoteObject> &listener)
 {
-    SELECTION_HILOGI("Begin to call SA RegisterListener");
-    auto proxy = iface_cast<ISelectionListener>(listener);
-    if (proxy == nullptr) {
-        SELECTION_HILOGE("RegisterListener: listener is nullptr");
-        return -1;
+    SELECTION_HILOGD("Begin to call SA RegisterListener");
+    if (listener == nullptr) {
+        SELECTION_HILOGE("RegisterListener: Input listener is nullptr.");
+        return 1;
     }
-    proxy->OnSelectionChange("HELLO FANZHE");
+
+    auto listenerStub = iface_cast<ISelectionListener>(listener);
+    if (listenerStub == nullptr) {
+        SELECTION_HILOGE("RegisterListener: Failed to cast listener to ISelectionListener.");
+        return 1;
+    }
+
+    if (listenerStub_ && listenerStub_ == listenerStub) {
+        SELECTION_HILOGW("RegisterListener: Listener already registered.");
+        return 0;
+    }
+
+    listenerStub_ = listenerStub;
     return 0;
 }
 
@@ -535,6 +551,13 @@ void SelectionInputMonitor::FinishedWordSelection() const
             curSelectState = SELECT_INPUT_INITIAL;
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL");
         }
+
+        // send selection data
+        sptr<ISelectionListener> listener = SelectionService::GetInstance().GetListenerStub();
+        if (listener == nullptr) {
+            SELECTION_HILOGE("get listener is null")
+        }
+        listener->OnSelectionChange("HELLO FANZHE");
     }
     return;
 }
