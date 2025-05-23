@@ -69,6 +69,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t StartNewAbility(const std::string& bundleName, const std::string& abilityName);
     void StopCurrentAbility();
+    sptr<ISelectionListener> GetListener();
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -85,6 +86,8 @@ private:
     std::string currentAbilityName_ = "";
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
+    mutable std::mutex mutex_;
+    sptr<ISelectionListener> listenerStub_ { nullptr };
 };
 
 class SelectionInputMonitor : public IInputEventConsumer {
