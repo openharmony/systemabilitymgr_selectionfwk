@@ -77,7 +77,7 @@ ErrCode SelectionService::UnregisterListener(const sptr<IRemoteObject> &listener
     return 0;
 }
 
-sptr<ISelectionListener> SelectionService::GetListenerStub() const {
+sptr<ISelectionListener> SelectionService::GetListener() {
     std::lock_guard<std::mutex> lock(mutex_);
     return listenerStub_;
 }
@@ -542,9 +542,9 @@ void SelectionInputMonitor::FinishedWordSelection() const
         }
 
         // send selection data
-        sptr<ISelectionListener> listener = SelectionService::GetInstance().GetListenerStub();
+        sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
         if (listener == nullptr) {
-            SELECTION_HILOGE("get listener is null")
+            SELECTION_HILOGE("get listener is null");
         }
         listener->OnSelectionChange("HELLO FANZHE");
     }
