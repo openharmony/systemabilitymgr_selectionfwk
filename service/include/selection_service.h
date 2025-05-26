@@ -19,6 +19,7 @@
 #include <mutex>
 #include <string>
 
+#include "ability_connect_callback_stub.h"
 #include "callback_object.h"
 #include "iselection_listener.h"
 #include "selection_service_stub.h"
@@ -54,6 +55,17 @@ typedef enum {
     SUB_WAIT_KEY_CTRL_UP = 4,
 } SelectInputSubState;
 
+class SelectionExtensionAbilityConnection : public OHOS::AAFwk::AbilityConnectionStub {
+public:
+    SelectionExtensionAbilityConnection() = default;
+    ~SelectionExtensionAbilityConnection() = default;
+    void OnAbilityConnectDone(
+        const OHOS::AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
+    void OnAbilityDisconnectDone(const OHOS::AppExecFwk::ElementName &element, int resultCode) override;
+private:
+    sptr<IRemoteObject> remoteObject_;
+};
+
 class SelectionService : public SystemAbility, public SelectionServiceStub {
     DECLARE_SYSTEM_ABILITY(SelectionService);
 
@@ -67,8 +79,8 @@ public:
     ErrCode RegisterListener(const sptr<IRemoteObject> &listener) override;
     ErrCode UnregisterListener(const sptr<IRemoteObject> &listener) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
-    int32_t StartNewAbility(const std::string& bundleName, const std::string& abilityName);
-    void StopCurrentAbility();
+    int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
+    void DisconnectCurrentExtAbility();
     sptr<ISelectionListener> GetListener();
 protected:
     void OnStart() override;
@@ -81,13 +93,11 @@ private:
     void WatchParams();
 
     int32_t inputMonitorId_ {-1};
-    std::mutex abilityMutex_;
-    std::string currentBundleName_ = "";
-    std::string currentAbilityName_ = "";
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
     mutable std::mutex mutex_;
     sptr<ISelectionListener> listenerStub_ { nullptr };
+    sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
 };
 
 class SelectionInputMonitor : public IInputEventConsumer {

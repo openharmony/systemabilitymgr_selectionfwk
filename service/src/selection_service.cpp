@@ -27,6 +27,7 @@
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
+using namespace OHOS::AppExecFwk;
 using namespace OHOS::MMI;
 using namespace OHOS::EventFwk;
 
@@ -38,6 +39,19 @@ uint32_t SelectionInputMonitor::curSelectState = SELECT_INPUT_INITIAL;
 uint32_t SelectionInputMonitor::subSelectState = SUB_INITIAL;
 int64_t SelectionInputMonitor::lastClickTime = 0;
 bool SelectionInputMonitor::ctrlSelectFlag = false;
+
+void SelectionExtensionAbilityConnection::OnAbilityConnectDone(
+    const ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
+{
+    SELECTION_HILOGI("OnAbilityConnectDone, bundle = %{public}s, ability = %{public}s, resultCode = %{public}d",
+        element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
+}
+void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementName &element, int resultCode)
+{
+    SELECTION_HILOGI("OnAbilityDisconnectDone, bundle = %{public}s,ability = %{public}s, resultCode = %{public}d",
+        element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
+    remoteObject_ = nullptr;
+}
 
 sptr<SelectionService> SelectionService::GetInstance()
 {
@@ -139,43 +153,34 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
     }
 }
 
-void SelectionService::StopCurrentAbility()
+void SelectionService::DisconnectCurrentExtAbility()
 {
-    std::lock_guard<std::mutex> lock(abilityMutex_);
-    if (currentBundleName_.empty() || currentAbilityName_.empty()) {
-        SELECTION_HILOGD("No ability running");
+    SELECTION_HILOGD("Disconnect current extensionAbility");
+    if (connectInner_ == nullptr) {
+        SELECTION_HILOGE("connectInner_ is null");
         return;
     }
-    SELECTION_HILOGD("Stop current ability: %{public}s/%{public}s", currentBundleName_.c_str(),
-        currentAbilityName_.c_str());
 
-    AAFwk::Want want;
-    want.SetElementName(currentBundleName_, currentAbilityName_);
-    int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->StopExtensionAbility(want, nullptr);
+    int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(connectInner_);
     if (ret != ERR_OK) {
-        SELECTION_HILOGE("StopServiceAbility failed, ret: %{public}d", ret);
+        SELECTION_HILOGE("DisconnectServiceAbility failed, ret: %{public}d", ret);
         return;
     }
-
-    currentBundleName_.clear();
-    currentAbilityName_.clear();
 }
 
-int32_t SelectionService::StartNewAbility( const std::string& bundleName, const std::string& abilityName)
+int32_t SelectionService::ConnectNewExtAbility( const std::string& bundleName, const std::string& abilityName)
 {
     SELECTION_HILOGD("Start new SelectionExtension, bundleName:%{public}s, abilityName:%{public}s", bundleName.c_str(),
         abilityName.c_str());
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
+    connectInner_ = new(std::nothrow) SelectionExtensionAbilityConnection();
 
-    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(want, nullptr);
+    auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, connectInner_, -1);
     if (ret != 0) {
         SELECTION_HILOGE("StartExtensionAbility failed %{public}d", ret);
         return ret;
     }
-
-    currentBundleName_ = bundleName;
-    currentAbilityName_ = abilityName;
     SELECTION_HILOGD("StartExtensionAbility success");
     return 0;
 }
@@ -199,8 +204,8 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
     const std::string bundleName = appInfo.substr(0, pos);
     const std::string extName = appInfo.substr(pos + 1);
     SELECTION_HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
-    selectionService->StopCurrentAbility();
-    auto ret = selectionService->StartNewAbility(bundleName, extName);
+    selectionService->DisconnectCurrentExtAbility();
+    auto ret = selectionService->ConnectNewExtAbility(bundleName, extName);
     SELECTION_HILOGD("StartExtensionAbility ret = %{public}d", ret);
 }
 
