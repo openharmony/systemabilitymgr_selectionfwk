@@ -13,4 +13,4 @@
 
 persist.sys.selection.switch.username = off
 persist.sys.selection.trigger.username = ctrl
-persist.sys.selection.app.username = com.hm.youdao
+persist.sys.selection.app.username = com.hm.youdao/ExtensionAbility
