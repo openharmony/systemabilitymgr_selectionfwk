@@ -2,6 +2,7 @@
 
 #include "event_checker.h"
 #include "iservice_registry.h"
+#include "selection_ability.h"
 #include "js_utils.h"
 #include "callback_handler.h"
 #include "napi/native_node_api.h"
@@ -9,6 +10,9 @@
 #include "selection_log.h"
 #include "system_ability_definition.h"
 #include "util.h"
+#include "napi_base_context.h"
+#include "js_panel.h"
+#include "js_selection_utils.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -96,11 +100,76 @@ napi_value JsSelectionEngineSetting::UnSubscribe(napi_env env, napi_callback_inf
     return result;
 }
 
+napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)//namespace AbilityRuntime待补充
+{
+    bool stageMode = false;
+    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, in, stageMode);//IsStageContext()待补充
+    if (status != napi_ok || (!stageMode)) {
+        SELECTION_HILOGE("it's not in stage mode.");
+        return status;
+    }
+    context = OHOS::AbilityRuntime::GetStageModeContext(env, in);//GetStageModeContext()待补充
+    if (context == nullptr) {
+        SELECTION_HILOGE("context is nullptr.");
+        return napi_generic_failure;
+    }
+    return napi_ok;
+}
+
 napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_info info)
 {
-    SELECTION_HILOGI("SelectionEngineSetting---CreatePanel");
+    SELECTION_HILOGI("SelectionEngineSetting CreatePanel start.");
 
-    return nullptr;
+    auto ctxt = std::make_shared<PanelContext>();
+//处理从JavaScript传入的参数验证和转换
+    auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PARAM_CHECK_RETURN(env, argc >= 2, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
+        napi_valuetype valueType = napi_undefined;
+        // 0 means parameter of ctx<BaseContext>
+        napi_typeof(env, argv[0], &valueType);
+        PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
+        napi_status status = GetContext(env, argv[0], ctxt->context);
+        if (status != napi_ok) {
+            return status;
+        }
+        // 1 means parameter of info<PanelInfo>
+        napi_typeof(env, argv[1], &valueType);
+        PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
+            napi_invalid_arg);
+        status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);//参数解析失败，这个需要看下！！！
+        SELECTION_HILOGD(
+        "output js param panelInfo covert , type/flag: %{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType), static_cast<int32_t>(ctxt->panelInfo.panelFlag));
+        PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
+        return status;
+    };
+//执行实际的面板创建操作
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
+        auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
+        ctxt->SetErrorCode(ret);
+        CHECK_RETURN_VOID(ret == ErrorCode::NO_ERROR, "JsSelectionEngineSetting CreatePanel failed!");
+        ctxt->SetState(napi_ok);
+    };
+//处理返回结果，创建JavaScript层的面板对象,
+    auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
+        JsPanel *jsPanel = nullptr;//JsPanel类在Js_panel.h中声明定义
+        napi_value constructor = JsPanel::Init(env);// 初始化JsPanel构造函数
+        CHECK_RETURN(constructor != nullptr, "failed to get panel constructor!", napi_generic_failure);
+
+        napi_status status = napi_new_instance(env, constructor, 0, nullptr, result);
+        CHECK_RETURN(status == napi_ok, "jsPanel new instance failed!", napi_generic_failure);
+
+        status = napi_unwrap(env, *result, (void **)(&jsPanel));
+        CHECK_RETURN((status == napi_ok) && (jsPanel != nullptr), "get jsPanel unwrap failed!", napi_generic_failure);
+        jsPanel->SetNative(ctxt->panel);//SetNative() 在js_panel.cpp实现
+        return napi_ok;
+    };
+
+    ctxt->SetAction(std::move(input), std::move(output));// 设置上下文的操作函数SetAction()
+    // 3 means JsAPI:createPanel has 3 params at most.
+    AsyncCall asyncCall(env, info, ctxt, 3);// 创建异步调用对象（最多3个参数）AsyncCall
+    return asyncCall.Call(env, exec, "createPanel");// 执行异步调用asyncCall.Call()
+    // return nullptr;//测试时临时使用
 }
 
 sptr<ISelectionService> JsSelectionEngineSetting::GetSelectionSystemAbility()

@@ -29,6 +29,10 @@
 #include "refbase.h"
 #include "selection_interface.h"
 #include "util.h"
+#include "async_call.h"
+#include "selection_panel.h"
+#include "panel_info.h"
+#include "context.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -55,9 +59,32 @@ private:
         }
     };
 
+    struct PanelContext : public AsyncCall::Context {
+        PanelInfo panelInfo = PanelInfo();
+        std::shared_ptr<SelectionPanel> panel = nullptr;
+        std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
+        PanelContext() : Context(nullptr, nullptr){};
+        PanelContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)){};
+
+        napi_status operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
+        {
+            CHECK_RETURN(self != nullptr, "self is nullptr", napi_invalid_arg);
+            return Context::operator()(env, argc, argv, self);
+        }
+        napi_status operator()(napi_env env, napi_value *result) override
+        {
+            if (status_ != napi_ok) {
+                output_ = nullptr;
+                return status_;
+            }
+            return Context::operator()(env, result);
+        }
+    };
+
     static napi_value GetSEInstance(napi_env env, napi_callback_info info);
     static napi_value JsConstructor(napi_env env, napi_callback_info cbinfo);
     static napi_value Write(napi_env env, const SelectionData &selectionData);
+    static napi_status GetContext(napi_env env, napi_value in, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
