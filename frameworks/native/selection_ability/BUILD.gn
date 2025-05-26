@@ -21,6 +21,7 @@ config("selection_listener_config") {
     "../../../utils/include",
     "${target_gen_dir}",
     "${selection_fwk_root_path}/common",
+    "../../common",
   ]
 }
 
@@ -62,7 +63,11 @@ ohos_shared_library("selection_ability") {
   output_values = get_target_outputs(":selection_listener_interface")
 
   sources = [
+    "src/selection_ability.cpp",
     "src/selection_listener_impl.cpp",
+    "src/selection_panel.cpp",
+    "src/task_manager.cpp",
+    "src/tasks/task.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
@@ -73,7 +78,22 @@ ohos_shared_library("selection_ability") {
     "c_utils:utils",
     "ipc:ipc_single",
     "hilog:libhilog",
+    "ability_base:configuration",
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "bundle_framework:appexecfwk_base",
+    "config_policy:configpolicy_util",
+    "eventhandler:libeventhandler",
+    "graphic_2d:librender_service_client",
+    "graphic_2d:window_animation",
+    "input:libmmi-client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "window_manager:libdm",
+    "window_manager:libwsutils",
   ]
+
+  public_external_deps = [ "window_manager:libwm" ]
 
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"

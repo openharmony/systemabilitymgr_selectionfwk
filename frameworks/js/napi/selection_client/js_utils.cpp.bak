@@ -15,12 +15,14 @@
 
 #include "js_utils.h"
 
+#include "js_util.h"
+
 namespace OHOS {
-namespace SelectionFwk {
+namespace MiscServices {
 constexpr int32_t STR_MAX_LENGTH = 4096;
 constexpr size_t STR_TAIL_LENGTH = 1;
 constexpr size_t ARGC_MAX = 6;
-
+constexpr size_t ARGC_ONE = 1;
 const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
     { ErrorCode::ERROR_CONTROLLER_INVOKING_FAILED, EXCEPTION_CONTROLLER },
     { ErrorCode::ERROR_STATUS_PERMISSION_DENIED, EXCEPTION_PERMISSION },
@@ -139,12 +141,12 @@ void JsUtils::ThrowException(napi_env env, int32_t err, const std::string &msg, 
     napi_value message;
     if (type == TypeCode::TYPE_NONE) {
         errMsg = errMsg + " " + msg;
-        SELECTION_HILOGE("THROW_ERROR message: %{public}s!", errMsg.c_str());
+        IMSA_HILOGE("THROW_ERROR message: %{public}s!", errMsg.c_str());
     } else {
         auto iter = PARAMETER_TYPE.find(type);
         if (iter != PARAMETER_TYPE.end()) {
             errMsg = errMsg + "The type of " + msg + " must be " + iter->second;
-            SELECTION_HILOGE("THROW_ERROR message: %{public}s!", errMsg.c_str());
+            IMSA_HILOGE("THROW_ERROR message: %{public}s!", errMsg.c_str());
         }
     }
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message));
@@ -156,7 +158,7 @@ void JsUtils::ThrowException(napi_env env, int32_t err, const std::string &msg, 
 
 napi_value JsUtils::ToError(napi_env env, int32_t code, const std::string &msg)
 {
-    SELECTION_HILOGD("ToError start");
+    IMSA_HILOGD("ToError start");
     napi_value errorObj;
     NAPI_CALL(env, napi_create_object(env, &errorObj));
     napi_value errorCode = nullptr;
@@ -166,28 +168,28 @@ napi_value JsUtils::ToError(napi_env env, int32_t code, const std::string &msg)
     NAPI_CALL(env, napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &errorMessage));
     NAPI_CALL(env, napi_set_named_property(env, errorObj, "code", errorCode));
     NAPI_CALL(env, napi_set_named_property(env, errorObj, "message", errorMessage));
-    SELECTION_HILOGD("ToError end");
+    IMSA_HILOGD("ToError end");
     return errorObj;
 }
 
 int32_t JsUtils::Convert(int32_t code)
 {
-    SELECTION_HILOGD("Convert start.");
+    IMSA_HILOGD("Convert start.");
     auto iter = ERROR_CODE_MAP.find(code);
     if (iter != ERROR_CODE_MAP.end()) {
-        SELECTION_HILOGD("ErrorCode: %{public}d", iter->second);
+        IMSA_HILOGD("ErrorCode: %{public}d", iter->second);
         return iter->second;
     }
-    SELECTION_HILOGD("Convert end.");
+    IMSA_HILOGD("Convert end.");
     return ERROR_CODE_QUERY_FAILED;
 }
 
 const std::string JsUtils::ToMessage(int32_t code)
 {
-    SELECTION_HILOGD("ToMessage start");
+    IMSA_HILOGD("ToMessage start");
     auto iter = ERROR_CODE_CONVERT_MESSAGE_MAP.find(code);
     if (iter != ERROR_CODE_CONVERT_MESSAGE_MAP.end()) {
-        SELECTION_HILOGD("ErrorMessage: %{public}s", (iter->second).c_str());
+        IMSA_HILOGD("ErrorMessage: %{public}s", (iter->second).c_str());
         return iter->second;
     }
     return "error is out of definition.";
@@ -200,7 +202,7 @@ bool JsUtils::Equals(napi_env env, napi_value value, napi_ref copy, std::thread:
     }
 
     if (threadId != std::this_thread::get_id()) {
-        SELECTION_HILOGD("napi_value can not be compared");
+        IMSA_HILOGD("napi_value can not be compared");
         return false;
     }
 
@@ -209,7 +211,7 @@ bool JsUtils::Equals(napi_env env, napi_value value, napi_ref copy, std::thread:
 
     bool isEquals = false;
     napi_strict_equals(env, value, copyValue, &isEquals);
-    SELECTION_HILOGD("value compare result: %{public}d", isEquals);
+    IMSA_HILOGD("value compare result: %{public}d", isEquals);
     return isEquals;
 }
 
@@ -230,7 +232,6 @@ void *JsUtils::GetNativeSelf(napi_env env, napi_callback_info info)
 
 napi_status JsUtils::GetValue(napi_env env, napi_value in, int32_t &out)
 {
-    SELECTION_HILOGD("napi_value -> int32_t ");
     napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, in, &type);
     CHECK_RETURN((status == napi_ok) && (type == napi_number), "invalid type", napi_generic_failure);
@@ -265,7 +266,7 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, double &out)
 /* napi_value <-> std::string */
 napi_status JsUtils::GetValue(napi_env env, napi_value in, std::string &out)
 {
-    SELECTION_HILOGD("JsUtils get string value in.");
+    IMSA_HILOGD("JsUtils get string value in.");
     napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, in, &type);
     CHECK_RETURN((status == napi_ok) && (type == napi_string), "invalid type", napi_generic_failure);
@@ -275,7 +276,7 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, std::string &out)
     if (maxLen <= 0) {
         return status;
     }
-    SELECTION_HILOGD("napi_value -> std::string get length %{public}zu", maxLen);
+    IMSA_HILOGD("napi_value -> std::string get length %{public}zu", maxLen);
     char *buf = new (std::nothrow) char[maxLen + STR_TAIL_LENGTH];
     if (buf != nullptr) {
         size_t len = 0;
@@ -292,6 +293,70 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, std::string &out)
 }
 
 /* napi_value <-> std::unordered_map<string, string> */
+napi_status JsUtils::GetValue(napi_env env, napi_value in, std::unordered_map<std::string, PrivateDataValue> &out)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, in, &type);
+    PARAM_CHECK_RETURN(env, type != napi_undefined, "param is undefined.", TYPE_NONE, napi_generic_failure);
+
+    napi_value keys = nullptr;
+    napi_get_property_names(env, in, &keys);
+    uint32_t arrLen = 0;
+    status = napi_get_array_length(env, keys, &arrLen);
+    if (status != napi_ok) {
+        IMSA_HILOGE("napi_get_array_length error");
+        return status;
+    }
+    // 5 means max private command count.
+    PARAM_CHECK_RETURN(env, arrLen <= 5 && arrLen > 0, "privateCommand must more than 0 and less than 5.", TYPE_NONE,
+        napi_generic_failure);
+    IMSA_HILOGD("length : %{public}u", arrLen);
+    for (size_t iter = 0; iter < arrLen; ++iter) {
+        napi_value key = nullptr;
+        status = napi_get_element(env, keys, iter, &key);
+        CHECK_RETURN(status == napi_ok, "napi_get_element error", status);
+
+        napi_value value = nullptr;
+        status = napi_get_property(env, in, key, &value);
+        CHECK_RETURN(status == napi_ok, "napi_get_property error", status);
+
+        std::string keyStr;
+        status = GetValue(env, key, keyStr);
+        CHECK_RETURN(status == napi_ok, "GetValue keyStr error", status);
+
+        PrivateDataValue privateCommand;
+        status = GetValue(env, value, privateCommand);
+        CHECK_RETURN(status == napi_ok, "GetValue privateCommand error", status);
+        out.emplace(keyStr, privateCommand);
+    }
+    return status;
+}
+
+napi_status JsUtils::GetValue(napi_env env, napi_value in, PrivateDataValue &out)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_typeof(env, in, &valueType);
+    CHECK_RETURN(status == napi_ok, "napi_typeof error", napi_generic_failure);
+    if (valueType == napi_string) {
+        std::string privateDataStr;
+        status = GetValue(env, in, privateDataStr);
+        CHECK_RETURN(status == napi_ok, "GetValue napi_string error", napi_generic_failure);
+        out.emplace<std::string>(privateDataStr);
+    } else if (valueType == napi_boolean) {
+        bool privateDataBool = false;
+        status = GetValue(env, in, privateDataBool);
+        CHECK_RETURN(status == napi_ok, "GetValue napi_boolean error", napi_generic_failure);
+        out.emplace<bool>(privateDataBool);
+    } else if (valueType == napi_number) {
+        int32_t privateDataInt = 0;
+        status = GetValue(env, in, privateDataInt);
+        CHECK_RETURN(status == napi_ok, "GetValue napi_number error", napi_generic_failure);
+        out.emplace<int32_t>(privateDataInt);
+    } else {
+        PARAM_CHECK_RETURN(env, false, "value type must be string | boolean | number", TYPE_NONE, napi_generic_failure);
+    }
+    return status;
+}
 
 napi_status JsUtils::GetValue(napi_env env, napi_value in, const std::string &type, napi_value &out)
 {
@@ -304,32 +369,106 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, const std::string &ty
     return napi_generic_failure;
 }
 
-// napi_status JsUtils::GetValue(napi_env env, napi_value in, PanelInfo &out)
-// {
-//     SELECTION_HILOGD("napi_value -> PanelInfo ");
-//     napi_value propType = nullptr;
-//     napi_status status = napi_get_named_property(env, in, "type", &propType);
-//     CHECK_RETURN((status == napi_ok), "no property type ", status);
-//     int32_t panelType = 0;
-//     status = GetValue(env, propType, panelType);
-//     CHECK_RETURN((status == napi_ok), "no value of type ", status);
+/* napi_value <-> PanelInfo */
+napi_status JsUtils::GetValue(napi_env env, napi_value in, PanelInfo &out)
+{
+    IMSA_HILOGD("napi_value -> PanelInfo ");
+    napi_value propType = nullptr;
+    napi_status status = napi_get_named_property(env, in, "type", &propType);
+    CHECK_RETURN((status == napi_ok), "no property type ", status);
+    int32_t panelType = 0;
+    status = GetValue(env, propType, panelType);
+    CHECK_RETURN((status == napi_ok), "no value of type ", status);
 
-//     // PanelFlag is optional, defaults to FLG_FIXED when empty.
-//     int32_t panelFlag = static_cast<int32_t>(PanelFlag::FLG_FIXED);
-//     napi_value panelFlagObj = nullptr;
-//     status = napi_get_named_property(env, in, "flag", &panelFlagObj);
-//     if (status == napi_ok) {
-//         JsUtils::GetValue(env, panelFlagObj, panelFlag);
-//     }
+    // PanelFlag is optional, defaults to FLG_FIXED when empty.
+    int32_t panelFlag = static_cast<int32_t>(PanelFlag::FLG_FIXED);
+    napi_value panelFlagObj = nullptr;
+    status = napi_get_named_property(env, in, "flag", &panelFlagObj);
+    if (status == napi_ok) {
+        JsUtils::GetValue(env, panelFlagObj, panelFlag);
+    }
 
-//     out.panelType = PanelType(panelType);
-//     out.panelFlag = PanelFlag(panelFlag);
-//     return napi_ok;
-// }
+    out.panelType = PanelType(panelType);
+    out.panelFlag = PanelFlag(panelFlag);
+    return napi_ok;
+}
+
+napi_value JsUtils::GetValue(napi_env env, const std::vector<InputWindowInfo> &in)
+{
+    napi_value array = nullptr;
+    uint32_t index = 0;
+    napi_create_array(env, &array);
+    if (array == nullptr) {
+        IMSA_HILOGE("create array failed");
+        return array;
+    }
+    for (const auto &info : in) {
+        napi_value jsInfo = GetValue(env, info);
+        napi_set_element(env, array, index, jsInfo);
+        ++index;
+    }
+    return array;
+}
+
+napi_value JsUtils::GetValue(napi_env env, const InputWindowInfo &in)
+{
+    napi_value info = nullptr;
+    napi_create_object(env, &info);
+
+    napi_value name = nullptr;
+    napi_create_string_utf8(env, in.name.c_str(), in.name.size(), &name);
+    napi_set_named_property(env, info, "name", name);
+
+    napi_value left = nullptr;
+    napi_create_int32(env, in.left, &left);
+    napi_set_named_property(env, info, "left", left);
+
+    napi_value top = nullptr;
+    napi_create_int32(env, in.top, &top);
+    napi_set_named_property(env, info, "top", top);
+
+    napi_value width = nullptr;
+    napi_create_uint32(env, in.width, &width);
+    napi_set_named_property(env, info, "width", width);
+
+    napi_value height = nullptr;
+    napi_create_uint32(env, in.height, &height);
+    napi_set_named_property(env, info, "height", height);
+
+    return info;
+}
 
 napi_status JsUtils::GetValue(napi_env env, const std::string &in, napi_value &out)
 {
     return napi_create_string_utf8(env, in.c_str(), in.size(), &out);
+}
+
+napi_value JsUtils::GetJsPrivateCommand(napi_env env, const std::unordered_map<std::string, PrivateDataValue> &in)
+{
+    napi_value jsPrivateCommand = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &jsPrivateCommand));
+    for (const auto &iter : in) {
+        size_t idx = iter.second.index();
+        napi_value value = nullptr;
+        if (idx == static_cast<size_t>(PrivateDataValueType::VALUE_TYPE_STRING)) {
+            auto stringValue = std::get_if<std::string>(&iter.second);
+            if (stringValue != nullptr) {
+                NAPI_CALL(env, napi_create_string_utf8(env, (*stringValue).c_str(), (*stringValue).size(), &value));
+            }
+        } else if (idx == static_cast<size_t>(PrivateDataValueType::VALUE_TYPE_BOOL)) {
+            auto boolValue = std::get_if<bool>(&iter.second);
+            if (boolValue != nullptr) {
+                NAPI_CALL(env, napi_get_boolean(env, *boolValue, &value));
+            }
+        } else if (idx == static_cast<size_t>(PrivateDataValueType::VALUE_TYPE_NUMBER)) {
+            auto numberValue = std::get_if<int32_t>(&iter.second);
+            if (numberValue != nullptr) {
+                NAPI_CALL(env, napi_create_int32(env, *numberValue, &value));
+            }
+        }
+        NAPI_CALL(env, napi_set_named_property(env, jsPrivateCommand, iter.first.c_str(), value));
+    }
+    return jsPrivateCommand;
 }
 
 napi_value JsUtils::GetValue(napi_env env, const std::vector<uint8_t> &in)
@@ -352,22 +491,77 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, std::vector<uint8_t> 
     void *data = nullptr;
     auto status = napi_get_arraybuffer_info(env, in, &data, &length);
     if (status != napi_ok) {
-        SELECTION_HILOGE("Get ArrayBuffer info failed!");
+        IMSA_HILOGE("Get ArrayBuffer info failed!");
         return status;
     }
     if (data == nullptr && length == 0) {
-        SELECTION_HILOGE("Empty ArrayBuffer.");
+        IMSA_HILOGE("Empty ArrayBuffer.");
         out.clear();
         return napi_ok;
     }
     if (data == nullptr) {
-        SELECTION_HILOGE("ArrayBuffer data is nullptr!");
+        IMSA_HILOGE("ArrayBuffer data is nullptr!");
         return napi_generic_failure;
     }
-    SELECTION_HILOGD("ArrayBuffer data size: %{public}zu.", length);
+    IMSA_HILOGD("ArrayBuffer data size: %{public}zu.", length);
     out.assign(reinterpret_cast<const uint8_t *>(data), reinterpret_cast<const uint8_t *>(data) + length);
     return napi_ok;
 }
 
-} // namespace SelectionFwk
+napi_status JsUtils::GetMessageHandlerCallbackParam(napi_value *argv,
+    const std::shared_ptr<JSMsgHandlerCallbackObject> &jsMessageHandler, const ArrayBuffer &arrayBuffer, size_t size)
+{
+    if (argv == nullptr) {
+        IMSA_HILOGE("argv is nullptr!.");
+        return napi_generic_failure;
+    }
+    if (size < ARGC_ONE) {
+        IMSA_HILOGE("argv size is less than 1!.");
+        return napi_generic_failure;
+    }
+    if (jsMessageHandler == nullptr) {
+        IMSA_HILOGE("jsMessageHandler is nullptr!.");
+        return napi_generic_failure;
+    }
+    napi_value jsMsgId = nullptr;
+    auto status = napi_create_string_utf8(
+        jsMessageHandler->env_, arrayBuffer.msgId.c_str(), NAPI_AUTO_LENGTH, &jsMsgId);
+    if (status != napi_ok) {
+        IMSA_HILOGE("napi_create_string_utf8 failed!.");
+        return napi_generic_failure;
+    }
+    // 0 means the first param index of callback.
+    argv[0] = { jsMsgId };
+    if (arrayBuffer.jsArgc > ARGC_ONE) {
+        napi_value jsMsgParam = JsUtils::GetValue(jsMessageHandler->env_, arrayBuffer.msgParam);
+        if (jsMsgParam == nullptr) {
+            IMSA_HILOGE("Get js messageParam object failed!.");
+            return napi_generic_failure;
+        }
+        // 0 means the second param index of callback.
+        argv[1] = { jsMsgParam };
+    }
+    return napi_ok;
+}
+
+napi_status JsUtils::GetValue(napi_env env, napi_value in, Rosen::Rect &out)
+{
+    bool ret = JsUtil::Object::ReadProperty(env, in, "left", out.posX_);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "top", out.posY_);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "width", out.width_);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "height", out.height_);
+    return ret ? napi_ok : napi_generic_failure;
+}
+
+napi_value JsUtils::GetValue(napi_env env, const Rosen::Rect &in)
+{
+    napi_value jsObject = nullptr;
+    napi_create_object(env, &jsObject);
+    bool ret = JsUtil::Object::WriteProperty(env, jsObject, "left", in.posX_);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "top", in.posY_);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "width", in.width_);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "height", in.height_);
+    return ret ? jsObject : JsUtil::Const::Null(env);
+}
+} // namespace MiscServices
 } // namespace OHOS

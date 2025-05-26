@@ -20,8 +20,10 @@
 
 #include "ability.h"
 #include "selection_log.h"
-#include "callback_object.h"
-#include "util.h"
+#include "selection_panel.h"
+// #include "selection_utils.h"
+#include "js_callback_object.h"
+#include "js_util.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -29,7 +31,7 @@
 
 using Ability = OHOS::AppExecFwk::Ability;
 namespace OHOS {
-namespace SelectionFwk {
+namespace MiscServices {
 enum IMFErrorCode : int32_t {
     EXCEPTION_PERMISSION = 201,
     EXCEPTION_SYSTEM_PERMISSION = 202,
@@ -107,7 +109,7 @@ enum TypeCode : int32_t {
 #define CHECK_RETURN_VOID(condition, message)                      \
     do {                                                           \
         if (!(condition)) {                                        \
-            SELECTION_HILOGE("test (" #condition ") failed: " message); \
+            IMSA_HILOGE("test (" #condition ") failed: " message); \
             return;                                                \
         }                                                          \
     } while (0)
@@ -116,7 +118,7 @@ enum TypeCode : int32_t {
 #define CHECK_RETURN(condition, message, retVal)                   \
     do {                                                           \
         if (!(condition)) {                                        \
-            SELECTION_HILOGE("test (" #condition ") failed: " message); \
+            IMSA_HILOGE("test (" #condition ") failed: " message); \
             return retVal;                                         \
         }                                                          \
     } while (0)
@@ -161,15 +163,21 @@ public:
     static napi_status GetValue(napi_env env, napi_value in, bool &out);
     static napi_status GetValue(napi_env env, napi_value in, double &out);
     static napi_status GetValue(napi_env env, napi_value in, std::string &out);
-
-
+    static napi_status GetValue(napi_env env, napi_value in, std::unordered_map<std::string, PrivateDataValue> &out);
+    static napi_status GetValue(napi_env env, napi_value in, PrivateDataValue &out);
     static napi_status GetValue(napi_env env, napi_value in, const std::string &type, napi_value &out);
-    // static napi_status GetValue(napi_env env, napi_value in, PanelInfo &out);
+    static napi_status GetValue(napi_env env, napi_value in, PanelInfo &out);
     static napi_status GetValue(napi_env env, napi_value in, std::vector<uint8_t> &out);
-
-
+    static napi_status GetValue(napi_env env, napi_value in, Rosen::Rect &out);
+    static napi_value GetValue(napi_env env, const std::vector<InputWindowInfo> &in);
+    static napi_value GetValue(napi_env env, const InputWindowInfo &in);
+    static napi_value GetValue(napi_env env, const Rosen::Rect &in);
+    static napi_value GetJsPrivateCommand(napi_env env, const std::unordered_map<std::string, PrivateDataValue> &in);
     static napi_value GetValue(napi_env env, const std::vector<uint8_t> &in);
     static napi_status GetValue(napi_env env, const std::string &in, napi_value &out);
+    static napi_status GetMessageHandlerCallbackParam(napi_value *argv,
+        const std::shared_ptr<JSMsgHandlerCallbackObject> &jsMessageHandler, const ArrayBuffer &arrayBuffer,
+            size_t size);
 
 private:
     static const std::map<int32_t, int32_t> ERROR_CODE_MAP;

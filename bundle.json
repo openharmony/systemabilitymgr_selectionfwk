@@ -32,7 +32,12 @@
         "ability_base",
         "ability_runtime",
         "window_manager",
-        "resource_management"
+        "resource_management",
+        "graphic_2d",
+        "bundle_framework",
+        "ffrt",
+
+        "config_policy"
       ],
       "third_party": [
       ]

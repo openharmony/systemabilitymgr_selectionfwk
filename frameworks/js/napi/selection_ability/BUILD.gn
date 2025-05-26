@@ -26,13 +26,20 @@ ohos_shared_library("selectionengine_napi") {
   }
   sources = [
     "js_selection_engine_setting.cpp",
+    "panel_listener_impl.cpp",
     "selection_engine_module.cpp",
+    "js_panel.cpp",
+    "../selection_client/async_call.cpp",
+    "../selection_client/js_selection_utils.cpp",
   ]
 
   include_dirs = [
     ".",
     "../../../../utils/include",
     "${target_gen_dir}",
+    "../../../native/selection_ability/include",
+    "../selection_client",
+    "../../../common",
   ]
 
   deps = [
@@ -57,6 +64,9 @@ ohos_shared_library("selectionengine_napi") {
     "window_manager:libwm_lite",
     "resource_management:global_resmgr",
     "ability_runtime:app_context",
+    "ffrt:libffrt",
+    "graphic_2d:librender_service_client",
+    "graphic_2d:window_animation",
   ]
 
   relative_install_dir = "module"
