@@ -350,7 +350,6 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
-    int32_t action = pointerEvent->GetPointerAction();
     int32_t pointerId = pointerEvent->GetPointerId();
     if (curSelectState == SELECT_INPUT_INITIAL && pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
