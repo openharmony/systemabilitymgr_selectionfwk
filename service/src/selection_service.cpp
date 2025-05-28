@@ -240,6 +240,7 @@ void SelectionService::InputMonitorInit()
     SELECTION_HILOGI("[SelectionService] input monitor init");
     std::shared_ptr<SelectionInputMonitor> inputMonitor = std::make_shared<SelectionInputMonitor>();
     if (inputMonitorId_ < 0) {
+        sleep(30);
         inputMonitorId_ =
             InputManager::GetInstance()->AddMonitor(std::static_pointer_cast<IInputEventConsumer>(inputMonitor));
             SELECTION_HILOGI("[SelectionService] input monitor init end");
@@ -298,7 +299,6 @@ void SelectionService::HandlePointEvent(int32_t type)
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
-    SELECTION_HILOGD("[SelectionService] into keyEvent");
     if (!ctrlSelectFlag) {
         return;
     }
@@ -349,11 +349,8 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
-    SELECTION_HILOGD("[SelectionService] into PointerEvent");
     int32_t action = pointerEvent->GetPointerAction();
     int32_t pointerId = pointerEvent->GetPointerId();
-    SELECTION_HILOGD("[SelectionService] pointerEvent: %{public}d", action);
-    SELECTION_HILOGD("[SelectionService] pointerId: %{public}d", pointerId);
     if (curSelectState == SELECT_INPUT_INITIAL && pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
     }
@@ -560,74 +557,63 @@ void SelectionInputMonitor::FinishedWordSelection() const
 
 void SelectionInputMonitor::InjectCtrlC() const
 {
+    // 创建KeyEvent对象
+    auto keyEvent1 = KeyEvent::Create();
+
+    // 设置Ctrl键按下
+    keyEvent1->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    keyEvent1->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    InputManager::GetInstance()->SimulateInputEvent(keyEvent1);
+
+    // 设置C键按下
+    auto keyEvent2 = KeyEvent::Create();
+    keyEvent2->SetKeyCode(KeyEvent::KEYCODE_C);
+    keyEvent2->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    InputManager::GetInstance()->SimulateInputEvent(keyEvent2);
+
+    // 设置C键释放
+    auto keyEvent3 = KeyEvent::Create();
+    keyEvent3->SetKeyCode(KeyEvent::KEYCODE_C);
+    keyEvent3->SetKeyAction(KeyEvent::KEY_ACTION_UP);
+    InputManager::GetInstance()->SimulateInputEvent(keyEvent3);
+
+    // 设置Ctrl键释放
+    auto keyEvent4 = KeyEvent::Create();
+    keyEvent4->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    keyEvent4->SetKeyAction(KeyEvent::KEY_ACTION_UP);
+    InputManager::GetInstance()->SimulateInputEvent(keyEvent4);
+
     // auto keyDownEvent = KeyEvent::Create();
     // keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
     // std::vector<int32_t> downKey;
     // downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
     // downKey.push_back(KeyEvent::KEYCODE_C);
-    // keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    
+
     // KeyEvent::KeyItem downItem[downKey.size()];
     // for (size_t i = 0; i < downKey.size(); i++) {
+    //     keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    //     keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
     //     downItem[i].SetKeyCode(downKey[i]);
     //     downItem[i].SetPressed(true);
     //     downItem[i].SetDownTime(500);
     //     keyDownEvent->AddPressedKeyItems(downItem[i]);
     // }
     // InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
-    // 创建KeyEvent对象
-    // auto keyEvent = KeyEvent::Create();
 
-    // // 设置Ctrl键按下
-    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入Ctrl按下
+    // auto keyUpEvent = KeyEvent::Create();
+    // keyUpEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
+    // std::vector<int32_t> upKey;
+    // upKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
+    // upKey.push_back(KeyEvent::KEYCODE_C);
 
-    // // 设置C键按下
-    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_C);
-    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入C按下
-
-    // // 设置C键释放
-    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_UP);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入C释放
-
-    // // 设置Ctrl键释放
-    // keyEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // keyEvent->SetKeyAction(KeyEvent::KEY_ACTION_UP);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent); // 注入Ctrl释放
-    auto keyDownEvent = KeyEvent::Create();
-    keyDownEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    std::vector<int32_t> downKey;
-    downKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
-    downKey.push_back(KeyEvent::KEYCODE_C);
-
-    KeyEvent::KeyItem downItem[downKey.size()];
-    for (size_t i = 0; i < downKey.size(); i++) {
-        keyDownEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-        keyDownEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-        downItem[i].SetKeyCode(downKey[i]);
-        downItem[i].SetPressed(true);
-        downItem[i].SetDownTime(500);
-        keyDownEvent->AddPressedKeyItems(downItem[i]);
-    }
-    InputManager::GetInstance()->SimulateInputEvent(keyDownEvent);
-
-    auto keyUpEvent = KeyEvent::Create();
-    keyUpEvent->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    std::vector<int32_t> upKey;
-    upKey.push_back(KeyEvent::KEYCODE_CTRL_LEFT);
-    upKey.push_back(KeyEvent::KEYCODE_C);
-
-    KeyEvent::KeyItem upItem[upKey.size()];
-    for (size_t i = 0; i < upKey.size(); i++) {
-        keyUpEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-        keyUpEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-        upItem[i].SetKeyCode(upKey[i]);
-        upItem[i].SetPressed(true);
-        upItem[i].SetDownTime(0);
-        keyUpEvent->RemoveReleasedKeyItems(upItem[i]);
-    }
-    InputManager::GetInstance()->SimulateInputEvent(keyUpEvent);
+    // KeyEvent::KeyItem upItem[upKey.size()];
+    // for (size_t i = 0; i < upKey.size(); i++) {
+    //     keyUpEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    //     keyUpEvent->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
+    //     upItem[i].SetKeyCode(upKey[i]);
+    //     upItem[i].SetPressed(true);
+    //     upItem[i].SetDownTime(0);
+    //     keyUpEvent->RemoveReleasedKeyItems(upItem[i]);
+    // }
+    // InputManager::GetInstance()->SimulateInputEvent(keyUpEvent);
 }
