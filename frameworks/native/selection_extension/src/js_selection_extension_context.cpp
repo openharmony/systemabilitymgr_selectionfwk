@@ -14,39 +14,33 @@
  */
 
 #include "js_selection_extension_context.h"
-
+#include "selection_extension_hilog.h"
 #include "js_error_utils.h"
 #include "js_extension_context.h"
-#include "js_runtime.h"
 #include "js_runtime_utils.h"
 #include "js_utils.h"
-#include "napi_common_start_options.h"
 #include "napi_common_want.h"
-#include "selection_extension_hilog.h"
-#include "start_options.h"
 
 namespace OHOS::AbilityRuntime {
 using namespace OHOS::SelectionFwk;
+
 namespace {
 constexpr int32_t INDEX_ZERO = 0;
-constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t ERROR_CODE_ONE = 1;
 constexpr size_t ARGC_ONE = 1;
-constexpr size_t ARGC_TWO = 2;
-constexpr size_t ARGC_THREE = 3;
 
 class JsSelectionExtensionContext final {
 public:
     explicit JsSelectionExtensionContext(const std::shared_ptr<SelectionExtensionContext>& context) : context_(context)
     {
-        // HILOG_INFO(LOG_CORE, "JsSelectionExtensionContext::JsSelectionExtensionContext is called.");
+        HILOG_INFO("JsSelectionExtensionContext::JsSelectionExtensionContext is called.");
     }
     JsSelectionExtensionContext() = default;
     ~JsSelectionExtensionContext() = default;
 
     static void Finalizer(napi_env env, void* data, void* hint)
     {
-        // HILOG_INFO("JsSelectionExtensionContext::Finalizer is called.");
+        HILOG_INFO("JsSelectionExtensionContext::Finalizer is called.");
         std::unique_ptr<JsSelectionExtensionContext>(static_cast<JsSelectionExtensionContext*>(data));
     }
 
@@ -60,41 +54,30 @@ private:
 
     napi_value OnStartAbility(napi_env env, size_t argc, napi_value* argv)
     {
-        // HILOG_INFO("SelectionExtensionContext OnStartAbility.");
-        // only support one or two or three params
-        PARAM_CHECK_RETURN(env, argc == ARGC_ONE || argc == ARGC_TWO || argc == ARGC_THREE,
-                           "number of param should in [1,3]", TYPE_NONE, CreateJsUndefined(env));
+        HILOG_INFO("SelectionExtensionContext OnStartAbility.");
+        // only support one params
+        PARAM_CHECK_RETURN(env, argc == ARGC_ONE, "number of param should in 1", TYPE_NONE, CreateJsUndefined(env));
         PARAM_CHECK_RETURN(env, JsUtil::GetType(env, argv[0]) == napi_object, "param want type must be Want", TYPE_NONE,
                            JsUtil::Const::Null(env));
         decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(env, argv[INDEX_ZERO], want);
-        // HILOG_INFO("%{public}s bundleName: %{public}s abilityName: %{public}s.", __func__, want.GetBundle().c_str(),
-        //            want.GetElement().GetAbilityName().c_str());
+        HILOG_INFO("%{public}s bundleName: %{public}s abilityName: %{public}s.", __func__, want.GetBundle().c_str(),
+                   want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
-        AAFwk::StartOptions startOptions;
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[INDEX_ONE], &valueType);
-        if (argc > ARGC_ONE && valueType == napi_object) {
-            // HILOG_INFO("OnStartAbility start options is used.");
-            AppExecFwk::UnwrapStartOptions(env, argv[INDEX_ONE], startOptions);
-            unwrapArgc++;
-        }
         napi_value lastParam = argc > unwrapArgc ? argv[unwrapArgc] : nullptr;
         napi_value result = nullptr;
         std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
-        auto asyncTask = [weak = context_, want, startOptions, unwrapArgc, env, task = napiAsyncTask.get()]() {
-            // HILOG_INFO("startAbility start.");
+        auto asyncTask = [weak = context_, want, unwrapArgc, env, task = napiAsyncTask.get()]() {
+            HILOG_INFO("startAbility start.");
             auto context = weak.lock();
             if (context == nullptr) {
-                // HILOG_WRAN("context is released.");
+                HILOG_WARN("context is released.");
                 task->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
                 delete task;
                 return;
             }
-            ErrCode errcode = ERR_OK;
-            (unwrapArgc == 1) ? errcode = context->StartAbility(want)
-                              : errcode = context->StartAbility(want, startOptions);
+            ErrCode errcode = (unwrapArgc == 1) ? context->StartAbility(want) : ERR_INVALID_VALUE;
             if (errcode == 0) {
                 task->Resolve(env, CreateJsUndefined(env));
             } else {
@@ -114,7 +97,7 @@ private:
 
 napi_value CreateJsSelectionExtensionContext(napi_env env, std::shared_ptr<SelectionExtensionContext> context)
 {
-    // HILOG_INFO(LOG_CORE, "CreateJsSelectionExtensionContext begin");
+    HILOG_INFO("CreateJsSelectionExtensionContext begin");
     std::shared_ptr<OHOS::AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     if (context) {
         abilityInfo = context->GetAbilityInfo();
@@ -125,7 +108,7 @@ napi_value CreateJsSelectionExtensionContext(napi_env env, std::shared_ptr<Selec
     napi_wrap(env, objValue, jsContext.release(), JsSelectionExtensionContext::Finalizer, nullptr, nullptr);
 
     const char* moduleName = "JsSelectionExtensionContext";
-    BindNativeFunction(env, objValue, "StartAbility", moduleName, JsSelectionExtensionContext::StartAbility);
+    BindNativeFunction(env, objValue, "startAbility", moduleName, JsSelectionExtensionContext::StartAbility);
     return objValue;
 }
 } // namespace OHOS::AbilityRuntime

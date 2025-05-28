@@ -32,16 +32,4 @@ ErrCode SelectionExtensionContext::StartAbility(const AAFwk::Want& want) const
     return err;
 }
 
-ErrCode SelectionExtensionContext::StartAbility(const AAFwk::Want& want, const AAFwk::StartOptions& startOptions) const
-{
-    HILOG_DEBUG("%{public}s start.", __func__);
-    ErrCode err =
-        AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
-    HILOG_DEBUG("%{public}s ret=%{public}d", __func__, err);
-    if (err != ERR_OK) {
-        HILOG_ERROR("InputMethodExtensionContext::StartAbility failed: %{public}d", err);
-    }
-    return err;
-}
-
 } // namespace OHOS::AbilityRuntime
