@@ -28,7 +28,7 @@ SelectionExtension* SelectionExtension::Create(const std::unique_ptr<Runtime>& r
     }
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
-            HILOG_INFO("Create JsSelectionExtension");
+            HILOG_INFO("create JsSelectionExtension");
             return JsSelectionExtension::Create(runtime);
         default:
             return new SelectionExtension();
@@ -40,7 +40,7 @@ void SelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& record,
                               std::shared_ptr<AbilityHandler>& handler,
                               const sptr<IRemoteObject>& token)
 {
-    HILOG_INFO("call SelectionExtension::Init");
+    HILOG_INFO("call %{public}s", __func__);
     ExtensionBase<SelectionExtensionContext>::Init(record, application, handler, token);
 }
 
