@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+sequenceable selection_interface..OHOS.SelectionFwk.SelectionDataInner;
+
 interface OHOS.SelectionFwk.ISelectionListener {
-    void OnSelectionChange([in] String text);
+    void OnSelectionChange([in] SelectionDataInner selectionDataInner);
 }

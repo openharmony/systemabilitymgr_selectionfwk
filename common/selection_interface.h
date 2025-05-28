@@ -20,13 +20,71 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include "parcel.h"
 
 namespace OHOS {
 namespace SelectionFwk {
+
+struct SelectionData {
+    std::string text { "" };
+    int32_t cursorStartPos = 0;
+    int32_t cursorEndPos = 0;
+    uint32_t windowId = 0;
+    uint32_t bundleID = 0;
+};
+
+struct SelectionDataInner : public Parcelable {
+    std::string text { "" };
+    int32_t cursorStartPos = 0;
+    int32_t cursorEndPos = 0;
+    uint32_t windowId = 0;
+    uint32_t bundleID = 0;
+
+    bool ReadFromParcel(Parcel &in)
+    {
+        text = in.ReadString();
+        cursorEndPos = in.ReadInt32();
+        cursorEndPos = in.ReadInt32();
+        windowId = in.ReadUint32();
+        bundleID = in.ReadUint32();
+        return true;
+    }
+
+    bool Marshalling(Parcel &out) const
+    {
+        if (!out.WriteString(text)) {
+            return false;
+        }
+        if (!out.WriteInt32(cursorStartPos)) {
+            return false;
+        }
+        if (!out.WriteInt32(cursorEndPos)) {
+            return false;
+        }
+        if (!out.WriteUint32(windowId)) {
+            return false;
+        }
+        if (!out.WriteUint32(bundleID)) {
+            return false;
+        }
+        return true;
+    }
+
+    static SelectionDataInner *Unmarshalling(Parcel &in)
+    {
+        SelectionDataInner *data = new (std::nothrow) SelectionDataInner();
+        if (data && !data->ReadFromParcel(in)) {
+            delete data;
+            data = nullptr;
+        }
+        return data;
+    }
+};
+
 class SelectionInterface {
 public:
     virtual ~SelectionInterface() = default;
-    virtual int32_t OnSelectionEvent(const std::string &selectionData) = 0;
+    virtual int32_t OnSelectionEvent(const SelectionData &selectionData) = 0;
 };
 } // namespace SelectionFwk
 }  // namespace OHOS

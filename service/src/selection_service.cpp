@@ -24,6 +24,7 @@
 #include "parameter.h"
 #include <chrono>
 #include "common_event_manager.h"
+#include "selection_interface.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -99,7 +100,7 @@ sptr<ISelectionListener> SelectionService::GetListener() {
 
 ErrCode SelectionService::RegisterListener(const sptr<IRemoteObject> &listener)
 {
-    SELECTION_HILOGD("Begin to call SA RegisterListener");
+    SELECTION_HILOGI("Enter RegisterListener");
     if (listener == nullptr) {
         SELECTION_HILOGE("RegisterListener: Input listener is nullptr.");
         return 1;
@@ -550,7 +551,13 @@ void SelectionInputMonitor::FinishedWordSelection() const
             SELECTION_HILOGE("get listener is null");
             return;
         }
-        listener->OnSelectionChange("HELLO FANZHE");
+        SelectionDataInner data;
+        data.text = "Hello, world!";
+        data.cursorStartPos = 0;
+        data.cursorEndPos = 13;
+        data.windowId = 1001;
+        data.bundleID = 2002;
+        listener->OnSelectionChange(data);
     }
     return;
 }
