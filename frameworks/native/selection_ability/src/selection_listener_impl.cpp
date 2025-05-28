@@ -18,10 +18,22 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-ErrCode SelectionListenerImpl::OnSelectionChange(const std::string& text)
+
+static void CopySelectionData(const SelectionDataInner& src, SelectionData& dst)
 {
-    SELECTION_HILOGI("Recveive selection data: %{public}s", text.c_str());
-    selectionI_->OnSelectionEvent(text);
+    dst.text = src.text;
+    dst.cursorStartPos = src.cursorStartPos;
+    dst.cursorEndPos = src.cursorEndPos;
+    dst.windowId = src.windowId;
+    dst.bundleID = src.bundleID;
+}
+
+ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionDataInner& selectionDataInner)
+{
+    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionDataInner.text.c_str());
+    SelectionData selectionData;
+    CopySelectionData(selectionDataInner, selectionData);
+    selectionI_->OnSelectionEvent(selectionData);
     return 0;
 }
 } // namespace SelectionFramework

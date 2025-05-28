@@ -46,7 +46,7 @@ napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info 
         SELECTION_HILOGE("subscribe failed, type: %{public}s!", type.c_str());
         return nullptr;
     }
-    SELECTION_HILOGE("subscribe type: %{public}s.", type.c_str());
+    SELECTION_HILOGI("subscribe type: %{public}s.", type.c_str());
     auto engine = reinterpret_cast<JsSelectionEngineSetting *>(JsUtils::GetNativeSelf(env, info));
     if (engine == nullptr) {
         return nullptr;
@@ -149,6 +149,10 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
     }
     auto selectionInterface = GetJsSelectionEngineSetting();
     listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
+    if (listenerStub_ == nullptr) {
+        SELECTION_HILOGE("listenerStub_ is nullptr!");
+        return;
+    }
     SELECTION_HILOGI("Begin to call SA RegisterListener");
     proxy->RegisterListener(listenerStub_->AsObject());
 }
@@ -295,19 +299,27 @@ std::shared_ptr<JsSelectionEngineSetting::SelectionEntry> JsSelectionEngineSetti
     return entry;
 }
 
-int32_t JsSelectionEngineSetting::OnSelectionEvent(const std::string &selectionData)
+napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionData &selectionData)
+{
+    napi_value jsObject = nullptr;
+    napi_create_object(env, &jsObject);
+    auto ret = JsUtil::Object::WriteProperty(env, jsObject, "bundleId", selectionData.bundleID);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "winID", selectionData.windowId);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "cursorEndPos", selectionData.cursorEndPos);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "cursorStartPos", selectionData.cursorStartPos);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "text", selectionData.text);
+    SELECTION_HILOGD("write selectionData into object, ret=%{public}s", ret ? "true" : "false");
+    return ret ? jsObject : JsUtil::Const::Null(env);
+}
+
+int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionData &selectionData)
 {
     SELECTION_HILOGI("OnSelectionEvent begin");
     std::string type = "selectionEvent";
 
-    if (selectionData.empty()) {
-        SELECTION_HILOGE("selectionData is empty");
-        return 1;
-    }
-
-    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) { entry.text = selectionData; });
+    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) {entry.selectionData = selectionData; });
     if (entry == nullptr) {
-        SELECTION_HILOGE("failed to get uv entry!");
+        SELECTION_HILOGE("failed to get SelectionEntry entry!");
         return 1;
     }
 
@@ -317,23 +329,25 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const std::string &selectionD
         return 1;
     }
 
-    SELECTION_HILOGI("selectionData is [%{public}s]", selectionData.c_str());
-
-
+    SELECTION_HILOGI("selection text is [%{public}s]", entry->selectionData.text.c_str());
     auto task = [entry]() {
-        auto getTextChangeProperty = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
+        auto paramGetter = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
             if (argc == 0) {
                 return false;
             }
+            napi_value jsObject = Write(env, entry->selectionData);
+            if (jsObject == JsUtil::Const::Null(env)) {
+                SELECTION_HILOGE("jsObject is nullptr!");
+                return false;
+            }
             // 0 means the first param of callback.
-            napi_create_string_utf8(env, entry->text.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            args[0] = jsObject;
             return true;
         };
         // 1 means callback has one param.
-        JsCallbackHandler::Traverse(entry->vecCopy, { 1, getTextChangeProperty });
+        JsCallbackHandler::Traverse(entry->vecCopy, { 1, paramGetter });
     };
     eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
-
     SELECTION_HILOGI("OnSelectionEvent end");
     return 0;
 }
