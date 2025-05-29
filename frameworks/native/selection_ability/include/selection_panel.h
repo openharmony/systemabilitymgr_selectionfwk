@@ -46,6 +46,7 @@ public:
     int32_t ShowPanel();
     int32_t HidePanel();
     int32_t StartMoving();
+    int32_t MoveTo(int32_t x, int32_t y);
     bool IsShowing();
     bool IsHidden();
 
