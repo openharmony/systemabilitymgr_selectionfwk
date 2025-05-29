@@ -310,5 +310,20 @@ int32_t SelectionPanel::StartMoving()
     return ErrorCode::NO_ERROR;
 }
 
+int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
+{
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    if (panelFlag_ == FLG_FIXED) {
+        SELECTION_HILOGE("FLG_FIXED panel can not moveTo!");
+        return ErrorCode::NO_ERROR;
+    }
+    auto ret = window_->MoveTo(x, y);
+    SELECTION_HILOGI("x/y: %{public}d/%{public}d, ret = %{public}d", x, y, ret);
+    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

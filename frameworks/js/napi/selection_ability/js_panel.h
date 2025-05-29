@@ -60,6 +60,7 @@ public:
     static napi_value Show(napi_env env, napi_callback_info info);
     static napi_value Hide(napi_env env, napi_callback_info info);
     static napi_value StartMoving(napi_env env, napi_callback_info info);
+    static napi_value MoveTo(napi_env env, napi_callback_info info);
     void SetNative(const std::shared_ptr<SelectionPanel> &panel);
     std::shared_ptr<SelectionPanel> GetNative();
 private:
@@ -106,6 +107,7 @@ private:
     };
 
     static napi_value JsNew(napi_env env, napi_callback_info info);
+    static void PrintEditorQueueInfoIfTimeout(int64_t start, const JsEventInfo &currentInfo);
     static const std::string CLASS_NAME;
     static thread_local napi_ref panelConstructorRef_;
     std::shared_ptr<SelectionPanel> selectionPanel_ = nullptr;

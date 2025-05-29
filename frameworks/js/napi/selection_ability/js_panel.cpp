@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace SelectionFwk {
+using namespace std::chrono;
 constexpr int32_t MAX_WAIT_TIME = 10;
 const std::string JsPanel::CLASS_NAME = "Panel";
 thread_local napi_ref JsPanel::panelConstructorRef_ = nullptr;
@@ -225,6 +226,59 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
         JsUtils::ThrowException(env, JsUtils::Convert(ret), "failed to start moving", TYPE_NONE);
     }
     return JsUtil::Const::Null(env);
+}
+
+napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
+{
+    auto ctxt = std::make_shared<PanelContentContext>(env, info);
+    auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        napi_status status = napi_generic_failure;
+        PARAM_CHECK_RETURN(env, argc > 1, "at least two parameters is required ", TYPE_NONE, status);
+        // 0 means the first param x<int32_t>
+        PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[0], ctxt->x) == napi_ok, "x type must be number",
+            TYPE_NONE, status);
+        // 1 means the second param y<int32_t>
+        PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[1], ctxt->y) == napi_ok, "y type must be number",
+            TYPE_NONE, status);
+        ctxt->info = { std::chrono::system_clock::now(), JsEvent::MOVE_TO };
+        jsQueue_.Push(ctxt->info);
+        return napi_ok;
+    };
+
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
+        int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        jsQueue_.Wait(ctxt->info);
+        PrintEditorQueueInfoIfTimeout(start, ctxt->info);
+        if (ctxt->selectionPanel == nullptr) {
+            SELECTION_HILOGE("inputMethodPanel_ is nullptr!");
+            jsQueue_.Pop();
+            return;
+        }
+        auto code = ctxt->selectionPanel->MoveTo(ctxt->x, ctxt->y);
+        jsQueue_.Pop();
+        if (code == ErrorCode::ERROR_PARAMETER_CHECK_FAILED) {
+            ctxt->SetErrorCode(code);
+            return;
+        }
+        ctxt->SetState(napi_ok);
+    };
+    ctxt->SetAction(std::move(input));
+    // 3 means JsAPI:moveTo has 3 params at most.
+    AsyncCall asyncCall(env, info, ctxt, 3);
+    return asyncCall.Call(env, exec, "moveTo");
+}
+
+void JsPanel::PrintEditorQueueInfoIfTimeout(int64_t start, const JsEventInfo &currentInfo)
+{
+    int64_t end = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    if (end - start >= MAX_WAIT_TIME) {
+        JsEventInfo frontInfo;
+        auto ret = jsQueue_.GetFront(frontInfo);
+        int64_t frontTime = duration_cast<microseconds>(frontInfo.timestamp.time_since_epoch()).count();
+        int64_t currentTime = duration_cast<microseconds>(currentInfo.timestamp.time_since_epoch()).count();
+        SELECTION_HILOGI("ret:%{public}d,front[%{public}" PRId64 ",%{public}d],current[%{public}" PRId64 ",%{public}d]", ret,
+            frontTime, static_cast<int32_t>(frontInfo.event), currentTime, static_cast<int32_t>(currentInfo.event));
+    }
 }
 
 } // namespace SelectionFwk
