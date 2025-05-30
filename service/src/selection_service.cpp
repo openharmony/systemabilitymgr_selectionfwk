@@ -100,9 +100,9 @@ sptr<ISelectionListener> SelectionService::GetListener() {
 
 ErrCode SelectionService::RegisterListener(const sptr<IRemoteObject> &listener)
 {
-    SELECTION_HILOGI("Enter RegisterListener");
+    SELECTION_HILOGD("Enter RegisterListener");
     if (listener == nullptr) {
-        SELECTION_HILOGE("RegisterListener: Input listener is nullptr.");
+        SELECTION_HILOGE("RegisterListener: selection listener is nullptr.");
         return 1;
     }
 
