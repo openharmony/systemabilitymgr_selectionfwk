@@ -25,6 +25,9 @@
 #include <chrono>
 #include "common_event_manager.h"
 #include "selection_interface.h"
+#include "if_system_ability_manager.h"
+#include "iservice_registry.h"
+#include "screenlock_manager.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -242,7 +245,15 @@ void SelectionService::InputMonitorInit()
     std::shared_ptr<SelectionInputMonitor> inputMonitor = std::make_shared<SelectionInputMonitor>(
         std::make_shared<DefaultSelectionEventListener>());
     if (inputMonitorId_ < 0) {
-        sleep(30);
+        auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        auto remoteObj = sam->GetSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
+        while (remoteObj == nullptr)
+        {
+            SELECTION_HILOGI("GetSystemAbility MULTIMODAL_INPUT_SERVICE_ID failed. wait...");
+            sleep(1);
+            remoteObj = sam->GetSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
+        }
+        SELECTION_HILOGI("GetSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
         inputMonitorId_ =
             InputManager::GetInstance()->AddMonitor(std::static_pointer_cast<IInputEventConsumer>(inputMonitor));
             SELECTION_HILOGI("[SelectionService] input monitor init end");
@@ -261,42 +272,10 @@ void SelectionService::InputMonitorCancel()
 
 void SelectionService::HandleKeyEvent(int32_t keyCode)
 {
-#ifdef HAS_MULTIMODALINPUT_INPUT_PART
-    SELECTION_HILOGI("[YMZ] keyCode: %{public}d", keyCode);
-    int64_t now = static_cast<int64_t>(time(nullptr));
-    if (IsScreenOn()) {
-        this->RefreshActivityInner(now, UserActivityType::USER_ACTIVITY_TYPE_BUTTON, false);
-    } else {
-        if (keyCode == KeyEvent::KEYCODE_F1) {
-            POWER_HILOGI(FEATURE_WAKEUP, "[UL_POWER] Wakeup by double click");
-            std::string reason = "double click";
-            reason.append(std::to_string(keyCode));
-            this->WakeupDevice(now, WakeupDeviceType::WAKEUP_DEVICE_DOUBLE_CLICK, reason);
-        } else if (keyCode >= KeyEvent::KEYCODE_0 && keyCode <= KeyEvent::KEYCODE_NUMPAD_RIGHT_PAREN) {
-            POWER_HILOGI(FEATURE_WAKEUP, "[UL_POWER] Wakeup by keyboard");
-            std::string reason = "keyboard:";
-            reason.append(std::to_string(keyCode));
-            this->WakeupDevice(now, WakeupDeviceType::WAKEUP_DEVICE_KEYBOARD, reason);
-        }
-    }
-#endif
 }
 
 void SelectionService::HandlePointEvent(int32_t type)
 {
-#ifdef HAS_MULTIMODALINPUT_INPUT_PART
-    SELECTION_HILOGI("type: %{public}d", type);
-    int64_t now = static_cast<int64_t>(time(nullptr));
-    if (this->IsScreenOn()) {
-        this->RefreshActivityInner(now, UserActivityType::USER_ACTIVITY_TYPE_ATTENTION, false);
-    } else {
-        if (type == PointerEvent::SOURCE_TYPE_MOUSE) {
-            std::string reason = "mouse click";
-            POWER_HILOGI(FEATURE_WAKEUP, "[UL_POWER] Wakeup by mouse");
-            this->WakeupDevice(now, WakeupDeviceType::WAKEUP_DEVICE_MOUSE, reason);
-        }
-    }
-#endif
 }
 
 void DefaultSelectionEventListener::OnTextSelected()
@@ -371,15 +350,13 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
     return;
 }
 
- void SelectionInputMonitor::ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const
- {
-    curSelectState = SELECT_INPUT_INITIAL;
-    subSelectState = SUB_INITIAL;
-    OnInputEvent(pointerEvent);
- }
-
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
+    bool screenLockedFlag = OHOS::ScreenLock::ScreenLockManager::GetInstance()->IsScreenLocked();
+    if (screenLockedFlag) {
+        SELECTION_HILOGD("It is not screen on.");
+        return;
+    }
     int32_t pointerId = pointerEvent->GetPointerId();
     if (curSelectState == SELECT_INPUT_INITIAL && pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
         return;
@@ -425,6 +402,12 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) c
     SELECTION_HILOGI("[SelectionService] into axisEvent");
 };
 
+void SelectionInputMonitor::ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    curSelectState = SELECT_INPUT_INITIAL;
+    subSelectState = SUB_INITIAL;
+    OnInputEvent(pointerEvent);
+}
 
 void SelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
@@ -585,11 +568,11 @@ void DefaultSelectionEventListener::InjectCtrlC() const
     keyEvent1->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
     keyEvent1->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
     keyEvent1->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    KeyEvent::KeyItem item1;
-    item1.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    item1.SetPressed(true);
-    item1.SetDownTime(500);
-    keyEvent1->AddKeyItem(item1);
+    // KeyEvent::KeyItem item1;
+    // item1.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    // item1.SetPressed(true);
+    // item1.SetDownTime(500);
+    // keyEvent1->AddKeyItem(item1);
     InputManager::GetInstance()->SimulateInputEvent(keyEvent1);
 
     // 设置C键按下
@@ -597,11 +580,11 @@ void DefaultSelectionEventListener::InjectCtrlC() const
     keyEvent2->SetKeyCode(KeyEvent::KEYCODE_C);
     keyEvent2->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
     keyEvent2->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    KeyEvent::KeyItem item2;
-    item2.SetKeyCode(KeyEvent::KEYCODE_C);
-    item2.SetPressed(true);
-    item2.SetDownTime(500);
-    keyEvent2->AddKeyItem(item2);
+    // KeyEvent::KeyItem item2;
+    // item2.SetKeyCode(KeyEvent::KEYCODE_C);
+    // item2.SetPressed(true);
+    // item2.SetDownTime(500);
+    // keyEvent2->AddKeyItem(item2);
     InputManager::GetInstance()->SimulateInputEvent(keyEvent2);
 
     // 设置C键释放
@@ -609,11 +592,11 @@ void DefaultSelectionEventListener::InjectCtrlC() const
     keyEvent3->SetKeyCode(KeyEvent::KEYCODE_C);
     keyEvent3->SetKeyAction(KeyEvent::KEY_ACTION_UP);
     keyEvent3->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    KeyEvent::KeyItem item3;
-    item3.SetKeyCode(KeyEvent::KEYCODE_C);
-    item3.SetPressed(true);
-    item3.SetDownTime(500);
-    keyEvent3->AddKeyItem(item3);
+    // KeyEvent::KeyItem item3;
+    // item3.SetKeyCode(KeyEvent::KEYCODE_C);
+    // item3.SetPressed(true);
+    // item3.SetDownTime(500);
+    // keyEvent3->AddKeyItem(item3);
     InputManager::GetInstance()->SimulateInputEvent(keyEvent3);
 
     // 设置Ctrl键释放
@@ -621,10 +604,10 @@ void DefaultSelectionEventListener::InjectCtrlC() const
     keyEvent4->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
     keyEvent4->SetKeyAction(KeyEvent::KEY_ACTION_UP);
     keyEvent4->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    KeyEvent::KeyItem item4;
-    item4.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    item4.SetPressed(true);
-    item4.SetDownTime(500);
-    keyEvent4->AddKeyItem(item4);
+    // KeyEvent::KeyItem item4;
+    // item4.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
+    // item4.SetPressed(true);
+    // item4.SetDownTime(500);
+    // keyEvent4->AddKeyItem(item4);
     InputManager::GetInstance()->SimulateInputEvent(keyEvent4);
 }
