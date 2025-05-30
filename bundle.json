@@ -36,7 +36,8 @@
         "graphic_2d",
         "bundle_framework",
         "ffrt",
-        "config_policy"
+        "config_policy",
+        "screenlock_mgr"
       ],
       "third_party": [
       ]
