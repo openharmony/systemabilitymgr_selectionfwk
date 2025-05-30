@@ -33,6 +33,10 @@ ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionDataInner& selec
     SELECTION_HILOGI("Recveive selection data: %{public}s", selectionDataInner.text.c_str());
     SelectionData selectionData;
     CopySelectionData(selectionDataInner, selectionData);
+    if (selectionI_ == nullptr) {
+        SELECTION_HILOGI("selectionI_ is nullptr");
+        return 1;
+    }
     selectionI_->OnSelectionEvent(selectionData);
     return 0;
 }

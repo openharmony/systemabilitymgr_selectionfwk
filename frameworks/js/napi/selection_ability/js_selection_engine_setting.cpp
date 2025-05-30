@@ -219,10 +219,10 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
     auto selectionInterface = GetJsSelectionEngineSetting();
     listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
     if (listenerStub_ == nullptr) {
-        SELECTION_HILOGE("listenerStub_ is nullptr!");
+        SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
         return;
     }
-    SELECTION_HILOGI("Begin to call SA RegisterListener");
+    SELECTION_HILOGI("Begin calling SA RegisterListener!");
     proxy->RegisterListener(listenerStub_->AsObject());
 }
 
@@ -283,7 +283,7 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
         if (selectionDelegate_ == nullptr) {
             auto delegate = std::make_shared<JsSelectionEngineSetting>();
             if (delegate == nullptr) {
-                SELECTION_HILOGE("keyboard delegate is nullptr!");
+                SELECTION_HILOGE("JsSelectionEngineSetting is nullptr!");
                 return nullptr;
             }
             selectionDelegate_ = delegate;
@@ -383,7 +383,7 @@ napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionData &se
 
 int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionData &selectionData)
 {
-    SELECTION_HILOGI("OnSelectionEvent begin");
+    SELECTION_HILOGD("OnSelectionEvent begin");
     std::string type = "selectionEvent";
 
     auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) {entry.selectionData = selectionData; });
@@ -417,7 +417,6 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionData &selectio
         JsCallbackHandler::Traverse(entry->vecCopy, { 1, paramGetter });
     };
     eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
-    SELECTION_HILOGI("OnSelectionEvent end");
     return 0;
 }
 
