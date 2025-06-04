@@ -15,22 +15,19 @@
 
 #include "selection_listener_impl.h"
 #include "selection_log.h"
+#include "selection_data_inner.h"
 
 namespace OHOS {
 namespace SelectionFwk {
 
 static void CopySelectionData(const SelectionDataInner& src, SelectionData& dst)
 {
-    dst.text = src.text;
-    dst.cursorStartPos = src.cursorStartPos;
-    dst.cursorEndPos = src.cursorEndPos;
-    dst.windowId = src.windowId;
-    dst.bundleID = src.bundleID;
+    dst = src.data;
 }
 
 ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionDataInner& selectionDataInner)
 {
-    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionDataInner.text.c_str());
+    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionDataInner.data.text.c_str());
     SelectionData selectionData;
     CopySelectionData(selectionDataInner, selectionData);
     if (selectionI_ == nullptr) {

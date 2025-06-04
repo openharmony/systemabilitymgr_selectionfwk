@@ -43,18 +43,18 @@ typedef enum {
     SUB_WAIT_KEY_CTRL_UP = 4,
 } SelectInputSubState;
 
-struct SelectionDataInner;
+struct SelectionData;
 
 class SelectionEventListener {
 public:
-    virtual void OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData) {
+    virtual void OnTextSelected(std::shared_ptr<SelectionData> selectionData) {
     };
     virtual ~SelectionEventListener() = default;
 };
 
 class DefaultSelectionEventListener : public SelectionEventListener {
 public:
-    virtual void OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData);
+    virtual void OnTextSelected(std::shared_ptr<SelectionData> selectionData);
 
 private:
     void InjectCtrlC();
@@ -65,10 +65,12 @@ class SelectionInputMonitor : public IInputEventConsumer {
 public:
     SelectionInputMonitor()
         : selectionEventListener_(std::make_shared<SelectionEventListener>()) {
+        selectionData_ = std::make_shared<SelectionData>();
     }
 
     SelectionInputMonitor(std::shared_ptr<SelectionEventListener> selectionEventListener)
         : selectionEventListener_(selectionEventListener) {
+        selectionData_ = std::make_shared<SelectionData>();
     }
 
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
@@ -90,12 +92,16 @@ private:
     void ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void JudgeTripleClick() const;
     bool IsTextSelected() const;
+    void SaveSelectionStartInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void SaveSelectionType() const;
 
     static uint32_t curSelectState;
     static uint32_t subSelectState;
     static int64_t lastClickTime;
 
     std::shared_ptr<SelectionEventListener> selectionEventListener_;
+    std::shared_ptr<SelectionData> selectionData_;
 };
 }
 

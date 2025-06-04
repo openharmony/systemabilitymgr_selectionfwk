@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-sequenceable selection_interface..OHOS.SelectionFwk.SelectionDataInner;
+sequenceable selection_data_inner..OHOS.SelectionFwk.SelectionDataInner;
 
 interface OHOS.SelectionFwk.ISelectionListener {
     void OnSelectionChange([in] SelectionDataInner selectionDataInner);

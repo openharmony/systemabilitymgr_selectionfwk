@@ -416,8 +416,10 @@ napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionData &se
     napi_create_object(env, &jsObject);
     auto ret = JsUtil::Object::WriteProperty(env, jsObject, "bundleId", selectionData.bundleID);
     ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "winID", selectionData.windowId);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "cursorEndPos", selectionData.cursorEndPos);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "cursorStartPos", selectionData.cursorStartPos);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosX", selectionData.startPosX);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosY", selectionData.startPosY);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosX", selectionData.endPosX);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosY", selectionData.endPosY);
     ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "text", selectionData.text);
     SELECTION_HILOGD("write selectionData into object, ret=%{public}s", ret ? "true" : "false");
     return ret ? jsObject : JsUtil::Const::Null(env);
