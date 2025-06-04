@@ -40,7 +40,7 @@ static int64_t GetCurrentTimeMillis() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
-void DefaultSelectionEventListener::OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData)
+void DefaultSelectionEventListener::OnTextSelected(std::shared_ptr<SelectionData> selectionData)
 {
     SELECTION_HILOGI("End word selection action.");
     InjectCtrlC();
@@ -50,16 +50,10 @@ void DefaultSelectionEventListener::OnTextSelected(std::shared_ptr<SelectionData
         SELECTION_HILOGE("get listener is null");
         return;
     }
-    SelectionDataInner data;
-    data.selectionType = MOVE_SELECTION;
-    data.text = "Hello, world!";
-    data.startPosX = 0;
-    data.startPosY = 13;
-    data.endPosX = 0;
-    data.endPosY = 13;
-    data.windowId = 1001;
-    data.bundleID = 2002;
-    listener->OnSelectionChange(data);
+    selectionData->text = "Hello World."; // TODO modify
+    SelectionDataInner dataInner;
+    dataInner.data = *selectionData;
+    listener->OnSelectionChange(dataInner);
     return;
 }
 
@@ -123,7 +117,8 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         SELECTION_HILOGD("It is not screen on.");
         return;
     }
-    SELECTION_HILOGI("pointerEvent->windowId: %{public}d", pointerEvent->GetTargetWindowId());
+    SELECTION_HILOGI("pointerEvent->windowId: %{public}d, displayId: %{public}d",
+        pointerEvent->GetTargetWindowId(), pointerEvent->GetTargetDisplayId());
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
@@ -187,6 +182,51 @@ void SelectionInputMonitor::ResetProcess(std::shared_ptr<PointerEvent> pointerEv
     OnInputEvent(pointerEvent);
 }
 
+void SelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    int32_t pointerId = pointerEvent->GetPointerId();
+    PointerEvent::PointerItem pointerItem;
+    pointerEvent->GetPointerItem(pointerId, pointerItem);
+    selectionData_->startPosX = pointerItem.GetDisplayX();
+    selectionData_->startPosY = pointerItem.GetDisplayY();
+    selectionData_->endPosX = pointerItem.GetDisplayX();
+    selectionData_->endPosY = pointerItem.GetDisplayY();
+    selectionData_->windowId = pointerEvent->GetTargetWindowId();
+    selectionData_->bundleID = 1; // TODO modify
+}
+
+void SelectionInputMonitor::SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const
+{
+    if (curSelectState != SELECT_INPUT_LEFT_MOVE && curSelectState != SELECT_INPUT_WAIT_LEFT_MOVE) {
+        return;
+    }
+    int32_t pointerId = pointerEvent->GetPointerId();
+    PointerEvent::PointerItem pointerItem;
+    pointerEvent->GetPointerItem(pointerId, pointerItem);
+    selectionData_->endPosX = pointerItem.GetDisplayX();
+    selectionData_->endPosY = pointerItem.GetDisplayY();
+}
+
+void SelectionInputMonitor::SaveSelectionType() const
+{
+    switch (curSelectState) {
+        case SELECT_INPUT_LEFT_MOVE:
+            selectionData_->selectionType = MOVE_SELECTION;
+            break;
+
+        case SELECT_INPUT_DOUBLE_CLICKED:
+            selectionData_->selectionType = DOUBLE_CLICKED_SELECTION;
+            break;
+
+        case SELECT_INPUT_TRIPLE_CLICKED:
+            selectionData_->selectionType = TRIPLE_CLICKED_SELECTION;
+            break;
+
+        default:
+            break;
+    }
+}
+
 void SelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
@@ -195,6 +235,7 @@ void SelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> po
         curSelectState = SELECT_INPUT_WORD_BEGIN;
         subSelectState = SUB_INITIAL;
         lastClickTime = GetCurrentTimeMillis();
+        SaveSelectionStartInfo(pointerEvent);
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WORD_BEGIN.");
     }
     return;
@@ -226,6 +267,7 @@ void SelectionInputMonitor::InputWordWaitLeftMoveProcess(std::shared_ptr<Pointer
             curSelectState = SELECT_INPUT_LEFT_MOVE;
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_LEFT_MOVE.");
         }
+        SaveSelectionEndInfo(pointerEvent);
     } else if (action != PointerEvent::POINTER_ACTION_MOVE) {
         SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.", subSelectState, action);
         ResetProcess(pointerEvent);
@@ -274,6 +316,7 @@ void SelectionInputMonitor::InputWordWaitDoubleClickProcess(std::shared_ptr<Poin
                 subSelectState = SUB_INITIAL;
                 SELECTION_HILOGI("set curSelectState to SELECT_INPUT_DOUBLE_CLICKED.");
             }
+            SaveSelectionEndInfo(pointerEvent);
         } else if (action == PointerEvent::POINTER_ACTION_MOVE) {
             curSelectState = SELECT_INPUT_WAIT_LEFT_MOVE;
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
@@ -313,6 +356,7 @@ void SelectionInputMonitor::InputWordWaitTripleClickProcess(std::shared_ptr<Poin
             subSelectState = SUB_INITIAL;
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_TRIPLE_CLICKED.");
         }
+        SaveSelectionEndInfo(pointerEvent);
     } else if (action == PointerEvent::POINTER_ACTION_MOVE) {
         curSelectState = SELECT_INPUT_WAIT_LEFT_MOVE;
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
@@ -335,10 +379,8 @@ void SelectionInputMonitor::FinishedWordSelection() const
         curSelectState = SELECT_INPUT_INITIAL;
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL");
     }
-
-    std::shared_ptr<SelectionDataInner> selectionData = std::make_shared<SelectionDataInner>();
-
-    selectionEventListener_->OnTextSelected(selectionData);
+    SaveSelectionType();
+    selectionEventListener_->OnTextSelected(selectionData_);
 }
 
 void DefaultSelectionEventListener::SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction)

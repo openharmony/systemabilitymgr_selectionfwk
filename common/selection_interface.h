@@ -20,18 +20,9 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include "parcel.h"
 
 namespace OHOS {
 namespace SelectionFwk {
-
-struct SelectionData {
-    std::string text { "" };
-    int32_t cursorStartPos = 0;
-    int32_t cursorEndPos = 0;
-    uint32_t windowId = 0;
-    uint32_t bundleID = 0;
-};
 
 typedef enum {
     MOVE_SELECTION = 0,
@@ -39,7 +30,7 @@ typedef enum {
     TRIPLE_CLICKED_SELECTION = 2,
 } SelectionType;
 
-struct SelectionDataInner : public Parcelable {
+struct SelectionData {
     SelectionType selectionType;
     std::string text { "" };
     int32_t startPosX = 0;
@@ -48,58 +39,6 @@ struct SelectionDataInner : public Parcelable {
     int32_t endPosY = 0;
     uint32_t windowId = 0;
     uint32_t bundleID = 0;
-
-    bool ReadFromParcel(Parcel &in)
-    {
-        selectionType = static_cast<SelectionType>(in.ReadInt8());
-        text = in.ReadString();
-        startPosX = in.ReadInt32();
-        startPosY = in.ReadInt32();
-        endPosX = in.ReadInt32();
-        endPosY = in.ReadInt32();
-        windowId = in.ReadUint32();
-        bundleID = in.ReadUint32();
-        return true;
-    }
-
-    bool Marshalling(Parcel &out) const
-    {
-        if (!out.WriteInt8(static_cast<int8_t>(selectionType))) {
-            return false;
-        }
-        if (!out.WriteString(text)) {
-            return false;
-        }
-        if (!out.WriteInt32(startPosX)) {
-            return false;
-        }
-        if (!out.WriteInt32(startPosY)) {
-            return false;
-        }
-        if (!out.WriteInt32(endPosX)) {
-            return false;
-        }
-        if (!out.WriteInt32(endPosY)) {
-            return false;
-        }
-        if (!out.WriteUint32(windowId)) {
-            return false;
-        }
-        if (!out.WriteUint32(bundleID)) {
-            return false;
-        }
-        return true;
-    }
-
-    static SelectionDataInner *Unmarshalling(Parcel &in)
-    {
-        SelectionDataInner *data = new (std::nothrow) SelectionDataInner();
-        if (data && !data->ReadFromParcel(in)) {
-            delete data;
-            data = nullptr;
-        }
-        return data;
-    }
 };
 
 class SelectionInterface {
