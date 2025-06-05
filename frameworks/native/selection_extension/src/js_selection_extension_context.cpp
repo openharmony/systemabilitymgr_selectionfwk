@@ -14,12 +14,12 @@
  */
 
 #include "js_selection_extension_context.h"
-#include "selection_extension_hilog.h"
 #include "js_error_utils.h"
 #include "js_extension_context.h"
 #include "js_runtime_utils.h"
 #include "js_utils.h"
 #include "napi_common_want.h"
+#include "selection_log.h"
 
 namespace OHOS::AbilityRuntime {
 using namespace OHOS::SelectionFwk;
@@ -33,14 +33,14 @@ class JsSelectionExtensionContext final {
 public:
     explicit JsSelectionExtensionContext(const std::shared_ptr<SelectionExtensionContext>& context) : context_(context)
     {
-        HILOG_INFO("JsSelectionExtensionContext::JsSelectionExtensionContext is called.");
+        SELECTION_HILOGI("JsSelectionExtensionContext::JsSelectionExtensionContext is called.");
     }
     JsSelectionExtensionContext() = default;
     ~JsSelectionExtensionContext() = default;
 
     static void Finalizer(napi_env env, void* data, void* hint)
     {
-        HILOG_INFO("JsSelectionExtensionContext::Finalizer is called.");
+        SELECTION_HILOGI("JsSelectionExtensionContext::Finalizer is called.");
         std::unique_ptr<JsSelectionExtensionContext>(static_cast<JsSelectionExtensionContext*>(data));
     }
 
@@ -54,7 +54,7 @@ private:
 
     napi_value OnStartAbility(napi_env env, size_t argc, napi_value* argv)
     {
-        HILOG_INFO("SelectionExtensionContext OnStartAbility.");
+        SELECTION_HILOGI("SelectionExtensionContext OnStartAbility.");
         // only support one params
         PARAM_CHECK_RETURN(env, argc == ARGC_ONE, "number of param should in 1", TYPE_NONE, CreateJsUndefined(env));
         PARAM_CHECK_RETURN(env, JsUtil::GetType(env, argv[0]) == napi_object, "param want type must be Want", TYPE_NONE,
@@ -62,17 +62,17 @@ private:
         decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(env, argv[INDEX_ZERO], want);
-        HILOG_INFO("%{public}s bundleName: %{public}s abilityName: %{public}s.", __func__, want.GetBundle().c_str(),
-                   want.GetElement().GetAbilityName().c_str());
+        SELECTION_HILOGI("%{public}s bundleName: %{public}s abilityName: %{public}s.", __func__,
+                         want.GetBundle().c_str(), want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
         napi_value lastParam = argc > unwrapArgc ? argv[unwrapArgc] : nullptr;
         napi_value result = nullptr;
         std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
         auto asyncTask = [weak = context_, want, unwrapArgc, env, task = napiAsyncTask.get()]() {
-            HILOG_INFO("startAbility start.");
+            SELECTION_HILOGI("startAbility start.");
             auto context = weak.lock();
             if (context == nullptr) {
-                HILOG_WARN("context is released.");
+                SELECTION_HILOGW("context is released.");
                 task->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
                 delete task;
                 return;
@@ -97,7 +97,7 @@ private:
 
 napi_value CreateJsSelectionExtensionContext(napi_env env, std::shared_ptr<SelectionExtensionContext> context)
 {
-    HILOG_INFO("CreateJsSelectionExtensionContext begin");
+    SELECTION_HILOGI("CreateJsSelectionExtensionContext begin");
     std::shared_ptr<OHOS::AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     if (context) {
         abilityInfo = context->GetAbilityInfo();
