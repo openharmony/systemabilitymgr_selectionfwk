@@ -16,7 +16,7 @@
 #include "selection_extension.h"
 #include "js_selection_extension.h"
 #include "runtime.h"
-#include "selection_extension_hilog.h"
+#include "selection_log.h"
 
 namespace OHOS::AbilityRuntime {
 using namespace OHOS::AppExecFwk;
@@ -28,7 +28,7 @@ SelectionExtension* SelectionExtension::Create(const std::unique_ptr<Runtime>& r
     }
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
-            HILOG_INFO("create JsSelectionExtension");
+            SELECTION_HILOGI("create JsSelectionExtension");
             return JsSelectionExtension::Create(runtime);
         default:
             return new SelectionExtension();
@@ -40,7 +40,7 @@ void SelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& record,
                               std::shared_ptr<AbilityHandler>& handler,
                               const sptr<IRemoteObject>& token)
 {
-    HILOG_INFO("call %{public}s", __func__);
+    SELECTION_HILOGI("call %{public}s", __func__);
     ExtensionBase<SelectionExtensionContext>::Init(record, application, handler, token);
 }
 

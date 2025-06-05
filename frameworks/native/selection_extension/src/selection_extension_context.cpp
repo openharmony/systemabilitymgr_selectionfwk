@@ -15,7 +15,7 @@
 
 #include "selection_extension_context.h"
 #include "ability_manager_client.h"
-#include "selection_extension_hilog.h"
+#include "selection_log.h"
 
 namespace OHOS::AbilityRuntime {
 const size_t SelectionExtensionContext::CONTEXT_TYPE_ID(std::hash<const char*> {}("SelectionExtensionContext"));
@@ -23,11 +23,11 @@ int32_t SelectionExtensionContext::ILLEGAL_REQUEST_CODE(-1);
 
 ErrCode SelectionExtensionContext::StartAbility(const AAFwk::Want& want) const
 {
-    HILOG_DEBUG("%{public}s begin.", __func__);
+    SELECTION_HILOGD("%{public}s begin.", __func__);
     ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
-    HILOG_DEBUG("%{public}s ret=%{public}d", __func__, err);
+    SELECTION_HILOGD("%{public}s ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
-        HILOG_ERROR("SelectionExtensionContext::StartAbility failed: %{public}d", err);
+        SELECTION_HILOGE("SelectionExtensionContext::StartAbility failed: %{public}d", err);
     }
     return err;
 }

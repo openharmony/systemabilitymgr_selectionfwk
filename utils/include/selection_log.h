@@ -31,17 +31,23 @@ extern "C" {
 #define SELETION_DEBUG_ENABLE 0
 #endif
 
-#define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define HILOG_PRINT(func, fmt, args...)                                                                             \
-    do {                                                                                                       \
-        func(LOG_CORE, "{%{public}s:%{public}d %{public}s()} " fmt, FILENAME, __LINE__, __FUNCTION__, ##args); \
-    } while (false)
+#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define SELECTION_HILOGD(fmt, ...) HILOG_PRINT(HILOG_DEBUG, fmt, ##__VA_ARGS__)
-#define SELECTION_HILOGI(fmt, ...) HILOG_PRINT(HILOG_INFO, fmt, ##__VA_ARGS__)
-#define SELECTION_HILOGW(fmt, ...) HILOG_PRINT(HILOG_WARN, fmt, ##__VA_ARGS__)
-#define SELECTION_HILOGE(fmt, ...) HILOG_PRINT(HILOG_ERROR, fmt, ##__VA_ARGS__)
-#define SELECTION_HILOGF(fmt, ...) HILOG_PRINT(HILOG_FATAL, fmt, ##__VA_ARGS__)
+#define SELECTION_HILOGF(fmt, ...)                                                                         \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_FATAL, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
+                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define SELECTION_HILOGE(fmt, ...)                                                                         \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
+                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define SELECTION_HILOGW(fmt, ...)                                                                        \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
+                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define SELECTION_HILOGI(fmt, ...)                                                                        \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
+                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define SELECTION_HILOGD(fmt, ...)                                                                         \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
+                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 
 namespace ErrorCode {
 // Error Code definition in the input method management system
