@@ -142,11 +142,11 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
     if (strcmp(key, SYS_SELECTION_TRIGGER_USERNAM) == 0) {
         if (strcmp(value, SYS_SELECTION_TRIGGER_VAL) == 0) {
-            SelectionInputMonitor::ctrlSelectFlag = true;
+            BaseSelectionInputMonitor::ctrlSelectFlag = true;
         } else {
-            SelectionInputMonitor::ctrlSelectFlag = false;
+            BaseSelectionInputMonitor::ctrlSelectFlag = false;
         }
-        SELECTION_HILOGI("ctrlSelectFlag is %{public}d", SelectionInputMonitor::ctrlSelectFlag);
+        SELECTION_HILOGI("ctrlSelectFlag is %{public}d", BaseSelectionInputMonitor::ctrlSelectFlag);
     }
 }
 
@@ -235,20 +235,19 @@ void SelectionService::OnStop()
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
-    std::shared_ptr<SelectionInputMonitor> inputMonitor = std::make_shared<SelectionInputMonitor>(
-        std::make_shared<DefaultSelectionEventListener>());
+    std::shared_ptr<IInputEventConsumer> inputMonitor = std::make_shared<SelectionInputMonitor>();
     if (inputMonitorId_ > 0) {
         return;
     }
 
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    auto remoteObj = sam->GetSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
+    auto remoteObj = sam->CheckSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
     while (remoteObj == nullptr) {
-        SELECTION_HILOGI("GetSystemAbility MULTIMODAL_INPUT_SERVICE_ID failed. wait...");
+        SELECTION_HILOGI("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID failed. wait...");
         sleep(1);
-        remoteObj = sam->GetSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
+        remoteObj = sam->CheckSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
     }
-    SELECTION_HILOGI("GetSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
+    SELECTION_HILOGI("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
     inputMonitorId_ = InputManager::GetInstance()->AddMonitor(inputMonitor);
     SELECTION_HILOGI("[SelectionService] input monitor init end");
 }

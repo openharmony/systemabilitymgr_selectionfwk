@@ -410,27 +410,27 @@ std::shared_ptr<JsSelectionEngineSetting::SelectionEntry> JsSelectionEngineSetti
     return entry;
 }
 
-napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionData &selectionData)
+napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionInfo &selectionInfo)
 {
     napi_value jsObject = nullptr;
     napi_create_object(env, &jsObject);
-    auto ret = JsUtil::Object::WriteProperty(env, jsObject, "bundleId", selectionData.bundleID);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "winID", selectionData.windowId);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosX", selectionData.startPosX);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosY", selectionData.startPosY);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosX", selectionData.endPosX);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosY", selectionData.endPosY);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "text", selectionData.text);
-    SELECTION_HILOGD("write selectionData into object, ret=%{public}s", ret ? "true" : "false");
+    auto ret = JsUtil::Object::WriteProperty(env, jsObject, "bundleName", selectionInfo.bundleName);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "winID", selectionInfo.windowId);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosX", selectionInfo.startPosX);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startPosY", selectionInfo.startPosY);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosX", selectionInfo.endPosX);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endPosY", selectionInfo.endPosY);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "text", selectionInfo.text);
+    SELECTION_HILOGD("write selectionInfo into object, ret=%{public}s", ret ? "true" : "false");
     return ret ? jsObject : JsUtil::Const::Null(env);
 }
 
-int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionData &selectionData)
+int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectionInfo)
 {
     SELECTION_HILOGD("OnSelectionEvent begin");
     std::string type = "selectionEvent";
 
-    auto entry = GetEntry(type, [&selectionData](SelectionEntry &entry) {entry.selectionData = selectionData; });
+    auto entry = GetEntry(type, [&selectionInfo](SelectionEntry &entry) {entry.selectionInfo = selectionInfo; });
     if (entry == nullptr) {
         SELECTION_HILOGE("failed to get SelectionEntry entry!");
         return 1;
@@ -442,13 +442,13 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionData &selectio
         return 1;
     }
 
-    SELECTION_HILOGI("selection text is [%{public}s]", entry->selectionData.text.c_str());
+    SELECTION_HILOGI("selection text is [%{public}s]", entry->selectionInfo.text.c_str());
     auto task = [entry]() {
         auto paramGetter = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
             if (argc == 0) {
                 return false;
             }
-            napi_value jsObject = Write(env, entry->selectionData);
+            napi_value jsObject = Write(env, entry->selectionInfo);
             if (jsObject == JsUtil::Const::Null(env)) {
                 SELECTION_HILOGE("jsObject is nullptr!");
                 return false;

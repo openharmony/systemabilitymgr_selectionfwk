@@ -24,34 +24,39 @@ namespace SelectionFwk {
 
 using namespace testing::ext;
 
-class SelectionInputMonitorTest : public testing::Test {
+struct EventStruct {
+    int buttonId;
+    int pointId;
+    int action;
+};
+class BaseSelectionInputMonitorTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    std::shared_ptr<SelectionInputMonitor> inputMonitor = nullptr;
+    std::shared_ptr<BaseSelectionInputMonitor> inputMonitor = nullptr;
 };
 
-void SelectionInputMonitorTest::SetUpTestCase()
+void BaseSelectionInputMonitorTest::SetUpTestCase()
 {
-    std::cout << "SelectionInputMonitorTest SetUpTestCase" << std::endl;
+    std::cout << "BaseSelectionInputMonitorTest SetUpTestCase" << std::endl;
 }
 
-void SelectionInputMonitorTest::TearDownTestCase()
+void BaseSelectionInputMonitorTest::TearDownTestCase()
 {
-    std::cout << "SelectionInputMonitorTest TearDownTestCase" << std::endl;
+    std::cout << "BaseSelectionInputMonitorTest TearDownTestCase" << std::endl;
 }
 
-void SelectionInputMonitorTest::SetUp()
+void BaseSelectionInputMonitorTest::SetUp()
 {
-    std::cout << "SelectionInputMonitorTest SetUp" << std::endl;
-    inputMonitor = std::make_shared<SelectionInputMonitor>(std::make_shared<DefaultSelectionEventListener>());
+    std::cout << "BaseSelectionInputMonitorTest SetUp" << std::endl;
+    inputMonitor = std::make_shared<BaseSelectionInputMonitor>();
 }
 
-void SelectionInputMonitorTest::TearDown()
+void BaseSelectionInputMonitorTest::TearDown()
 {
-    std::cout << "SelectionInputMonitorTest TearDown" << std::endl;
+    std::cout << "BaseSelectionInputMonitorTest TearDown" << std::endl;
 }
 
 /**
@@ -59,35 +64,24 @@ void SelectionInputMonitorTest::TearDown()
  * @tc.desc: param check samgr ready event
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
+HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor001 start " << std::endl;
-    SelectionInputMonitor::ctrlSelectFlag = false;
-    SelectionInputMonitor::lastTextSelectedFlag = false;
+    vector<EventStruct> events = {
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_MOVE},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP}
+    };
 
-    // bool screenLockedFlag = OHOS::ScreenLock::ScreenLockManager::GetInstance()->IsScreenLocked();
-    // if (screenLockedFlag) {
-    //     ASSERT_EQ(true, true);
-    //     return;
-    // }
-
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-    pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    inputMonitor->OnInputEvent(pointEvent);
-
-    pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_MOVE);
-    inputMonitor->OnInputEvent(pointEvent);
-
-    pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerId(PointerEvent::MOUSE_BUTTON_LEFT);
-    pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_UP);
-    inputMonitor->OnInputEvent(pointEvent);
-
-    auto ret = inputMonitor->lastTextSelectedFlag;
+    for (uint16_t i = 0; i < events.size(); i++) {
+        auto event = events[i];
+        std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+        pointEvent->SetButtonId(event.buttonId);
+        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetPointerAction(event.action);
+        inputMonitor->OnInputEvent(pointEvent);
+    }
+    auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
 }
 

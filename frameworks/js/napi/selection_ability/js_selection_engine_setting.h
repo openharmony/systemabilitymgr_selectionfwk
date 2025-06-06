@@ -47,13 +47,13 @@ public:
     static napi_value UnSubscribe(napi_env env, napi_callback_info info);
     static napi_value CreatePanel(napi_env env, napi_callback_info info);
     static napi_value DestroyPanel(napi_env env, napi_callback_info info);
-    int32_t OnSelectionEvent(const SelectionData &selectionData);
+    int32_t OnSelectionEvent(const SelectionInfo &selectionInfo);
 
 private:
     struct SelectionEntry {
         std::vector<std::shared_ptr<JSCallbackObject>> vecCopy;
         std::string type;
-        SelectionData selectionData;
+        SelectionInfo selectionInfo;
         SelectionEntry(const std::vector<std::shared_ptr<JSCallbackObject>> &cbVec, const std::string &type)
             : vecCopy(cbVec), type(type)
         {
@@ -84,7 +84,7 @@ private:
 
     static napi_value GetSEInstance(napi_env env, napi_callback_info info);
     static napi_value JsConstructor(napi_env env, napi_callback_info cbinfo);
-    static napi_value Write(napi_env env, const SelectionData &selectionData);
+    static napi_value Write(napi_env env, const SelectionInfo &selectionInfo);
     static napi_status GetContext(napi_env env, napi_value in, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);

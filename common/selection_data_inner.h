@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include "parcel.h"
 #include "selection_interface.h"
@@ -25,24 +26,23 @@
 namespace OHOS {
 namespace SelectionFwk {
 
-struct SelectionDataInner : public Parcelable {
-    SelectionData data;
+struct SelectionInfoData : public Parcelable {
+    SelectionInfo data;
 
-    bool ReadFromParcel(Parcel &in)
-    {
+    bool ReadFromParcel(Parcel &in) {
         data.selectionType = static_cast<SelectionType>(in.ReadInt8());
         data.text = in.ReadString();
         data.startPosX = in.ReadInt32();
         data.startPosY = in.ReadInt32();
         data.endPosX = in.ReadInt32();
         data.endPosY = in.ReadInt32();
+        data.displayId = in.ReadUint32();
         data.windowId = in.ReadUint32();
-        data.bundleID = in.ReadUint32();
+        data.bundleName = in.ReadString();
         return true;
     }
 
-    bool Marshalling(Parcel &out) const
-    {
+    bool Marshalling(Parcel &out) const {
         if (!out.WriteInt8(static_cast<int8_t>(data.selectionType))) {
             return false;
         }
@@ -61,23 +61,34 @@ struct SelectionDataInner : public Parcelable {
         if (!out.WriteInt32(data.endPosY)) {
             return false;
         }
+        if (!out.WriteUint32(data.displayId)) {
+            return false;
+        }
         if (!out.WriteUint32(data.windowId)) {
             return false;
         }
-        if (!out.WriteUint32(data.bundleID)) {
+        if (!out.WriteString(data.bundleName)) {
             return false;
         }
         return true;
     }
 
-    static SelectionDataInner *Unmarshalling(Parcel &in)
-    {
-        SelectionDataInner *data = new (std::nothrow) SelectionDataInner();
+    static SelectionInfoData *Unmarshalling(Parcel &in) {
+        SelectionInfoData *data = new (std::nothrow) SelectionInfoData();
         if (data && !data->ReadFromParcel(in)) {
             delete data;
             data = nullptr;
         }
         return data;
+    }
+
+    std::string ToString() const {
+        std::ostringstream oss;
+        oss << "SelectionInfo { selectionType: " << data.selectionType << ", text: \"" << data.text << "\" \
+            startPosX: " << data.startPosX << ", startPosY: " << data.startPosY << ", endPosX: " << data.endPosX << ",\
+            endPosY: " << data.endPosY << ", displayId: " << data.displayId << ", windowId: " << data.windowId <<
+            ", bundleName: " << data.bundleName << "}";
+        return oss.str();
     }
 };
 
