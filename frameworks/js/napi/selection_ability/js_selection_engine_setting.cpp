@@ -26,6 +26,8 @@ std::mutex JsSelectionEngineSetting::selectionMutex_;
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::selectionDelegate_{ nullptr };
 std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
+sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
+sptr<ISelectionService> JsSelectionEngineSetting::abilityManager_ { nullptr };
 
 
 napi_value JsSelectionEngineSetting::GetSelectionAbility(napi_env env, napi_callback_info info)
@@ -254,19 +256,19 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
     SELECTION_HILOGI("add %{public}s callbackObj into jsCbMap_.", type.c_str());
     jsCbMap_[type].push_back(std::move(callbackObj));
 
-    auto proxy = GetSelectionSystemAbility();
-    if (proxy == nullptr) {
-        SELECTION_HILOGE("selection system ability is nullptr!");
-        return;
-    }
-    auto selectionInterface = GetJsSelectionEngineSetting();
-    listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
-    if (listenerStub_ == nullptr) {
-        SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
-        return;
-    }
-    SELECTION_HILOGI("Begin calling SA RegisterListener!");
-    proxy->RegisterListener(listenerStub_->AsObject());
+    // auto proxy = GetSelectionSystemAbility();
+    // if (proxy == nullptr) {
+    //     SELECTION_HILOGE("selection system ability is nullptr!");
+    //     return;
+    // }
+    // auto selectionInterface = GetJsSelectionEngineSetting();
+    // listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
+    // if (listenerStub_ == nullptr) {
+    //     SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
+    //     return;
+    // }
+    // SELECTION_HILOGI("Begin calling SA RegisterListener!");
+    // proxy->RegisterListener(listenerStub_->AsObject());
 }
 
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
@@ -339,6 +341,23 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
     return selectionDelegate_;
 }
 
+void JsSelectionEngineSetting::RegisterListerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging)
+{
+    auto proxy = GetSelectionSystemAbility();
+    if (proxy == nullptr) {
+        SELECTION_HILOGE("selection system ability is nullptr!");
+        return;
+    }
+    // auto selectionInterface = GetJsSelectionEngineSetting();
+    listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
+    if (listenerStub_ == nullptr) {
+        SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
+        return;
+    }
+    SELECTION_HILOGI("Begin calling SA RegisterListener!");
+    proxy->RegisterListener(listenerStub_->AsObject());
+}
+
 napi_value JsSelectionEngineSetting::JsConstructor(napi_env env, napi_callback_info cbinfo)
 {
     napi_value thisVar = nullptr;
@@ -356,6 +375,7 @@ napi_value JsSelectionEngineSetting::JsConstructor(napi_env env, napi_callback_i
         SELECTION_HILOGE("failed to wrap: %{public}d!", status);
         return nullptr;
     }
+    RegisterListerToService(delegate);
     return thisVar;
 };
 

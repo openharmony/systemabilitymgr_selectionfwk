@@ -41,6 +41,7 @@ using namespace OHOS::EventFwk;
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(SelectionService::GetInstance().GetRefPtr());
 std::shared_mutex SelectionService::adminLock_;
 sptr<SelectionService> SelectionService::instance_;
+sptr<ISelectionListener> SelectionService::listenerStub_ { nullptr };
 
 void SelectionExtensionAbilityConnection::OnAbilityConnectDone(
     const ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
@@ -101,7 +102,7 @@ sptr<ISelectionListener> SelectionService::GetListener() {
 
 ErrCode SelectionService::RegisterListener(const sptr<IRemoteObject> &listener)
 {
-    SELECTION_HILOGD("Enter RegisterListener");
+    SELECTION_HILOGI("Enter RegisterListener");
     if (listener == nullptr) {
         SELECTION_HILOGE("RegisterListener: selection listener is nullptr.");
         return 1;
@@ -266,16 +267,16 @@ void SelectionService::InitFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] init focus changed monitor");
     FocusMonitorManager::GetInstance().RegisterFocusChangedListener(
-        [this](bool isOnFocused, uint32_t windowId) {
-            HandleFocusChanged(isOnFocused, windowId);
+        [this](bool isOnFocused, int32_t windowId, uint32_t windowType) {
+            HandleFocusChanged(isOnFocused, windowId, windowType);
         });
 }
 
-void SelectionService::HandleFocusChanged(bool isOnFocused, uint32_t windowId)
+void SelectionService::HandleFocusChanged(bool isOnFocused, uint32_t windowId, uint32_t windowType)
 {
     SELECTION_HILOGI("[SelectionService] handle focus changed");
-    if (!isOnFocused) {
-        listenerStub_->FocusChange(windowId);
+    if (!isOnFocused && listenerStub_ != nullptr) {
+        listenerStub_->FocusChange(windowId, windowType);
     }
 }
 

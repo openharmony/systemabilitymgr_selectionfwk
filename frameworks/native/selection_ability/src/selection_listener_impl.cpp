@@ -16,7 +16,7 @@
 #include "selection_listener_impl.h"
 #include "selection_log.h"
 #include "selection_data_inner.h"
-#include "selection_panel.h"
+#include "selection_panel_manger.h"
 
 
 namespace OHOS {
@@ -40,23 +40,27 @@ ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& select
     return 0;
 }
 
-ErrCode SelectionListenerImpl::FocusChange(int32_t windowID)
+ErrCode SelectionListenerImpl::FocusChange(uint32_t windowID, uint32_t windowType)
 {
     SELECTION_HILOGI("Recveive windowID: %{public}d", windowID);
     if (selectionI_ == nullptr) {
-        SELECTION_HILOGI("selectionI_ is nullptr");
+        SELECTION_HILOGE("selectionI_ is nullptr");
         return 1;
     }
 
-    auto selectionPanel = std::make_shared<SelectionPanel>();
-    if (selectionPanel == nullptr) {
-        SELECTION_HILOGE("selectionPanel is nullptr");
-        return 1;
+    auto& panelManager = SelectionPanelManger::GetInstance();
+    if (!panelManager.FindWindowID(windowID)) {
+        return 0;
     }
-    int32_t panelWindowID = selectionPanel->GetWindowId();
-    if (windowID != panelWindowID) {
-        SELECTION_HILOGI("selectionPanel is UnFocus");
-        selectionPanel->HidePanel();
+    if (windowType == PanelType::MENU_PANEL) {
+        SELECTION_HILOGI("hide windowID: %{public}d", windowID);
+        panelManager.GetSelectionPanel(windowID)->HidePanel();
+    }
+
+    if (windowType == PanelType::MAIN_PANEL) {
+        SELECTION_HILOGI("destroy windowID: %{public}d", windowID);
+        panelManager.GetSelectionPanel(windowID)->DestroyPanel();
+        panelManager.RemoveSelectionPanel(windowID);
     }
     return 0;
 }

@@ -31,6 +31,7 @@ ohos_static_library("selection_common") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
