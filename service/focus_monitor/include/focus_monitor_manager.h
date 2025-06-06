@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-using FocusHandle = std::function<void(bool, int32_t)>;
+using FocusHandle = std::function<void(bool, int32_t, uint32_t)>;
 class FocusMonitorManager {
 public:
     static FocusMonitorManager &GetInstance();

@@ -74,7 +74,7 @@ private:
     int32_t height_ = 0;
 
     static std::mutex windowMutex_;
-    static sptr<OHOS::Rosen::Window> window_;
+    sptr<OHOS::Rosen::Window> window_;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
     bool isScbEnable_ { false };
     Rosen::KeyboardLayoutParams keyboardLayoutParams_;

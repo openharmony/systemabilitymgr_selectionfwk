@@ -89,7 +89,8 @@ private:
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
-    sptr<ISelectionService> GetSelectionSystemAbility();
+    static sptr<ISelectionService> GetSelectionSystemAbility();
+    static void RegisterListerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging);
     static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
     using EntrySetter = std::function<void(SelectionEntry &)>;
     std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);
@@ -101,8 +102,8 @@ private:
     static std::mutex selectionMutex_;
     static std::shared_ptr<JsSelectionEngineSetting> selectionDelegate_;
     std::recursive_mutex mutex_;
-    sptr<ISelectionListener> listenerStub_ { nullptr };
-    sptr<ISelectionService> abilityManager_ { nullptr };
+    static sptr<ISelectionListener> listenerStub_;
+    static sptr<ISelectionService> abilityManager_;
     static std::mutex eventHandlerMutex_;
     static std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };

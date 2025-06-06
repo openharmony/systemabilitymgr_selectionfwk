@@ -19,6 +19,7 @@
 #include <utility>
 #include "selection_panel.h"
 #include "selection_log.h"
+#include "selection_panel_manger.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -78,6 +79,7 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
             auto ret = selectionPanel->CreatePanel(context, panelInfo);
             if (ret == ErrorCode::NO_ERROR) {
                 panel = selectionPanel;
+                SelectionPanelManger::GetInstance().AddSelectionPanel(selectionPanel->GetWindowId(), selectionPanel);
                 return true;
             }
             selectionPanel = nullptr;

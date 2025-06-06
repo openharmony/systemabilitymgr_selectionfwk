@@ -72,14 +72,14 @@ private:
     void InputMonitorCancel();
     void WatchParams();
     void InitFocusChangedMonitor();
-    void HandleFocusChanged(bool isOnFocused, uint32_t windowId);
+    void HandleFocusChanged(bool isOnFocused, uint32_t windowId, uint32_t windowType);
 
 
     int32_t inputMonitorId_ {-1};
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
     mutable std::mutex mutex_;
-    sptr<ISelectionListener> listenerStub_ { nullptr };
+    static sptr<ISelectionListener> listenerStub_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
 };
 }

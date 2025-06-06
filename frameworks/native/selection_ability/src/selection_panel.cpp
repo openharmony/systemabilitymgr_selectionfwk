@@ -23,6 +23,7 @@
 #include "scene_board_judgement.h"
 #include "selection_log.h"
 #include "selectionmethod_trace.h"
+#include "selection_panel_manger.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -34,7 +35,6 @@ using WindowState = OHOS::Rosen::WindowState;
 std::atomic<uint32_t> SelectionPanel::sequenceId_ { 0 };
 constexpr int32_t MAXWAITTIME = 30;
 constexpr int32_t WAITTIME = 10;
-sptr<OHOS::Rosen::Window> SelectionPanel::window_ {nullptr};
 std::mutex SelectionPanel::windowMutex_;
 
 SelectionPanel::~SelectionPanel() = default;
