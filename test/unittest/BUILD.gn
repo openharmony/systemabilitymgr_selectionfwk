@@ -28,6 +28,7 @@ ohos_unittest("selection_service_unit_test") {
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service",
+    "${selection_fwk_root_path}/common:selection_common",
   ]
   external_deps = [
     "ability_base:want",

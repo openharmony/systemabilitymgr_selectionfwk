@@ -25,26 +25,27 @@ namespace OHOS {
 namespace SelectionFwk {
 
 typedef enum {
-    MOVE_SELECTION = 0,
-    DOUBLE_CLICKED_SELECTION = 1,
-    TRIPLE_CLICKED_SELECTION = 2,
+    MOVE_SELECTION = 1,
+    DOUBLE_CLICKED_SELECTION = 2,
+    TRIPLE_CLICKED_SELECTION = 3,
 } SelectionType;
 
-struct SelectionData {
+struct SelectionInfo {
     SelectionType selectionType;
-    std::string text { "" };
+    std::string text = "";
     int32_t startPosX = 0;
     int32_t startPosY = 0;
     int32_t endPosX = 0;
     int32_t endPosY = 0;
+    uint32_t displayId = 0;
     uint32_t windowId = 0;
-    uint32_t bundleID = 0;
+    std::string bundleName = "";
 };
 
 class SelectionInterface {
 public:
     virtual ~SelectionInterface() = default;
-    virtual int32_t OnSelectionEvent(const SelectionData &selectionData) = 0;
+    virtual int32_t OnSelectionEvent(const SelectionInfo &selectionInfo) = 0;
 };
 } // namespace SelectionFwk
 }  // namespace OHOS

@@ -18,7 +18,7 @@
 
 #include <string>
 #include <i_input_event_consumer.h>
-
+#include "selection_interface.h"
 namespace OHOS::SelectionFwk {
 using namespace MMI;
 
@@ -43,43 +43,21 @@ typedef enum {
     SUB_WAIT_KEY_CTRL_UP = 4,
 } SelectInputSubState;
 
-struct SelectionData;
-
-class SelectionEventListener {
+class BaseSelectionInputMonitor : public IInputEventConsumer {
 public:
-    virtual void OnTextSelected(std::shared_ptr<SelectionData> selectionData) {
-    };
-    virtual ~SelectionEventListener() = default;
-};
-
-class DefaultSelectionEventListener : public SelectionEventListener {
-public:
-    virtual void OnTextSelected(std::shared_ptr<SelectionData> selectionData);
-
-private:
-    void InjectCtrlC();
-    void SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction);
-};
-
-class SelectionInputMonitor : public IInputEventConsumer {
-public:
-    SelectionInputMonitor()
-        : selectionEventListener_(std::make_shared<SelectionEventListener>()) {
-        selectionData_ = std::make_shared<SelectionData>();
-    }
-
-    SelectionInputMonitor(std::shared_ptr<SelectionEventListener> selectionEventListener)
-        : selectionEventListener_(selectionEventListener) {
-        selectionData_ = std::make_shared<SelectionData>();
+    BaseSelectionInputMonitor() {
     }
 
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
 
+    void ResetState() const;
+    bool IsTextSelected() const;
+    const SelectionInfo& GetSelectionInfo() const;
+
 public:
     static bool ctrlSelectFlag;
-    static bool lastTextSelectedFlag;
 
 private:
     void InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
@@ -91,18 +69,40 @@ private:
     void FinishedWordSelection() const;
     void ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void JudgeTripleClick() const;
-    bool IsTextSelected() const;
     void SaveSelectionStartInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
     void SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
     void SaveSelectionType() const;
+    bool IsSelectionDone() const;
 
-    static uint32_t curSelectState;
-    static uint32_t subSelectState;
-    static int64_t lastClickTime;
+private:
+    mutable uint32_t curSelectState = SELECT_INPUT_INITIAL;
+    mutable uint32_t subSelectState = SUB_INITIAL;
+    mutable int64_t lastClickTime = 0;
 
-    std::shared_ptr<SelectionEventListener> selectionEventListener_;
-    std::shared_ptr<SelectionData> selectionData_;
+    mutable bool isTextSelected_ = false;
+    mutable SelectionInfo selectionInfo_;
 };
+
+class SelectionInputMonitor : public IInputEventConsumer {
+public:
+    SelectionInputMonitor() {
+        delegate_ = std::make_shared<BaseSelectionInputMonitor>();
+    }
+
+    virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
+    virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
+    virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
+
+private:
+    void FinishedWordSelection() const;
+    void OnSelectionTriggered() const;
+    void InjectCtrlC() const;
+    void SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction) const;
+
+private:
+    std::shared_ptr<BaseSelectionInputMonitor> delegate_;
+};
+
 }
 
 #endif // SELECTION_INPUT_MONITOR_H

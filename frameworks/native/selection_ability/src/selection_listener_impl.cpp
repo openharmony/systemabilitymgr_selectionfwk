@@ -22,21 +22,21 @@
 namespace OHOS {
 namespace SelectionFwk {
 
-static void CopySelectionData(const SelectionDataInner& src, SelectionData& dst)
+static void CopySelectionData(const SelectionInfoData& src, SelectionInfo& dst)
 {
     dst = src.data;
 }
 
-ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionDataInner& selectionDataInner)
+ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& selectionInfoData)
 {
-    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionDataInner.data.text.c_str());
-    SelectionData selectionData;
-    CopySelectionData(selectionDataInner, selectionData);
+    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionInfoData.data.text.c_str());
+    SelectionInfo selectionInfo;
+    CopySelectionData(selectionInfoData, selectionInfo);
     if (selectionI_ == nullptr) {
         SELECTION_HILOGI("selectionI_ is nullptr");
         return 1;
     }
-    selectionI_->OnSelectionEvent(selectionData);
+    selectionI_->OnSelectionEvent(selectionInfo);
     return 0;
 }
 

@@ -25,7 +25,7 @@ class SelectionListenerImpl : public SelectionListenerStub {
 public:
     SelectionListenerImpl(std::shared_ptr<SelectionInterface> selectionI) : selectionI_(selectionI) {}
     ~SelectionListenerImpl() override = default;
-    ErrCode OnSelectionChange(const SelectionDataInner& selectionDataInner) override;
+    ErrCode OnSelectionChange(const SelectionInfoData& SelectionInfoData) override;
     ErrCode FocusChange(int32_t windowID)override;
 private:
     std::shared_ptr<SelectionInterface> selectionI_;
