@@ -48,109 +48,105 @@ std::shared_ptr<AppExecFwk::EventHandler> PanelListenerImpl::GetEventHandler()
     return handler_;
 }
 
-void PanelListenerImpl::OnPanelStatus(uint32_t windowId, bool isShow)
+void PanelListenerImpl::OnPanelStatus(uint32_t windowId, const std::string& status)
 {
-    std::string type = isShow ? "show" : "hide";
     auto eventHandler = GetEventHandler();
     if (eventHandler == nullptr) {
         SELECTION_HILOGE("eventHandler is nullptr!");
         return;
     }
-    std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = GetCallback(windowId, type);
-    if (callBack == nullptr) {
+    CallbackVector callBacks = GetCallback(windowId, status);
+    if (callBacks.empty()) {
         SELECTION_HILOGE("callBack is nullptr!");
         return;
     }
-    auto entry = std::make_shared<UvEntry>(callBack);
-    SELECTION_HILOGI("windowId = %{public}u, type = %{public}s", windowId, type.c_str());
-    auto task = [entry]() {
-        SelectionFwk::JsCallbackHandler::Traverse({ entry->cbCopy });
+    SELECTION_HILOGI("OnPanelStatus status: %{public}s", status.c_str());
+    auto task = [callBacks]() {
+        SelectionFwk::JsCallbackHandler::Traverse(callBacks);
     };
-    eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
+    eventHandler->PostTask(task, status, 0, AppExecFwk::EventQueue::Priority::VIP);
 }
 
-void PanelListenerImpl::OnSizeChange(uint32_t windowId, const WindowSize &size)
-{
-    std::string type = "sizeChange";
-    auto eventHandler = GetEventHandler();
-    if (eventHandler == nullptr) {
-        SELECTION_HILOGE("eventHandler is nullptr!");
-        return;
-    }
-    std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = GetCallback(windowId, type);
-    if (callBack == nullptr) {
-        return;
-    }
-    auto entry = std::make_shared<UvEntry>(callBack);
-    entry->size = size;
-    SELECTION_HILOGI("OnSizeChange start. windowId:%{public}u, w:%{public}u, h:%{public}u", windowId, size.width,
-        size.height);
-    auto task = [entry]() {
-        auto gitWindowSizeParams = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
-            if (argc == 0) {
-                return false;
-            }
-            napi_value windowSize = JsWindowSize::Write(env, entry->size);
-            // 0 means the first param of callback.
-            args[0] = { windowSize };
-            return true;
-        };
-        SelectionFwk::JsCallbackHandler::Traverse({ entry->cbCopy }, { 1, gitWindowSizeParams });
-    };
-    eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
-}
+// void PanelListenerImpl::OnSizeChange(uint32_t windowId, const WindowSize &size)
+// {
+//     std::string type = "sizeChange";
+//     auto eventHandler = GetEventHandler();
+//     if (eventHandler == nullptr) {
+//         SELECTION_HILOGE("eventHandler is nullptr!");
+//         return;
+//     }
+//     std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = GetCallback(windowId, type);
+//     if (callBack == nullptr) {
+//         return;
+//     }
+//     auto entry = std::make_shared<UvEntry>(callBack);
+//     entry->size = size;
+//     SELECTION_HILOGI("OnSizeChange start. windowId:%{public}u, w:%{public}u, h:%{public}u", windowId, size.width,
+//         size.height);
+//     auto task = [entry]() {
+//         auto gitWindowSizeParams = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
+//             if (argc == 0) {
+//                 return false;
+//             }
+//             napi_value windowSize = JsWindowSize::Write(env, entry->size);
+//             // 0 means the first param of callback.
+//             args[0] = { windowSize };
+//             return true;
+//         };
+//         SelectionFwk::JsCallbackHandler::Traverse({ entry->cbCopy }, { 1, gitWindowSizeParams });
+//     };
+//     eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
+// }
 
-void PanelListenerImpl::OnSizeChange(
-    uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea, const std::string &event)
-{
-    std::string type = "sizeUpdate";
-    auto eventHandler = GetEventHandler();
-    if (eventHandler == nullptr) {
-        SELECTION_HILOGE("eventHandler is nullptr!");
-        return;
-    }
-    std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = GetCallback(windowId, event);
-    if (callBack == nullptr) {
-        SELECTION_HILOGE("callback is nullptr");
-        return;
-    }
-    auto entry = std::make_shared<UvEntry>(callBack);
-    entry->size = size;
-    entry->keyboardArea = keyboardArea;
-    SELECTION_HILOGI("%{public}s start. windowId:%{public}u, windowSize[%{public}u/%{public}u], "
-                "keyboardArea:[%{public}d/%{public}d/%{public}d/%{public}d]",
-        event.c_str(), windowId, size.width, size.height, keyboardArea.top, keyboardArea.bottom, keyboardArea.left,
-        keyboardArea.right);
-    auto task = [entry]() {
-        auto getWindowSizeParams = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
-            if (argc == 0) {
-                return false;
-            }
-            napi_value windowSize = JsWindowSize::Write(env, entry->size);
-            napi_value jsKeyboardArea = JsKeyboardArea::Write(env, entry->keyboardArea);
-            args[0] = { windowSize };
-            args[1] = { jsKeyboardArea };
-            return true;
-        };
-        // 2 means 'sizeChange' has 2 params
-        SelectionFwk::JsCallbackHandler::Traverse({ entry->cbCopy }, { 2, getWindowSizeParams });
-    };
-    eventHandler->PostTask(task, event, 0, AppExecFwk::EventQueue::Priority::VIP);
-}
+// void PanelListenerImpl::OnSizeChange(
+//     uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea, const std::string &event)
+// {
+    // std::string type = "sizeUpdate";
+    // auto eventHandler = GetEventHandler();
+    // if (eventHandler == nullptr) {
+    //     SELECTION_HILOGE("eventHandler is nullptr!");
+    //     return;
+    // }
+    // std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = GetCallback(windowId, event);
+    // if (callBack == nullptr) {
+    //     SELECTION_HILOGE("callback is nullptr");
+    //     return;
+    // }
+    // auto entry = std::make_shared<UvEntry>(callBack);
+    // entry->size = size;
+    // entry->keyboardArea = keyboardArea;
+    // SELECTION_HILOGI("%{public}s start. windowId:%{public}u, windowSize[%{public}u/%{public}u], "
+    //             "keyboardArea:[%{public}d/%{public}d/%{public}d/%{public}d]",
+    //     event.c_str(), windowId, size.width, size.height, keyboardArea.top, keyboardArea.bottom, keyboardArea.left,
+    //     keyboardArea.right);
+    // auto task = [entry]() {
+    //     auto getWindowSizeParams = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
+    //         if (argc == 0) {
+    //             return false;
+    //         }
+    //         napi_value windowSize = JsWindowSize::Write(env, entry->size);
+    //         napi_value jsKeyboardArea = JsKeyboardArea::Write(env, entry->keyboardArea);
+    //         args[0] = { windowSize };
+    //         args[1] = { jsKeyboardArea };
+    //         return true;
+    //     };
+    //     // 2 means 'sizeChange' has 2 params
+    //     SelectionFwk::JsCallbackHandler::Traverse({ entry->cbCopy }, { 2, getWindowSizeParams });
+    // };
+    // eventHandler->PostTask(task, event, 0, AppExecFwk::EventQueue::Priority::VIP);
+// }
 
 
-std::shared_ptr<SelectionFwk::JSCallbackObject> PanelListenerImpl::GetCallback(uint32_t windowId, const std::string &type)
+CallbackVector PanelListenerImpl::GetCallback(uint32_t windowId, const std::string &type)
 {
-    std::shared_ptr<SelectionFwk::JSCallbackObject> callBack = nullptr;
-    callbacks_.ComputeIfPresent(windowId, [&type, &callBack](uint32_t id, auto callbacks) {
-        auto it = callbacks.find(type);
-        if (it == callbacks.end()) {
-            return !callbacks.empty();
+    CallbackVector callBackVector;
+    callbacks_.ComputeIfPresent(windowId, [&type, &callBackVector](uint32_t id, TypeMap& callbacks) {
+        if (callbacks.find(type) != callbacks.end()) {
+            callBackVector = callbacks[type];
         }
-        callBack = it->second;
         return !callbacks.empty();
     });
-    return callBack;
+    return callBackVector;
 }
 
 napi_value JsWindowSize::Write(napi_env env, const WindowSize &nativeObject)
@@ -192,25 +188,48 @@ bool JsKeyboardArea::Read(napi_env env, napi_value jsObject, PanelAdjustInfo &na
 void PanelListenerImpl::Subscribe(uint32_t windowId, const std::string &type,
     std::shared_ptr<JSCallbackObject> cbObject)
 {
-    callbacks_.Compute(windowId,
-        [cbObject, &type](auto windowId, std::map<std::string, std::shared_ptr<JSCallbackObject>> &cbs) {
-            auto [it, insert] = cbs.try_emplace(type, cbObject);
-            if (insert) {
-                SELECTION_HILOGI("start to subscribe type: %{public}s of windowId: %{public}u.", type.c_str(), windowId);
-            } else {
-                SELECTION_HILOGD("type: %{public}s of windowId: %{public}u already subscribed.", type.c_str(), windowId);
-            }
+    callbacks_.Compute(windowId, [cbObject, &type](auto windowId, TypeMap& cbs) {
+        if (cbs.find(type) == cbs.end()) {
+            cbs.try_emplace(type, CallbackVector {cbObject});
             return !cbs.empty();
-        });
+        }
+        auto it = std::find_if(
+            cbs[type].begin(), cbs[type].end(),
+            [cbObject](const std::shared_ptr<JSCallbackObject>& vecCbObject) { return *vecCbObject == *cbObject; });
+        if (it == cbs[type].end()) {
+            cbs[type].emplace_back(cbObject);
+            SELECTION_HILOGI("start to subscribe type: %{public}s of windowId: %{public}u.", type.c_str(), windowId);
+        } else {
+            SELECTION_HILOGI("type: %{public}s of windowId: %{public}u already subscribed.", type.c_str(), windowId);
+        }
+        return !cbs.empty();
+    });
 }
 
 void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId)
 {
-    callbacks_.ComputeIfPresent(windowId,
-        [&type](auto windowId, std::map<std::string, std::shared_ptr<JSCallbackObject>> &cbs) {
-            cbs.erase(type);
+    callbacks_.ComputeIfPresent(windowId, [&type](auto windowId, TypeMap& cbs) {
+        cbs.erase(type);
+        return !cbs.empty();
+    });
+}
+
+void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId, std::shared_ptr<JSCallbackObject> cbObject)
+{
+    callbacks_.ComputeIfPresent(windowId, [&type, cbObject](auto windowId, TypeMap& cbs) {
+        auto it = cbs.find(type);
+        if (it == cbs.end()) {
             return !cbs.empty();
-        });
+        }
+        auto targetCallback = std::find_if(
+            cbs[type].begin(), cbs[type].end(),
+            [cbObject](std::shared_ptr<JSCallbackObject> vecCbObject) { return *vecCbObject == *cbObject; });
+        if (targetCallback != cbs[type].end()) {
+            cbs[type].erase(targetCallback);
+        }
+
+        return !cbs.empty();
+    });
 }
 
 } // namespace SelectionFwk

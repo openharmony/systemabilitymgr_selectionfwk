@@ -166,6 +166,7 @@ int32_t SelectionPanel::DestroyPanel()
     }
     auto result = window_->Destroy();
     SELECTION_HILOGI("destroy ret: %{public}d", result);
+    PanelStatusChange(SelectionWindowStatus::DESTROYED);
     return ErrorCode::NO_ERROR;
 }
 
@@ -228,7 +229,6 @@ int32_t SelectionPanel::ShowPanel()
         return ErrorCode::ERROR_OPERATE_PANEL;
     }
     SELECTION_HILOGI("Selection panel shown successfully.");
-    PanelStatusChange(SelectionWindowStatus::SHOW);
     return ErrorCode::NO_ERROR;
 }
 
@@ -248,13 +248,14 @@ bool SelectionPanel::IsShowing()
 
 void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
 {
-    if (status == SelectionWindowStatus::SHOW && showRegistered_ && panelStatusListener_ != nullptr) {
-        SELECTION_HILOGD("ShowPanel panelStatusListener_ is not nullptr.");
-        panelStatusListener_->OnPanelStatus(windowId_, true);
-    }
-    if (status == SelectionWindowStatus::HIDE && hideRegistered_ && panelStatusListener_ != nullptr) {
-        SELECTION_HILOGD("HidePanel panelStatusListener_ is not nullptr.");
-        panelStatusListener_->OnPanelStatus(windowId_, false);
+    if (panelStatusListener_ != nullptr) {
+        SELECTION_HILOGD("panelStatusListener_ is not nullptr.");
+        if (status == SelectionWindowStatus::HIDDEN && hiddedRegistered_ ) {
+            panelStatusListener_->OnPanelStatus(windowId_, panelStatusMap_.at(status));
+        }
+        if (status == SelectionWindowStatus::DESTROYED && destroyedRegistered_ ) {
+            panelStatusListener_->OnPanelStatus(windowId_, panelStatusMap_.at(status));
+        }
     }
 }
 
@@ -280,7 +281,7 @@ int32_t SelectionPanel::HidePanel()
     }
     SELECTION_HILOGI("success, type/flag: %{public}d/%{public}d.", static_cast<int32_t>(panelType_),
         static_cast<int32_t>(panelFlag_));
-    PanelStatusChange(SelectionWindowStatus::HIDE);
+    PanelStatusChange(SelectionWindowStatus::HIDDEN);
     return ErrorCode::NO_ERROR;
 }
 
@@ -335,18 +336,11 @@ bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener>
         return false;
     }
     SELECTION_HILOGD("type: %{public}s.", type.c_str());
-    if (type == "show" || type == "hide") {
-        if (panelStatusListener_ == nullptr) {
+    if (panelStatusListener_ == nullptr) {
+        auto isExist = [&type](const auto& pair) { return pair.second == type; };
+        if (std::find_if(panelStatusMap_.begin(), panelStatusMap_.end(), isExist) != panelStatusMap_.end()) {
             SELECTION_HILOGD("panelStatusListener_ is nullptr, need to be set");
             panelStatusListener_ = std::move(statusListener);
-        }
-        if (window_ != nullptr) {
-            if (type == "show" && IsShowing()) {
-                panelStatusListener_->OnPanelStatus(windowId_, true);
-            }
-            if (type == "hide" && IsHidden()) {
-                panelStatusListener_->OnPanelStatus(windowId_, false);
-            }
         }
     }
     return true;
@@ -354,10 +348,10 @@ bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener>
 
 bool SelectionPanel::MarkListener(const std::string &type, bool isRegister)
 {
-    if (type == "show") {
-        showRegistered_ = isRegister;
-    } else if (type == "hide") {
-        hideRegistered_ = isRegister;
+    if (type == panelStatusMap_.at(SelectionWindowStatus::DESTROYED)) {
+        destroyedRegistered_ = isRegister;
+    } else if (type == panelStatusMap_.at(SelectionWindowStatus::HIDDEN)) {
+        hiddedRegistered_ = isRegister;
     } else {
         SELECTION_HILOGE("type error!");
         return false;
@@ -375,7 +369,7 @@ void SelectionPanel::ClearPanelListener(const std::string &type)
         SELECTION_HILOGD("panelStatusListener_ not set, don't need to remove.");
         return;
     }
-    if (showRegistered_ || hideRegistered_) {
+    if (destroyedRegistered_ || hiddedRegistered_) {
         return;
     }
     panelStatusListener_ = nullptr;
