@@ -33,6 +33,8 @@
 
 namespace OHOS {
 namespace SelectionFwk {
+using CallbackVector = std::vector<std::shared_ptr<SelectionFwk::JSCallbackObject>>;
+using TypeMap = std::map<std::string, CallbackVector>;
 
 struct JsWindowSize {
     static napi_value Write(napi_env env, const WindowSize &nativeObject);
@@ -62,21 +64,21 @@ struct UvEntry {
     void SetEventHandler(std::shared_ptr<AppExecFwk::EventHandler> handler);
     std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
 
-    void OnPanelStatus(uint32_t windowId, bool isShow) override;
-    void OnSizeChange(uint32_t windowId, const WindowSize &size) override;
-    void OnSizeChange(uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea,
-        const std::string &event) override;
+    void OnPanelStatus(uint32_t windowId, const std::string& status) override;
+    // void OnSizeChange(uint32_t windowId, const WindowSize &size) override;
+    // void OnSizeChange(uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea,
+    //     const std::string &event) override;
     void Subscribe(uint32_t windowId, const std::string &type, std::shared_ptr<JSCallbackObject> cbObject);
+    void RemoveInfo(const std::string &type, uint32_t windowId, std::shared_ptr<JSCallbackObject> cbObject);
     void RemoveInfo(const std::string &type, uint32_t windowId);
 
-    std::shared_ptr<SelectionFwk::JSCallbackObject> GetCallback(uint32_t windowId, const std::string &type);
+    CallbackVector GetCallback(uint32_t windowId, const std::string &type);
 
     static std::mutex listenerMutex_;
     static std::shared_ptr<PanelListenerImpl> instance_;
     mutable std::shared_mutex eventHandlerMutex_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-
-    ConcurrentMap<uint32_t, std::map<std::string, std::shared_ptr<SelectionFwk::JSCallbackObject>>> callbacks_;
+    ConcurrentMap<uint32_t, TypeMap> callbacks_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

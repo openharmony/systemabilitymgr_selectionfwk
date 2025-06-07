@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace SelectionFwk {
 enum class SelectionWindowStatus : uint32_t {
-    SHOW,
-    HIDE,
+    HIDDEN,
+    DESTROYED,
     NONE
 };
 

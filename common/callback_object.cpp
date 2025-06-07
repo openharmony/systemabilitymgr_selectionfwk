@@ -54,6 +54,31 @@ JSCallbackObject::~JSCallbackObject()
     env_ = nullptr;
 }
 
+bool JSCallbackObject::operator==(const JSCallbackObject& other) const
+{
+    if (other.env_ != env_ || other.threadId_ != threadId_) {
+        return false;
+    }
+
+    napi_value thisValue, otherValue;
+    napi_status status;
+    status = napi_get_reference_value(env_, this->callback_, &thisValue);
+    if (status != napi_ok) {
+        return false;
+    }
+    status = napi_get_reference_value(env_, other.callback_, &otherValue);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    bool result;
+    status = napi_strict_equals(env_, thisValue, otherValue, &result);
+    if (status != napi_ok) {
+        return false;
+    }
+
+    return result;
+}
 
 JSMsgHandlerCallbackObject::JSMsgHandlerCallbackObject(napi_env env, napi_value onTerminated, napi_value onMessage)
     : env_(env), handler_(AppExecFwk::EventHandler::Current()), threadId_(std::this_thread::get_id())

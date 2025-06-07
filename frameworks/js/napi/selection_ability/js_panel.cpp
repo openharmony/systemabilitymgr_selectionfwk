@@ -349,8 +349,16 @@ napi_value JsPanel::UnSubscribe(napi_env env, napi_callback_info info)
         SELECTION_HILOGE("selectionPanel is nullptr!");
         return nullptr;
     }
-    observer->RemoveInfo(type, selectionPanel->windowId_);
-    selectionPanel->ClearPanelListener(type);
+
+    if (paramType == napi_function) {
+        std::shared_ptr<JSCallbackObject> cbObject = std::make_shared<JSCallbackObject>(
+            env, argv[1], std::this_thread::get_id(), AppExecFwk::EventHandler::Current());
+        observer->RemoveInfo(type, selectionPanel->windowId_, cbObject);
+    } else {
+        observer->RemoveInfo(type, selectionPanel->windowId_);
+        selectionPanel->ClearPanelListener(type);
+    }
+
     napi_value result = nullptr;
     napi_get_null(env, &result);
     return result;

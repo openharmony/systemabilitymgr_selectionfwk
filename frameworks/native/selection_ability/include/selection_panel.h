@@ -57,6 +57,10 @@ public:
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
 private:
+    inline static const std::unordered_map<SelectionWindowStatus, std::string> panelStatusMap_ {
+        { SelectionWindowStatus::HIDDEN, "hidden" },
+        { SelectionWindowStatus::DESTROYED, "destroyed" }
+    };
     std::string GeneratePanelName();
     int32_t SetPanelProperties();
     static uint32_t GenerateSequenceId();
@@ -75,8 +79,8 @@ private:
     uint32_t invalidGravityPercent = 0;
     std::atomic<bool> isWaitSetUiContent_ { true };
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
-    bool showRegistered_ = false;
-    bool hideRegistered_ = false;
+    bool destroyedRegistered_ = false;
+    bool hiddedRegistered_ = false;
 
 };
 } // namespace SelectionFwk
