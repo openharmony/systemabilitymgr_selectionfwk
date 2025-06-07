@@ -28,23 +28,19 @@ napi_status JsSelectionUtils::GetValue(napi_env env, napi_value in, PanelInfo &o
 {
     SELECTION_HILOGD("napi_value -> PanelInfo ");
     napi_value propType = nullptr;
-    napi_status status = napi_get_named_property(env, in, "type", &propType);
-    CHECK_RETURN((status == napi_ok), "no property type ", status);
+    napi_status status = napi_get_named_property(env, in, "panelType", &propType);
+    CHECK_RETURN((status == napi_ok), "no property panelType ", status);
     int32_t panelType = 0;
     status = JsUtils::GetValue(env, propType, panelType);
-    CHECK_RETURN((status == napi_ok), "no value of type ", status);
-
-    // PanelFlag is optional, defaults to FLG_FIXED when empty.
-    int32_t panelFlag = static_cast<int32_t>(PanelFlag::FLG_FIXED);
-    napi_value panelFlagObj = nullptr;
-    status = napi_get_named_property(env, in, "flag", &panelFlagObj);
-    if (status == napi_ok) {
-        JsUtils::GetValue(env, panelFlagObj, panelFlag);
-    }
-
+    CHECK_RETURN((status == napi_ok), "no value of panelType ", status);
     out.panelType = PanelType(panelType);
-    out.panelFlag = PanelFlag(panelFlag);
-    return napi_ok;
+
+    bool ret = JsUtil::Object::ReadProperty(env, in, "x", out.x);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "y", out.y);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "width", out.width);
+    ret = ret && JsUtil::Object::ReadProperty(env, in, "height", out.height);
+
+    return ret ? napi_ok : napi_generic_failure;
 }
 } // namespace SelectionFwk
 } // namespace OHOS

@@ -21,26 +21,25 @@
 namespace OHOS {
 namespace SelectionFwk {
 enum PanelType {
-    SOFT_KEYBOARD = 0,
-    STATUS_BAR,
-};
-
-enum PanelFlag {
-    FLG_FIXED = 0,
-    FLG_FLOATING,
-    FLG_CANDIDATE_COLUMN,
+    MENU_PANEL = 1,
+    MAIN_PANEL = 2,
 };
 
 struct PanelInfo : public Parcelable {
-    PanelType panelType = SOFT_KEYBOARD;
-    PanelFlag panelFlag = FLG_FIXED;
+    PanelType panelType = MAIN_PANEL;
+    int32_t x = 0;
+    int32_t y = 0;
+    int32_t width = 0;
+    int32_t height = 0;
 
     bool ReadFromParcel(Parcel &in)
     {
         int32_t panelTypeData = in.ReadInt32();
-        int32_t panelFlagData = in.ReadInt32();
         panelType = static_cast<PanelType>(panelTypeData);
-        panelFlag = static_cast<PanelFlag>(panelFlagData);
+        x = in.ReadInt32();
+        y = in.ReadInt32();
+        width = in.ReadInt32();
+        height = in.ReadInt32();
         return true;
     }
     bool Marshalling(Parcel &out) const
@@ -48,7 +47,16 @@ struct PanelInfo : public Parcelable {
         if (!out.WriteInt32(static_cast<int32_t>(panelType))) {
             return false;
         }
-        if (!out.WriteInt32(static_cast<int32_t>(panelFlag))) {
+        if (!out.WriteInt32(x)) {
+            return false;
+        }
+        if (!out.WriteInt32(y)) {
+            return false;
+        }
+        if (!out.WriteInt32(width)) {
+            return false;
+        }
+        if (!out.WriteInt32(height)) {
             return false;
         }
         return true;

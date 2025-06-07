@@ -67,9 +67,12 @@ private:
     void PanelStatusChange(const SelectionWindowStatus &status);
     bool MarkListener(const std::string &type, bool isRegister);
 
+    PanelType panelType_ = PanelType::MENU_PANEL;
+    int32_t x_ = 0;
+    int32_t y_ = 0;
+    int32_t width_ = 0;
+    int32_t height_ = 0;
 
-    PanelType panelType_ = PanelType::STATUS_BAR;//待修改
-    PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;//待修改
     static std::mutex windowMutex_;
     static sptr<OHOS::Rosen::Window> window_;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;

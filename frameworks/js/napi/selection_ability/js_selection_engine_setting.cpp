@@ -138,7 +138,9 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
             napi_invalid_arg);
         status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
         SELECTION_HILOGD(
-        "output js param panelInfo covert , type/flag: %{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType), static_cast<int32_t>(ctxt->panelInfo.panelFlag));
+            "output js param panelInfo covert , panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
+            static_cast<int32_t>(ctxt->panelInfo.panelType), ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width,
+            ctxt->panelInfo.height);
         PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
         return status;
     };

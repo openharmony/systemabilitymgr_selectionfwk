@@ -43,9 +43,14 @@ int32_t SelectionPanel::CreatePanel(
 {
     SELECTION_HILOGI("SelectionPanel CreatePanel start.");
     panelType_ = panelInfo.panelType;
-    panelFlag_ = panelInfo.panelFlag;
-    SELECTION_HILOGD(
-        "start, type/flag: %{public}d/%{public}d.", static_cast<int32_t>(panelType_), static_cast<int32_t>(panelFlag_));
+    x_ = panelInfo.x;
+    y_ = panelInfo.y;
+    width_ = panelInfo.width;
+    height_ = panelInfo.height;
+    SELECTION_HILOGI(
+        "start , panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
+        static_cast<int32_t>(panelType_), x_, y_, width_, height_);
+
     // winOption_ = new (std::nothrow) OHOS::Rosen::WindowOption();
     // if (winOption_ == nullptr) {
     //     return ErrorCode::ERROR_NULL_POINTER;
@@ -104,8 +109,8 @@ int32_t SelectionPanel::CreatePanel(
 std::string SelectionPanel::GeneratePanelName()
 {
     uint32_t sequenceId = GenerateSequenceId();
-    std::string windowName = panelType_ == SOFT_KEYBOARD ? "softKeyboard" + std::to_string(sequenceId) :
-                                                           "statusBar" + std::to_string(sequenceId);
+    std::string windowName = panelType_ == MENU_PANEL ? "menuPanel" + std::to_string(sequenceId) :
+                                                           "mainPanel" + std::to_string(sequenceId);
     SELECTION_HILOGD("SelectionPanel, windowName: %{public}s.", windowName.c_str());
     return windowName;
 }
@@ -117,26 +122,6 @@ int32_t SelectionPanel::SetPanelProperties()
         return ErrorCode::ERROR_OPERATE_PANEL;
     }
     WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;
-    if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FIXED) {
-        gravity = WindowGravity::WINDOW_GRAVITY_BOTTOM;
-    } else if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FLOATING) {
-        auto surfaceNode = window_->GetSurfaceNode();
-        if (surfaceNode == nullptr) {
-            SELECTION_HILOGE("surfaceNode is nullptr!");
-            return ErrorCode::ERROR_OPERATE_PANEL;
-        }
-        surfaceNode->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
-        Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
-    } else if (panelType_ == STATUS_BAR) {
-        auto surfaceNo = window_->GetSurfaceNode();
-        if (surfaceNo == nullptr) {
-            SELECTION_HILOGE("surfaceNo is nullptr!");
-            return ErrorCode::ERROR_OPERATE_PANEL;
-        }
-        surfaceNo->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
-        Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
-        return ErrorCode::NO_ERROR;
-    }
     if (!isScbEnable_) {
         WMError wmError = window_->SetWindowGravity(gravity, invalidGravityPercent);
         if (wmError != WMError::WM_OK) {
@@ -279,8 +264,8 @@ int32_t SelectionPanel::HidePanel()
         SELECTION_HILOGE("HidePanel error, err: %{public}d!", ret);
         return ErrorCode::ERROR_OPERATE_PANEL;
     }
-    SELECTION_HILOGI("success, type/flag: %{public}d/%{public}d.", static_cast<int32_t>(panelType_),
-        static_cast<int32_t>(panelFlag_));
+    SELECTION_HILOGI("success, panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
+        static_cast<int32_t>(panelType_), x_, y_, width_, height_);
     PanelStatusChange(SelectionWindowStatus::HIDDEN);
     return ErrorCode::NO_ERROR;
 }
@@ -320,10 +305,6 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_NULL_POINTER;
-    }
-    if (panelFlag_ == FLG_FIXED) {
-        SELECTION_HILOGE("FLG_FIXED panel can not moveTo!");
-        return ErrorCode::NO_ERROR;
     }
     auto ret = window_->MoveTo(x, y);
     SELECTION_HILOGI("x/y: %{public}d/%{public}d, ret = %{public}d", x, y, ret);
