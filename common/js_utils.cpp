@@ -304,29 +304,6 @@ napi_status JsUtils::GetValue(napi_env env, napi_value in, const std::string &ty
     return napi_generic_failure;
 }
 
-// napi_status JsUtils::GetValue(napi_env env, napi_value in, PanelInfo &out)
-// {
-//     SELECTION_HILOGD("napi_value -> PanelInfo ");
-//     napi_value propType = nullptr;
-//     napi_status status = napi_get_named_property(env, in, "type", &propType);
-//     CHECK_RETURN((status == napi_ok), "no property type ", status);
-//     int32_t panelType = 0;
-//     status = GetValue(env, propType, panelType);
-//     CHECK_RETURN((status == napi_ok), "no value of type ", status);
-
-//     // PanelFlag is optional, defaults to FLG_FIXED when empty.
-//     int32_t panelFlag = static_cast<int32_t>(PanelFlag::FLG_FIXED);
-//     napi_value panelFlagObj = nullptr;
-//     status = napi_get_named_property(env, in, "flag", &panelFlagObj);
-//     if (status == napi_ok) {
-//         JsUtils::GetValue(env, panelFlagObj, panelFlag);
-//     }
-
-//     out.panelType = PanelType(panelType);
-//     out.panelFlag = PanelFlag(panelFlag);
-//     return napi_ok;
-// }
-
 napi_status JsUtils::GetValue(napi_env env, const std::string &in, napi_value &out)
 {
     return napi_create_string_utf8(env, in.c_str(), in.size(), &out);

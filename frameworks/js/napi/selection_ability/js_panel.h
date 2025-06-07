@@ -72,7 +72,6 @@ private:
         HotAreas hotAreas;
         std::vector<Rosen::Rect> hotArea;
         bool isEnhancedCall{ false };
-        PanelFlag panelFlag = PanelFlag::FLG_FIXED;
         std::string path = "";
         uint32_t width = 0;
         uint32_t height = 0;
