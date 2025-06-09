@@ -45,15 +45,6 @@ public:
                       const sptr<IRemoteObject>& token) override;
 
     /**
-     * @brief Called when this extension is started. You must override this function if you want to perform some
-     *        initialization operations during extension startup.
-     *
-     * This function can be called only once in the entire lifecycle of an extension.
-     * @param Want Indicates the {@link Want} structure containing startup information about the extension.
-     */
-    virtual void OnStart(const AAFwk::Want& want) override;
-
-    /**
      * @brief Called when this Service extension is connected for the first time.
      *
      * You can override this function to implement your own processing logic.
@@ -70,14 +61,6 @@ public:
      *
      */
     virtual void OnDisconnect(const AAFwk::Want& want) override;
-
-    /**
-     * @brief Called when this extension enters the <b>STATE_STOP</b> state.
-     *
-     * The extension in the <b>STATE_STOP</b> is being destroyed.
-     * You can override this function to implement your own processing logic.
-     */
-    virtual void OnStop() override;
 
 private:
     napi_value CallObjectMethod(const char* methodName, const napi_value* argv = nullptr, size_t argc = 0);

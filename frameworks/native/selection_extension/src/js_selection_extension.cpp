@@ -115,17 +115,6 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
     SELECTION_HILOGI("%{public}s end.", __func__);
 }
 
-void JsSelectionExtension::OnStart(const AAFwk::Want& want)
-{
-    SELECTION_HILOGI("%{public}s start.", __func__);
-    Extension::OnStart(want);
-    napi_env env = jsRuntime_.GetNapiEnv();
-    napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
-    napi_value argv[] = {napiWant};
-    CallObjectMethod("onCreate", argv, ARGC_ONE);
-    SELECTION_HILOGI("%{public}s end.", __func__);
-}
-
 sptr<IRemoteObject> JsSelectionExtension::OnConnect(const AAFwk::Want& want)
 {
     SELECTION_HILOGI("%{public}s start.", __func__);
@@ -153,12 +142,6 @@ void JsSelectionExtension::OnDisconnect(const AAFwk::Want& want)
     napi_value argv[] = {napiWant};
     CallObjectMethod("onDisconnect", argv, ARGC_ONE);
     SELECTION_HILOGI("%{public}s end.", __func__);
-}
-
-void JsSelectionExtension::OnStop()
-{
-    SELECTION_HILOGI("%{public}s start.", __func__);
-    SelectionExtension::OnStop();
 }
 
 napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const napi_value* argv, size_t argc)
