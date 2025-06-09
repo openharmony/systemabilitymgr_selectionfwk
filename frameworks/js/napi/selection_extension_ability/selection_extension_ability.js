@@ -16,20 +16,12 @@
 let ExtensionAbility = requireNapi('app.ability.ExtensionAbility');
 
 class SelectionExtensionAbility extends ExtensionAbility {
-  onCreate(want) {
-    console.log('onCreate, want:' + want.abilityName);
-  }
-
   onConnect(want) {
     console.log('onConnect, want:' + want.abilityName);
   }
 
   onDisconnect(want) {
     console.log('onDisconnect');
-  }
-
-  onDestroy() {
-    console.log('onDestroy');
   }
 }
 
