@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@
 using Ability = OHOS::AppExecFwk::Ability;
 namespace OHOS {
 namespace SelectionFwk {
-enum IMFErrorCode : int32_t {
+enum SEErrorCode : int32_t {
     EXCEPTION_PERMISSION = 201,
     EXCEPTION_SYSTEM_PERMISSION = 202,
     EXCEPTION_PARAMCHECK = 401,
@@ -52,6 +52,8 @@ enum IMFErrorCode : int32_t {
     EXCEPTION_REQUEST_NOT_ACCEPT = 12800015,
     EXCEPTION_EDITABLE = 12800016,
     EXCEPTION_INVALID_PANEL_TYPE_FLAG = 12800017,
+    EXCEPTION_SELECTION_SERVICE = 25600001, // TODO:待定
+    EXCEPTION_PANEL_DESTORYED    // TODO:待定
 };
 
 enum TypeCode : int32_t {
@@ -74,7 +76,7 @@ enum TypeCode : int32_t {
 #define PARAM_CHECK_RETURN(env, condition, message, typeCode, retVal)                            \
     do {                                                                                         \
         if (!(condition)) {                                                                      \
-            JsUtils::ThrowException(env, IMFErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
+            JsUtils::ThrowException(env, SEErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
             return retVal;                                                                       \
         }                                                                                        \
     } while (0)
@@ -82,7 +84,7 @@ enum TypeCode : int32_t {
 #define PARAM_CHECK_RETURN_VOID(env, condition, message, typeCode)                            \
     do {                                                                                         \
         if (!(condition)) {                                                                      \
-            JsUtils::ThrowException(env, IMFErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
+            JsUtils::ThrowException(env, SEErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
             return;                                                                       \
         }                                                                                        \
     } while (0)
@@ -130,6 +132,8 @@ struct JsPropertyInfo {
 class JsUtils {
 public:
     static void ThrowException(napi_env env, int32_t err, const std::string &msg, TypeCode type);
+
+    static void ThrowException(napi_env env, int32_t err, const std::string &msg = "");
 
     static napi_value ToError(napi_env env, int32_t code, const std::string &msg);
 

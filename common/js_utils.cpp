@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,6 +86,8 @@ const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
     { ErrorCode::ERROR_IMSA_FORCE_STOP_IME_TIMEOUT, EXCEPTION_IMMS },
     { ErrorCode::ERROR_IMC_NULLPTR, EXCEPTION_IMMS },
     { ErrorCode::ERROR_DEVICE_UNSUPPORTED, EXCEPTION_UNSUPPORTED },
+    { ErrorCode::ERROR_SELECTION_SERVICE, EXCEPTION_SELECTION_SERVICE },
+    { ErrorCode::ERROR_PANEL_DESTORYED, EXCEPTION_PANEL_DESTORYED }
 };
 
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
@@ -114,6 +116,8 @@ const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_REQUEST_NOT_ACCEPT, "the another side does not accept the request." },
     { EXCEPTION_EDITABLE, "the edit mode need enable." },
     { EXCEPTION_INVALID_PANEL_TYPE_FLAG, "invalid panel type or panel flag." },
+    { EXCEPTION_SELECTION_SERVICE, "selection service exception." },
+    { EXCEPTION_PANEL_DESTORYED, "this panel has been destroyed." }
 };
 
 const std::map<int32_t, std::string> JsUtils::PARAMETER_TYPE = {
@@ -152,6 +156,12 @@ void JsUtils::ThrowException(napi_env env, int32_t err, const std::string &msg, 
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, err, &code));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, error, "code", code));
     NAPI_CALL_RETURN_VOID(env, napi_throw(env, error));
+}
+
+void JsUtils::ThrowException(napi_env env, int32_t errCode, const std::string& msg)
+{
+    std::string errMsg = ToMessage(JsUtils::Convert(errCode)) + " " + msg;
+    NAPI_CALL_RETURN_VOID(env, napi_throw_error(env, std::to_string(errCode).c_str(), errMsg.c_str()));
 }
 
 napi_value JsUtils::ToError(napi_env env, int32_t code, const std::string &msg)
