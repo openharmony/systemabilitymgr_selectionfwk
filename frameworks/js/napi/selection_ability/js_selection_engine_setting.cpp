@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "js_selection_engine_setting.h"
 
 #include "event_checker.h"
@@ -122,7 +137,6 @@ napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
 napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_info info)
 {
     SELECTION_HILOGI("SelectionEngineSetting CreatePanel start.");
-
     auto ctxt = std::make_shared<PanelContext>();
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PARAM_CHECK_RETURN(env, argc >= 2, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
@@ -147,10 +161,13 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
         return status;
     };
 
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
+    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
         auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
-        ctxt->SetErrorCode(ret);
         CHECK_RETURN_VOID(ret == ErrorCode::NO_ERROR, "JsSelectionEngineSetting CreatePanel failed!");
+        if(ret != ErrorCode::NO_ERROR) {
+            ctxt->SetErrorCode(ret);
+            JsUtils::ThrowException(env, JsUtils::Convert(ret), "CreatePanel failed!", TYPE_NONE);
+        }
         ctxt->SetState(napi_ok);
     };
 
@@ -205,6 +222,7 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
         auto errCode = SelectionAbility::GetInstance()->DestroyPanel(ctxt->panel);
         if (errCode != ErrorCode::NO_ERROR) {
             SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", errCode);
+            JsUtils::ThrowException(env, JsUtils::Convert(errCode), "DestroyPanel failed!", TYPE_NONE);
             return napi_generic_failure;
         }
         ctxt->panel = nullptr;

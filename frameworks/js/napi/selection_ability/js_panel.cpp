@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -137,7 +137,10 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
             ctxt->SetErrorCode(code);
             ctxt->SetErrorMessage("path should be a path to specific page.");
             return napi_generic_failure;
+        } else if (code == ErrorCode::ERROR_SELECTION_SERVICE || code == ErrorCode::ERROR_PANEL_DESTORYED) {
+            JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to SetUiContent", TYPE_NONE);
         }
+
         return napi_ok;
     };
     ctxt->SetAction(std::move(input), std::move(output));
@@ -155,7 +158,7 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
         jsQueue_.Push(ctxt->info);
         return napi_ok;
     };
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
+    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
         jsQueue_.Wait(ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -163,13 +166,13 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
             return;
         }
         auto code = SelectionAbility::GetInstance()->ShowPanel(ctxt->selectionPanel);
+        jsQueue_.Pop();
         if (code == ErrorCode::NO_ERROR) {
             ctxt->SetState(napi_ok);
-            jsQueue_.Pop();
             return;
         }
-        jsQueue_.Pop();
         ctxt->SetErrorCode(code);
+        JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to show", TYPE_NONE);
     };
     ctxt->SetAction(std::move(input));
     // 1 means JsAPI:show has 1 param at most.
@@ -187,7 +190,7 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
         jsQueue_.Push(ctxt->info);
         return napi_ok;
     };
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
+    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
         jsQueue_.Wait(ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -201,6 +204,7 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
             return;
         }
         ctxt->SetErrorCode(code);
+        JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to hide", TYPE_NONE);
     };
     ctxt->SetAction(std::move(input));
     // 1 means JsAPI:hide has 1 param at most.
@@ -251,7 +255,7 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         return napi_ok;
     };
 
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
+    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
         int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         jsQueue_.Wait(ctxt->info);
         PrintEditorQueueInfoIfTimeout(start, ctxt->info);
@@ -262,9 +266,8 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         }
         auto code = ctxt->selectionPanel->MoveTo(ctxt->x, ctxt->y);
         jsQueue_.Pop();
-        if (code == ErrorCode::ERROR_PARAMETER_CHECK_FAILED) {
-            ctxt->SetErrorCode(code);
-            return;
+        if(code != ErrorCode::NO_ERROR) {
+            JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to moveTo", TYPE_NONE);
         }
         ctxt->SetState(napi_ok);
     };

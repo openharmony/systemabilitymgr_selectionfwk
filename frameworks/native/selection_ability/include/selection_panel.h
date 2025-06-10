@@ -50,6 +50,7 @@ public:
     PanelType GetPanelType();
     bool IsShowing();
     bool IsHidden();
+    bool IsDestroyed() const;
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
     void ClearPanelListener(const std::string &type);
     int32_t GetWindowId();

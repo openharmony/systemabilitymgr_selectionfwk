@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -170,6 +170,10 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
         SELECTION_HILOGE("window_ is nullptr, can not SetUiContent!");
         return ErrorCode::ERROR_NULL_POINTER;
     }
+    if(IsDestroyed()) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTORYED;
+    }
     WMError ret = WMError::WM_OK;
 
     window_->NapiSetUIContent(contentInfo, env, nullptr);
@@ -199,6 +203,10 @@ int32_t SelectionPanel::ShowPanel()
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_IMA_NULLPTR;
+    }
+    if(IsDestroyed()) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTORYED;
     }
     if (IsShowing()) {
         SELECTION_HILOGI("panel already shown.");
@@ -251,6 +259,10 @@ int32_t SelectionPanel::HidePanel()
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_NULL_POINTER;
     }
+    if(IsDestroyed()) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTORYED;
+    }
     if (IsHidden()) {
         SELECTION_HILOGI("panel already hidden.");
         return ErrorCode::NO_ERROR;
@@ -280,11 +292,20 @@ bool SelectionPanel::IsHidden()
     return false;
 }
 
+bool SelectionPanel::IsDestroyed() const
+{
+    return window_ && window_->GetWindowState() == WindowState::STATE_DESTROYED;
+}
+
 int32_t SelectionPanel::StartMoving()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_IME;
+    }
+    if(IsDestroyed()) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTORYED;
     }
     auto ret = window_->StartMoveWindow();
     if (ret == WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT) {
@@ -305,6 +326,10 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_NULL_POINTER;
+    }
+    if(IsDestroyed()) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTORYED;
     }
     auto ret = window_->MoveTo(x, y);
     SELECTION_HILOGI("x/y: %{public}d/%{public}d, ret = %{public}d", x, y, ret);
