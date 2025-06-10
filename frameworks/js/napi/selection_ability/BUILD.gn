@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
-ohos_shared_library("selectionengine_napi") {
+ohos_shared_library("selectionmanager_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     boundary_sanitize = true
@@ -74,7 +74,7 @@ ohos_shared_library("selectionengine_napi") {
     "samgr:samgr_proxy",
   ]
 
-  relative_install_dir = "module"
+  relative_install_dir = "module/selectioninput"
   subsystem_name = "systemabilitymgr"
   part_name = "selectionfwk"
 }

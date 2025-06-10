@@ -36,10 +36,8 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-class JsSelectionEngineSetting : public SelectionInterface{
+class JsSelectionEngineSetting : public SelectionInterface {
 public:
-    JsSelectionEngineSetting() = default;
-    ~JsSelectionEngineSetting() = default;
     static napi_value Init(napi_env env, napi_value exports);
     static napi_value InitProperty(napi_env env, napi_value exports);
     static napi_value GetSelectionAbility(napi_env env, napi_callback_info info);
@@ -82,8 +80,9 @@ private:
         }
     };
 
+    JsSelectionEngineSetting() = default;
     static napi_value GetSEInstance(napi_env env, napi_callback_info info);
-    static napi_value JsConstructor(napi_env env, napi_callback_info cbinfo);
+    static SFErrorCode Register();
     static napi_value Write(napi_env env, const SelectionInfo &selectionInfo);
     static napi_status GetContext(napi_env env, napi_value in, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();

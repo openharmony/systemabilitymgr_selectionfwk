@@ -31,6 +31,7 @@ using Ability = OHOS::AppExecFwk::Ability;
 namespace OHOS {
 namespace SelectionFwk {
 enum SFErrorCode : int32_t {
+    EXCEPTION_SUCCESS = 0,
     EXCEPTION_PARAMCHECK = 401,
     EXCEPTION_SELECTION_SERVICE = 33600001,
     EXCEPTION_PANEL_DESTORYED = 33600002,
