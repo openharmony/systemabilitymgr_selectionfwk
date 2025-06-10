@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace SelectionFwk {
 const std::unordered_set<std::string> EVENT_TYPES[static_cast<uint32_t>(EventSubscribeModule::MODULE_END)] = {
-    [static_cast<uint32_t>(EventSubscribeModule::SELECTION_METHOD_ABILITY)] = { "selectionEvent", "selectionPanelEvent" },
+    [static_cast<uint32_t>(EventSubscribeModule::SELECTION_METHOD_ABILITY)] = { "selectionCompleted" },
     [static_cast<uint32_t>(EventSubscribeModule::PANEL)] = { "destroyed", "hidden" }
 };
 

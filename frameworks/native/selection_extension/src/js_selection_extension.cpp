@@ -40,7 +40,7 @@ napi_value AttachSelectionExtensionContext(napi_env env, void* value, void*)
         return nullptr;
     }
     napi_value object = CreateJsSelectionExtensionContext(env, ptr);
-    auto systemModule = JsRuntime::LoadSystemModuleByEngine(env, "SelectionExtensionContext", &object, 1);
+    auto systemModule = JsRuntime::LoadSystemModuleByEngine(env, "selectionInput.SelectionExtensionContext", &object, 1);
     if (systemModule == nullptr) {
         SELECTION_HILOGE("failed to load system module by engine!");
         return nullptr;
@@ -206,7 +206,7 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
     }
     SELECTION_HILOGD("JsSelectionExtension::Init CreateJsSelectionExtensionContext.");
     napi_value contextObj = CreateJsSelectionExtensionContext(env, context);
-    auto shellContextRef = jsRuntime_.LoadSystemModule("SelectionExtensionContext", &contextObj, ARGC_ONE);
+    auto shellContextRef = jsRuntime_.LoadSystemModule("selectionInput.SelectionExtensionContext", &contextObj, ARGC_ONE);
     if (shellContextRef == nullptr) {
         SELECTION_HILOGE("shellContextRef is nullptr!");
         return;

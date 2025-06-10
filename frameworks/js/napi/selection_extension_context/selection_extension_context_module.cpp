@@ -23,15 +23,15 @@ extern const char _binary_selection_extension_context_abc_end[];
 static napi_module g_ExtensionContextModule = {
     .nm_version = 0,
     .nm_filename = "libselectionextensioncontext_napi.so/selection_extension_context.js",
-    .nm_modname = "SelectionExtensionContext",
+    .nm_modname = "selectionInput.SelectionExtensionContext",
 };
 
-extern "C" __attribute__((constructor)) void NAPI_SelectionExtensionContext_AutoRegister()
+extern "C" __attribute__((constructor)) void NAPI_selectionInput_SelectionExtensionContext_AutoRegister()
 {
     napi_module_register(&g_ExtensionContextModule);
 }
 
-extern "C" __attribute__((visibility("default"))) void NAPI_SelectionExtensionContext_GetJSCode(
+extern "C" __attribute__((visibility("default"))) void NAPI_selectionInput_SelectionExtensionContext_GetJSCode(
     const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
@@ -43,7 +43,7 @@ extern "C" __attribute__((visibility("default"))) void NAPI_SelectionExtensionCo
 }
 
 // ability_context JS register
-extern "C" __attribute__((visibility("default"))) void NAPI_SelectionExtensionContext_GetABCCode(
+extern "C" __attribute__((visibility("default"))) void NAPI_selectionInput_SelectionExtensionContext_GetABCCode(
     const char **buf, int *buflen)
 {
     if (buf != nullptr) {

@@ -20,10 +20,6 @@ class SelectionExtensionContext extends ExtensionContext {
     super(obj);
     this.extensionAbilityInfo = obj.extensionAbilityInfo;
   }
-
-  startAbility(want) {
-    return this.__context_impl__.startAbility(want);
-  }
 }
 
 export default SelectionExtensionContext;

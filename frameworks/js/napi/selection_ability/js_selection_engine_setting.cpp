@@ -30,7 +30,8 @@
 #include "js_selection_utils.h"
 
 using namespace OHOS;
-using namespace OHOS::SelectionFwk;
+namespace OHOS {
+namespace SelectionFwk {
 
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
@@ -43,7 +44,6 @@ std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
 sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
 sptr<ISelectionService> JsSelectionEngineSetting::abilityManager_ { nullptr };
-
 
 napi_value JsSelectionEngineSetting::GetSelectionAbility(napi_env env, napi_callback_info info)
 {
@@ -68,15 +68,12 @@ napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info 
         return nullptr;
     }
     SELECTION_HILOGI("subscribe type: %{public}s.", type.c_str());
-    auto engine = reinterpret_cast<JsSelectionEngineSetting *>(JsUtils::GetNativeSelf(env, info));
-    if (engine == nullptr) {
-        return nullptr;
-    }
+
     std::shared_ptr<JSCallbackObject> callback =
         std::make_shared<JSCallbackObject>(env, argv[1], std::this_thread::get_id(),
             AppExecFwk::EventHandler::Current());
+    auto engine = JsSelectionEngineSetting::GetJsSelectionEngineSetting();
     engine->RegisterListener(argv[ARGC_ONE], type, callback);
-
     napi_value result = nullptr;
     napi_get_null(env, &result);
     return result;
@@ -256,36 +253,22 @@ sptr<ISelectionService> JsSelectionEngineSetting::GetSelectionSystemAbility()
 void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string type,
     std::shared_ptr<JSCallbackObject> callbackObj)
 {
-    SELECTION_HILOGD("RegisterListener %{public}s", type.c_str());
+    SELECTION_HILOGI("RegisterListener %{public}s", type.c_str());
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        SELECTION_HILOGD("methodName %{public}s is not registered!", type.c_str());
+        SELECTION_HILOGI("methodName %{public}s is not registered!", type.c_str());
     }
     auto callbacks = jsCbMap_[type];
     bool ret = std::any_of(callbacks.begin(), callbacks.end(), [&callback](std::shared_ptr<JSCallbackObject> cb) {
         return JsUtils::Equals(cb->env_, callback, cb->callback_, cb->threadId_);
     });
     if (ret) {
-        SELECTION_HILOGD("JsSelectionEngineSetting callback already registered!");
+        SELECTION_HILOGI("JsSelectionEngineSetting callback already registered!");
         return;
     }
 
     SELECTION_HILOGI("add %{public}s callbackObj into jsCbMap_.", type.c_str());
     jsCbMap_[type].push_back(std::move(callbackObj));
-
-    // auto proxy = GetSelectionSystemAbility();
-    // if (proxy == nullptr) {
-    //     SELECTION_HILOGE("selection system ability is nullptr!");
-    //     return;
-    // }
-    // auto selectionInterface = GetJsSelectionEngineSetting();
-    // listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionInterface);
-    // if (listenerStub_ == nullptr) {
-    //     SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
-    //     return;
-    // }
-    // SELECTION_HILOGI("Begin calling SA RegisterListener!");
-    // proxy->RegisterListener(listenerStub_->AsObject());
 }
 
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
@@ -343,7 +326,7 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
     if (selectionDelegate_ == nullptr) {
         std::lock_guard<std::mutex> lock(selectionMutex_);
         if (selectionDelegate_ == nullptr) {
-            auto delegate = std::make_shared<JsSelectionEngineSetting>();
+            std::shared_ptr<JsSelectionEngineSetting> delegate(new JsSelectionEngineSetting);
             if (delegate == nullptr) {
                 SELECTION_HILOGE("JsSelectionEngineSetting is nullptr!");
                 return nullptr;
@@ -375,25 +358,15 @@ void JsSelectionEngineSetting::RegisterListerToService(std::shared_ptr<JsSelecti
     proxy->RegisterListener(listenerStub_->AsObject());
 }
 
-napi_value JsSelectionEngineSetting::JsConstructor(napi_env env, napi_callback_info cbinfo)
+SFErrorCode JsSelectionEngineSetting::Register()
 {
-    napi_value thisVar = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, cbinfo, nullptr, nullptr, &thisVar, nullptr));
     auto delegate = GetJsSelectionEngineSetting();
     if (delegate == nullptr) {
         SELECTION_HILOGE("failed to get delegate!");
-        napi_value result = nullptr;
-        napi_get_null(env, &result);
-        return result;
-    }
-    napi_status status = napi_wrap(
-        env, thisVar, delegate.get(), [](napi_env env, void *nativeObject, void *hint) {}, nullptr, nullptr);
-    if (status != napi_ok) {
-        SELECTION_HILOGE("failed to wrap: %{public}d!", status);
-        return nullptr;
+        return EXCEPTION_SELECTION_SERVICE;
     }
     RegisterListerToService(delegate);
-    return thisVar;
+    return EXCEPTION_SUCCESS;
 };
 
 napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
@@ -401,26 +374,16 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
     SELECTION_HILOGI("napi init");
     napi_property_descriptor descriptor[] = {
         DECLARE_NAPI_FUNCTION("getSelectionAbility", GetSelectionAbility),
-    };
-    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor), descriptor));
-    return InitProperty(env, exports);
-}
-
-napi_value JsSelectionEngineSetting::InitProperty(napi_env env, napi_value exports)
-{
-    SELECTION_HILOGI("napi init");
-    napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("createPanel", CreatePanel),
         DECLARE_NAPI_FUNCTION("destroyPanel", DestroyPanel),
     };
-
-    napi_value cons = nullptr;
-    NAPI_CALL(env, napi_define_class(env, KDS_CLASS_NAME.c_str(), KDS_CLASS_NAME.size(), JsConstructor, nullptr,
-                       sizeof(properties) / sizeof(napi_property_descriptor), properties, &cons));
-    NAPI_CALL(env, napi_create_reference(env, cons, 1, &KDSRef_));
-    NAPI_CALL(env, napi_set_named_property(env, exports, KDS_CLASS_NAME.c_str(), cons));
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor), descriptor));
+    if (Register() != EXCEPTION_SUCCESS) {
+        SELECTION_HILOGE("regist lister to service failed!");
+        return nullptr;
+    }
     return exports;
 }
 
@@ -467,7 +430,7 @@ napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionInfo &se
 int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectionInfo)
 {
     SELECTION_HILOGD("OnSelectionEvent begin");
-    std::string type = "selectionEvent";
+    std::string type = "selectionCompleted";
 
     auto entry = GetEntry(type, [&selectionInfo](SelectionEntry &entry) {entry.selectionInfo = selectionInfo; });
     if (entry == nullptr) {
@@ -502,4 +465,5 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
     eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
     return 0;
 }
-
+}
+}

@@ -53,7 +53,7 @@
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_context:selectionextensioncontext_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_extension:selection_extension_ability_native",
-        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_ability:selectionengine_napi",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_ability:selectionmanager_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_ability:selection_ability"
       ],
       "inner_kits": [],

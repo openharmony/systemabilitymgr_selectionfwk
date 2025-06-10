@@ -55,7 +55,7 @@ ohos_shared_library("selectionextensioncontext_napi") {
 
   external_deps = [ "napi:ace_napi" ]
 
-  relative_install_dir = "module"
+  relative_install_dir = "module/selectioninput"
   subsystem_name = "systemabilitymgr"
   part_name = "selectionfwk"
 }
