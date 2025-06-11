@@ -18,7 +18,7 @@
 #include <sys/socket.h>
 #include <inttypes.h>
 #include "selection_log.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "napi/native_node_api.h"
 
 namespace OHOS {

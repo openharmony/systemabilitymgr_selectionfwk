@@ -17,7 +17,7 @@
 #include "js_error_utils.h"
 #include "js_extension_context.h"
 #include "js_runtime_utils.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "napi_common_want.h"
 #include "selection_log.h"
 

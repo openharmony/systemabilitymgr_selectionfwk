@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
+import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 import("//build/ohos.gni")
 
 config("selection_js_common_public_config") {
@@ -40,7 +40,7 @@ ohos_static_library("selection_common") {
     "callback_object.cpp",
     "util.cpp",
     "selectionmethod_trace.cpp",
-    "js_utils.cpp",
+    "selectionfwk_js_utils.cpp",
   ]
 
   ldflags = [ "-Wl,--exclude-libs=ALL" ]

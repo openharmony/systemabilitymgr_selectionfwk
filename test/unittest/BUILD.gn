@@ -12,9 +12,9 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
+import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
-module_out_path = "selection_fwk/selection_fwk"
+module_out_path = "selectionfwk/selectionfwk"
 ohos_unittest("selection_service_unit_test") {
   module_out_path = module_out_path
   include_dirs = [

@@ -18,7 +18,7 @@
 #include "event_checker.h"
 #include "iservice_registry.h"
 #include "selection_ability.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "callback_handler.h"
 #include "napi/native_node_api.h"
 #include "selection_listener_impl.h"

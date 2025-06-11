@@ -19,7 +19,7 @@
 #include <queue>
 #include "cpp/mutex.h"
 #include "selection_log.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "ffrt.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"

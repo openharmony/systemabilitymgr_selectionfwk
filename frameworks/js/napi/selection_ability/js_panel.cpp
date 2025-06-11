@@ -19,7 +19,7 @@
 #include "napi/native_node_api.h"
 #include "selection_log.h"
 #include "panel_listener_impl.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "selectionmethod_trace.h"
 #include "selection_ability.h"
 #include "event_checker.h"

@@ -15,7 +15,7 @@
 
 #include "panel_listener_impl.h"
 
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "callback_handler.h"
 #include "util.h"
 

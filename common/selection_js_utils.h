@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACE_KITS_JS_UTILS_H
-#define INTERFACE_KITS_JS_UTILS_H
+#ifndef SELECTAIONFWK_JS_UTILS_H
+#define SELECTAIONFWK_JS_UTILS_H
 
 #include <map>
 
@@ -186,6 +186,6 @@ private:
 
     static constexpr uint8_t MAX_ARGMENT_COUNT = 10;
 };
-} // namespace MiscServices
+} // namespace SelectionFwk
 } // namespace OHOS
-#endif // INTERFACE_KITS_JS_UTILS_H
+#endif // SELECTAIONFWK_JS_UTILS_H

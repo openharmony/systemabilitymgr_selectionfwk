@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
+import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
 
 ohos_shared_library("selection_extension_ability_native") {

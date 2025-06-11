@@ -44,21 +44,21 @@
     },
     "build": {
       "sub_component": [
-        "//foundation/systemabilitymgr/selection_fwk/common:selection_common",
-        "//foundation/systemabilitymgr/selection_fwk/etc/init:selection_service_cfg",
-        "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para",
-        "//foundation/systemabilitymgr/selection_fwk/etc/para:selection_para_dac",
-        "//foundation/systemabilitymgr/selection_fwk/service:selection_service",
-        "//foundation/systemabilitymgr/selection_fwk/sa_profile:selection_service_sa_profile",
-        "//foundation/systemabilitymgr/selection_fwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",
-        "//foundation/systemabilitymgr/selection_fwk/frameworks/js/napi/selection_extension_context:selectionextensioncontext_napi",
-        "//foundation/systemabilitymgr/selection_fwk/frameworks/native/selection_extension:selection_extension_ability_native",
-        "//foundation/systemabilitymgr/selection_fwk/frameworks/js/napi/selection_ability:selectionengine_napi",
-        "//foundation/systemabilitymgr/selection_fwk/frameworks/native/selection_ability:selection_ability"
+        "//foundation/systemabilitymgr/selectionfwk/common:selection_common",
+        "//foundation/systemabilitymgr/selectionfwk/etc/init:selection_service_cfg",
+        "//foundation/systemabilitymgr/selectionfwk/etc/para:selection_para",
+        "//foundation/systemabilitymgr/selectionfwk/etc/para:selection_para_dac",
+        "//foundation/systemabilitymgr/selectionfwk/service:selection_service",
+        "//foundation/systemabilitymgr/selectionfwk/sa_profile:selection_service_sa_profile",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_context:selectionextensioncontext_napi",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_extension:selection_extension_ability_native",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_ability:selectionengine_napi",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_ability:selection_ability"
       ],
       "inner_kits": [],
       "test": [
-        "//foundation/systemabilitymgr/selection_fwk/test/unittest:selection_service_unit_test"
+        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_service_unit_test"
       ]
     }
   }

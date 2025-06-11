@@ -11,7 +11,7 @@
 │   ├── foundation
 │   │   ├──systemabilitymgr
 │   │   │   ├── samgr           => 代码提交仓: https://gitee.com/sinall/systemabilitymgr_samgr.git, selection_fwk分支
-│   │   │   └── selection_fwk   => 代码提交仓: https://gitee.com/sinall/selection_fwk.git, master分支
+│   │   │   └── selectionfwk   => 代码提交仓: https://gitee.com/sinall/selectionfwk.git, master分支
 │   │   ├──bundlemanager
 │   │   │   └── bundle_framework =>代码提交仓: https://gitee.com/sinall/bundlemanager_bundle_framework.git selection_fwk分支
 │   │   └──ability
@@ -27,12 +27,12 @@
 ```
 1. selection_fwk仓库：
 cd foundation/systemabilitymgr
-git clone https://gitee.com/sinall/selection_fwk.git 
+git clone https://gitee.com/sinall/selectionfwk.git 
 2. 其余仓库
 $ cd foundation/systemabilitymgr/samgr（修改为对应仓库路径）
 $ git remote add sinall https://gitee.com/sinall/systemabilitymgr_samgr.git（修改为对应仓库的网址）
-$ git fetch sinall selection_fwk
-$ git checkout -b selection_fwk sinall/selection_fwk
+$ git fetch sinall selectionfwk
+$ git checkout -b selectionfwk sinall/selectionfwk
 ```
 
 - 后续更新代码
