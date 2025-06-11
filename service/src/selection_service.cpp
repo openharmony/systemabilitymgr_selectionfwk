@@ -31,7 +31,6 @@
 #include "screenlock_manager.h"
 #include "focus_monitor_manager.h"
 
-
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
 using namespace OHOS::AppExecFwk;
@@ -129,7 +128,7 @@ int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &ar
     return OHOS::NO_ERROR;
 }
 
-static void WatchParameterFunc(const char *key, const char *value, void *context)
+static void WatchEnableSwitch(const char *key, const char *value, void *context)
 {
     (void)context;
     SELECTION_HILOGI("WatchParameterFunc begin");
@@ -141,14 +140,9 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
     (void)context;
     SELECTION_HILOGI("WatchParameterFunc begin");
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
-    if (strcmp(key, SYS_SELECTION_TRIGGER_USERNAM) == 0) {
-        if (strcmp(value, SYS_SELECTION_TRIGGER_VAL) == 0) {
-            BaseSelectionInputMonitor::ctrlSelectFlag = true;
-        } else {
-            BaseSelectionInputMonitor::ctrlSelectFlag = false;
-        }
-        SELECTION_HILOGI("ctrlSelectFlag is %{public}d", BaseSelectionInputMonitor::ctrlSelectFlag);
-    }
+    int triggerCmpResult = strcmp(value, DEFAULT_TRIGGER);
+    BaseSelectionInputMonitor::ctrlSelectFlag = (triggerCmpResult == 0);
+    SELECTION_HILOGI("ctrlSelectFlag is %{public}d", BaseSelectionInputMonitor::ctrlSelectFlag);
 }
 
 void SelectionService::DisconnectCurrentExtAbility()
@@ -210,9 +204,9 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
 void SelectionService::WatchParams()
 {
     SELECTION_HILOGI("WatchParams begin");
-    WatchParameter(SYS_SELECTION_SWITCH_USERNAM, WatchParameterFunc, nullptr);
-    WatchParameter(SYS_SELECTION_TRIGGER_USERNAM, WatchTriggerMode, nullptr);
-    WatchParameter(SYS_SELECTION_APP_USERNAM, WatchAppSwitch, this);
+    WatchParameter(SYS_SELECTION_SWITCH, WatchEnableSwitch, nullptr);
+    WatchParameter(SYS_SELECTION_TRIGGER, WatchTriggerMode, nullptr);
+    WatchParameter(SYS_SELECTION_APP, WatchAppSwitch, this);
     SELECTION_HILOGI("WatchParams end");
 }
 
