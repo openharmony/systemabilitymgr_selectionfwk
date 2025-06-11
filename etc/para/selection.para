@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-persist.sys.selection.switch.username = off
-persist.sys.selection.trigger.username = ctrl
-persist.sys.selection.app.username = com.hm.youdao/ExtensionAbility
+sys.selection.switch = on
+sys.selection.trigger = ctrl
+sys.selection.app = com.hm.youdao/ExtensionAbility
+sys.selection.uid = -1

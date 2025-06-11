@@ -13,7 +13,7 @@
                 "allow-update": true,
                 "param": [
                     {
-                        "name":"persist.sys.selection.switch.username",
+                        "name":"sys.selection.switch",
                         "value":"on"
                     }
                 ]
@@ -22,7 +22,7 @@
                 "allow-update": true,
                 "param": [
                     {
-                        "name":"persist.sys.selection.switch.username",
+                        "name":"sys.selection.switch",
                         "value":"off"
                     }
                 ]

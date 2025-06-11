@@ -30,10 +30,12 @@
 namespace OHOS::SelectionFwk {
 using namespace MMI;
 
-constexpr const char *SYS_SELECTION_SWITCH_USERNAM = "persist.sys.selection.switch.username";
-constexpr const char *SYS_SELECTION_TRIGGER_USERNAM = "persist.sys.selection.trigger.username";
-constexpr const char *SYS_SELECTION_APP_USERNAM = "persist.sys.selection.app.username";
-constexpr const char *SYS_SELECTION_TRIGGER_VAL = "ctrl";
+constexpr const char *SYS_SELECTION_SWITCH = "sys.selection.switch";
+constexpr const char *SYS_SELECTION_TRIGGER = "sys.selection.trigger";
+constexpr const char *SYS_SELECTION_APP = "sys.selection.app";
+constexpr const char *DEFAULT_SWITCH = "on";
+constexpr const char *DEFAULT_TRIGGER = "ctrl";
+constexpr const char *DEFAULT_SELECTION_APP = "com.hm.youdao/ExtensionAbility";
 
 class SelectionExtensionAbilityConnection : public OHOS::AAFwk::AbilityConnectionStub {
 public:
