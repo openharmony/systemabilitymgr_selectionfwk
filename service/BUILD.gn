@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 import("//build/config/components/idl_tool/idl.gni")
-import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
+import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
 config("selection_sa_config") {
   # visibility = [ ":*" ]

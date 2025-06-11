@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_FWK_PANEL_COMMON_H
-#define SELECTION_FWK_PANEL_COMMON_H
+#ifndef SELECTIONFWK_PANEL_COMMON_H
+#define SELECTIONFWK_PANEL_COMMON_H
 
 #include <cstdint>
 
@@ -93,4 +93,4 @@ struct FullPanelAdjustInfo {
 };
 } // namespace SelectionFwk
 } // namespace OHOS
-#endif //SELECTION_FWK_PANEL_COMMON_H
+#endif //SELECTIONFWK_PANEL_COMMON_H

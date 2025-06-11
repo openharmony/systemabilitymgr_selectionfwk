@@ -22,7 +22,7 @@
 #include "selection_log.h"
 #include "selection_panel.h"
 #include "util.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"

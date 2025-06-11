@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_FWK_PANEL_INFO_H
-#define SELECTION_FWK_PANEL_INFO_H
+#ifndef SELECTIONFWK_PANEL_INFO_H
+#define SELECTIONFWK_PANEL_INFO_H
 
 #include "parcel.h"
 
@@ -82,4 +82,4 @@ enum class ImmersiveMode : int32_t {
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif // SELECTION_FWK_PANEL_INFO_H
+#endif // SELECTIONFWK_PANEL_INFO_H

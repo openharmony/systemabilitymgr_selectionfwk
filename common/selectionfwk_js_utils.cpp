@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "js_utils.h"
+#include "selection_js_utils.h"
 
 namespace OHOS {
 namespace SelectionFwk {

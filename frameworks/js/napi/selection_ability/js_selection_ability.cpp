@@ -16,7 +16,7 @@
 #include "js_selection_ability.h"
 
 #include "event_checker.h"
-#include "js_utils.h"
+#include "selection_js_utils.h"
 #include "napi/native_node_api.h"
 #include "selection_log.h"
 #include "util.h"
