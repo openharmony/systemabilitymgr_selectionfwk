@@ -33,10 +33,14 @@ typedef enum {
 struct SelectionInfo {
     SelectionType selectionType;
     std::string text = "";
-    int32_t startPosX = 0;
-    int32_t startPosY = 0;
-    int32_t endPosX = 0;
-    int32_t endPosY = 0;
+    int32_t startDisplayX = 0;
+    int32_t startDisplayY = 0;
+    int32_t endDisplayX = 0;
+    int32_t endDisplayY = 0;
+    int32_t startWindowX = 0;
+    int32_t startWindowY = 0;
+    int32_t endWindowX = 0;
+    int32_t endWindowY = 0;
     uint32_t displayId = 0;
     uint32_t windowId = 0;
     std::string bundleName = "";

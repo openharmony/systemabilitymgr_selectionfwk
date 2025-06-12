@@ -32,10 +32,14 @@ struct SelectionInfoData : public Parcelable {
     bool ReadFromParcel(Parcel &in) {
         data.selectionType = static_cast<SelectionType>(in.ReadInt8());
         data.text = in.ReadString();
-        data.startPosX = in.ReadInt32();
-        data.startPosY = in.ReadInt32();
-        data.endPosX = in.ReadInt32();
-        data.endPosY = in.ReadInt32();
+        data.startDisplayX = in.ReadInt32();
+        data.startDisplayY = in.ReadInt32();
+        data.endDisplayX = in.ReadInt32();
+        data.endDisplayY = in.ReadInt32();
+        data.startWindowX = in.ReadInt32();
+        data.startWindowY = in.ReadInt32();
+        data.endWindowX = in.ReadInt32();
+        data.endWindowY = in.ReadInt32();
         data.displayId = in.ReadUint32();
         data.windowId = in.ReadUint32();
         data.bundleName = in.ReadString();
@@ -49,16 +53,28 @@ struct SelectionInfoData : public Parcelable {
         if (!out.WriteString(data.text)) {
             return false;
         }
-        if (!out.WriteInt32(data.startPosX)) {
+        if (!out.WriteInt32(data.startDisplayX)) {
             return false;
         }
-        if (!out.WriteInt32(data.startPosY)) {
+        if (!out.WriteInt32(data.startDisplayY)) {
             return false;
         }
-        if (!out.WriteInt32(data.endPosX)) {
+        if (!out.WriteInt32(data.endDisplayX)) {
             return false;
         }
-        if (!out.WriteInt32(data.endPosY)) {
+        if (!out.WriteInt32(data.endDisplayY)) {
+            return false;
+        }
+        if (!out.WriteInt32(data.startWindowX)) {
+            return false;
+        }
+        if (!out.WriteInt32(data.startWindowY)) {
+            return false;
+        }
+        if (!out.WriteInt32(data.endWindowX)) {
+            return false;
+        }
+        if (!out.WriteInt32(data.endWindowY)) {
             return false;
         }
         if (!out.WriteUint32(data.displayId)) {
@@ -85,9 +101,12 @@ struct SelectionInfoData : public Parcelable {
     std::string ToString() const {
         std::ostringstream oss;
         oss << "SelectionInfo { selectionType: " << data.selectionType << ", text: \"" << data.text << "\" \
-            startPosX: " << data.startPosX << ", startPosY: " << data.startPosY << ", endPosX: " << data.endPosX << ",\
-            endPosY: " << data.endPosY << ", displayId: " << data.displayId << ", windowId: " << data.windowId <<
-            ", bundleName: " << data.bundleName << "}";
+            startDisplayX: " << data.startDisplayX << ", startDisplayY: " << data.startDisplayY << ", \
+            endDisplayX: " << data.endDisplayX << ", endDisplayY: " << data.endDisplayY << ", \
+            startWindowX: " << data.startWindowX << ", startWindowY: " << data.startWindowY << ", \
+            endWindowX: " << data.endWindowX << ", endWindowY: " << data.endWindowY << ", \
+            displayId: " << data.displayId << ", windowId: " << data.windowId << ", bundleName: \
+            " << data.bundleName << "}";
         return oss.str();
     }
 };

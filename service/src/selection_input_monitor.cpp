@@ -155,10 +155,14 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
-    selectionInfo_.startPosX = pointerItem.GetDisplayX();
-    selectionInfo_.startPosY = pointerItem.GetDisplayY();
-    selectionInfo_.endPosX = pointerItem.GetDisplayX();
-    selectionInfo_.endPosY = pointerItem.GetDisplayY();
+    selectionInfo_.startDisplayX = pointerItem.GetDisplayX();
+    selectionInfo_.startDisplayY = pointerItem.GetDisplayY();
+    selectionInfo_.endDisplayX = pointerItem.GetDisplayX();
+    selectionInfo_.endDisplayY = pointerItem.GetDisplayY();
+    selectionInfo_.startWindowX = pointerItem.GetWindowX();
+    selectionInfo_.startWindowY = pointerItem.GetWindowY();
+    selectionInfo_.endWindowX = pointerItem.GetWindowX();
+    selectionInfo_.endWindowY = pointerItem.GetWindowY();
     selectionInfo_.displayId = pointerEvent->GetTargetDisplayId();
     selectionInfo_.windowId = pointerEvent->GetTargetWindowId();
 
@@ -186,8 +190,10 @@ void BaseSelectionInputMonitor::SaveSelectionEndInfo(std::shared_ptr<PointerEven
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
-    selectionInfo_.endPosX = pointerItem.GetDisplayX();
-    selectionInfo_.endPosY = pointerItem.GetDisplayY();
+    selectionInfo_.endDisplayX = pointerItem.GetDisplayX();
+    selectionInfo_.endDisplayY = pointerItem.GetDisplayY();
+    selectionInfo_.endWindowX = pointerItem.GetWindowX();
+    selectionInfo_.endWindowY = pointerItem.GetWindowY();
 }
 
 void BaseSelectionInputMonitor::SaveSelectionType() const
