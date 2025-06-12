@@ -1,55 +1,38 @@
-## 划词服务代码环境搭建
+# selectionfwk
 
-### 代码结构
+#### 介绍
+划词服务,通过剪贴板获取划词内存，提供划词配置同步接口，划词服务SA监听多模键鼠事件获取鼠标和触控板操作窗口和应用信息，DFX增强。
 
-```
-│   ├── base
-│   │   ├── startup
-│   │   │   └── init            => 代码提交仓: https://gitee.com/sinall/startup_init.git, selection_fwk分支
-│   │   └── security
-│   │       └── selinux_adapter => 代码提交仓: https://gitee.com/sinall/security_selinux_adapter.git, selection_fwk分支
-│   ├── foundation
-│   │   ├──systemabilitymgr
-│   │   │   ├── samgr           => 代码提交仓: https://gitee.com/sinall/systemabilitymgr_samgr.git, selection_fwk分支
-│   │   │   └── selectionfwk   => 代码提交仓: https://gitee.com/sinall/selectionfwk.git, master分支
-│   │   ├──bundlemanager
-│   │   │   └── bundle_framework =>代码提交仓: https://gitee.com/sinall/bundlemanager_bundle_framework.git selection_fwk分支
-│   │   └──ability
-│   │       └── ability_runtime => 代码提交仓: https://gitee.com/sinall/ability_ability_runtime.git, selection_fwk分支
-│   ├── productdefine
-│   │   	└── common          => 代码提交仓: https://gitee.com/sinall/productdefine_common.git, selection_fwk分支
-```
+#### 仓路径
+/foundation/systemabilitymgr/selectionfwk
 
-### 更新代码命令
-
-- 初次环境搭建，在代码仓库对应目录下执行以下命令
+## 目录
 
 ```
-1. selection_fwk仓库：
-cd foundation/systemabilitymgr
-git clone https://gitee.com/sinall/selectionfwk.git 
-2. 其余仓库
-$ cd foundation/systemabilitymgr/samgr（修改为对应仓库路径）
-$ git remote add sinall https://gitee.com/sinall/systemabilitymgr_samgr.git（修改为对应仓库的网址）
-$ git fetch sinall selectionfwk
-$ git checkout -b selectionfwk sinall/selectionfwk
+/foundation/systemabilitymgr
+├── selectionfwk
+│   ├── common                                      # 公共代码
+│   ├── etc                                         # 组件包含的进程的配置文件
+│   ├── frameworks                                  # 接口实现
+│   │   └── js/napi                                 # 划词框架napi接口
+│   │   └── native                                  # native接口
+│   ├── sa_profile                                  # sa定义
+│   ├── services                                    # 划词框架服务
+│   ├── test                                        # 接口测试目录
+│   │   └── unitest                                 # 接口的单元测试
+│   ├── utils                                       # 核心服务工具代码目录
 ```
 
-- 后续更新代码
-
-```
-cd foundation/systemabilitymgr（修改为对应的仓库路径）
-git pull --reb sinall master（修改为对应的分支名）
-```
-
-### 编译命令
+### 编译步骤
 
 - 全量编译
 
-```
 修改build.gn文件后编译命令
+```
 $ ./build.sh --product-name rk3568 --ccache
+```
 未修改build.gn文件编译命令
+```
 $ ./build.sh --product-name rk3568 --ccache --fast-rebuild
 ```
 
@@ -59,32 +42,45 @@ $ ./build.sh --product-name rk3568 --ccache --fast-rebuild
 $ ./build.sh --product-name rk3568 --ccache --build-target selectionfwk
 ```
 
-### 测试命令
+### 测试步骤
 
-1. 测试启动服务
+1. 测试方法
 
+查看服务进程
 ```
-# ps -ef | grep selection_service
-未启动服务
-# param set sys.selection.switch.username on
-# ps -e未启动服务f | grep selection_service
-服务已启动
+# ps -ef | grep selection
+```
+启动划词服务
+```
+# param set sys.selection.switch on
+```
+关闭划词服务
+```
+# param set sys.selection.switch off
+```
+切换划词应用
+```
+# param set sys.selection.app com.selection.selectionapplication/SelectionExtensionAbility
+```
+设置划词触发方式
+```
+# param set sys.selection.trigger ""
 ```
 
-2. 测试关闭服务 （系统参数关闭会延时，等待约20-30s）
+2. 获取日志命令
 
+打开debug日志
 ```
-# ps -ef | grep selection_service
-服务已启动
-# param set sys.selection.switch.username off
-# ps -ef | grep selection_service
-服务已退出
-```
-
-3. 获取日志命令
-
-```
-# dmesg | grep selection_service
 # hilog -b D
-# hilog | grep 8500
 ```
+过滤日志
+```
+# hilog -T SELECTION_SERVICE
+```
+
+## 参与贡献
+
+1.  Fork 本仓库
+2.  提交代码
+3.  新建 Pull Request
+4.  commit完成即可
