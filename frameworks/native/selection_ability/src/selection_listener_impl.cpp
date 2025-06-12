@@ -52,12 +52,17 @@ ErrCode SelectionListenerImpl::FocusChange(uint32_t windowID, uint32_t windowTyp
     if (!panelManager.FindWindowID(windowID)) {
         return 0;
     }
-    if (windowType == PanelType::MENU_PANEL) {
+    auto selectionPanel = panelManager.GetSelectionPanel(windowID);
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGE("get selectionPanel is nullptr, windowID: %{public}d", windowID);
+        return 1;
+    }
+    if (selectionPanel->GetPanelType() == PanelType::MENU_PANEL) {
         SELECTION_HILOGI("hide windowID: %{public}d", windowID);
         panelManager.GetSelectionPanel(windowID)->HidePanel();
     }
 
-    if (windowType == PanelType::MAIN_PANEL) {
+    if (selectionPanel->GetPanelType() == PanelType::MAIN_PANEL) {
         SELECTION_HILOGI("destroy windowID: %{public}d", windowID);
         panelManager.GetSelectionPanel(windowID)->DestroyPanel();
         panelManager.RemoveSelectionPanel(windowID);
