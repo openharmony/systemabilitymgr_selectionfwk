@@ -171,7 +171,7 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
     windowInfoOption.windowId = selectionInfo_.windowId;
     std::vector<sptr<Rosen::WindowInfo>> infos;
     Rosen::WMError ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
-    SELECTION_HILOGI("ListWindowInfo ret: %{public}d, infos size: %{public}d", ret, infos.size());
+    SELECTION_HILOGI("ListWindowInfo ret: %{public}d, infos size: %{public}zu", ret, infos.size());
     for (unsigned int i = 0; i < infos.size(); i++) {
         auto info = infos[i];
         SELECTION_HILOGI("ListWindowInfo bundleName: %{public}s", info->windowMetaInfo.bundleName.c_str());
