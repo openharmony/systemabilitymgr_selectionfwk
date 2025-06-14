@@ -14,9 +14,11 @@
  */
 
 import selectionManager from '@ohos.selectionInput.selectionManager'
+import PanelInfo from '@ohos.selectionInput.SelectionPanel'
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 
 describe("SystemApiJsTest", function () {
+    panel_: selectionManager.Panel = undefined;
     beforeAll(function () {
         console.info('beforeAll called');
     })
@@ -26,19 +28,37 @@ describe("SystemApiJsTest", function () {
     })
 
     /*
-     * @tc.name:SystemApi_destroyPanel_001
-     * @tc.desc:verify SystemApi of destroyPanel
+     * @tc.name:SystemApi_createPanel_001
+     * @tc.desc:verify SystemApi of createPanel
      * @tc.type: FUNC
      */
-    // it("SystemApi_destroyPanel_001", 0, done => {
-    //     console.info('----------------------SystemApi_destroyPanel_001---------------------------');
-    //     try {
-    //         selectionManager.destroyPanel(selectionManager.panel);
-    //         expect(false).assertTrue();
-    //         done();
-    //     } catch (err) {
-    //         expect(err.code).assertEqual(SYSTEMAPI_DENIED_CODE);
-    //         done();
-    //     }
-    // });
+    it('SystemApi_createPanel_001', 0, async function (done) {
+      console.info('************* SystemApi_createPanel_001 Test start*************');
+      try {
+        let panelInfo = {
+            panelType: 1,
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 100
+        }
+        selectionManager.createPanel(this.context, panelInfo).then((panel) => {
+          console.info('SystemApi_createPanel_001 promise success');
+          this.panel_ = panel;
+          expect(true).assertTrue();
+          done();
+        }).catch((error) => {
+          console.info(`SystemApi_createPanel_001 result: ${JSON.stringify(error)}`);
+          expect().assertFail();
+          done();
+        })
+      } catch (error) {
+        console.info(`SystemApi_createPanel_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      }
+      console.info('************* SystemApi_createPanel_001 Test end*************');
+    });
+
+
 });
