@@ -61,6 +61,84 @@ describe("SystemApiJsTest", function () {
   });
 
   /*
+   * @tc.name:selection_panel_setUiContent_001
+   * @tc.desc:verify method of setUiContent
+   * @tc.type: FUNC
+   */
+  it('selection_panel_setUiContent_001', 0, async function (done) {
+    console.info('************* selection_panel_setUiContent_001 Test start*************');
+    try {
+      this.panel_.setUiContent('pages/Index')
+      .then(() => {
+        console.info('selection_panel_setUiContent_001 promise success');
+        expect(true).assertTrue();
+        done();
+      }).catch((error) => {
+        console.info(`selection_panel_setUiContent_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      })
+    } catch (error) {
+      console.info(`selection_panel_setUiContent_001 result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+    console.info('************* selection_panel_setUiContent_001 Test end*************');
+  });
+
+  /*
+   * @tc.name:selection_panel_setUiContent_002
+   * @tc.desc:verify method of setUiContent
+   * @tc.type: FUNC
+   */
+  it('selection_panel_setUiContent_002', 0, async function (done) {
+    console.info('************* selection_panel_setUiContent_002 Test start*************');
+    try {
+      this.panel_.setUiContent('pages/Panel')
+      .then(() => {
+        console.info('selection_panel_setUiContent_002 promise success');
+        expect(false).assertTrue();
+        done();
+      }).catch((error) => {
+        console.info(`selection_panel_setUiContent_002 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      })
+    } catch (error) {
+      console.info(`selection_panel_setUiContent_002 result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+    console.info('************* selection_panel_setUiContent_002 Test end*************');
+  });
+
+  /*
+   * @tc.name:selection_panel_show_001
+   * @tc.desc:verify method of setUiContent
+   * @tc.type: FUNC
+   */
+  it('selection_panel_show_001', 0, async function (done) {
+    console.info('************* selection_panel_show_001 Test start*************');
+    try {
+      this.panel_.show()
+      .then(() => {
+        console.info('selection_panel_show_001 promise success');
+        expect(true).assertTrue();
+        done();
+      }).catch((error) => {
+        console.info(`selection_panel_show_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      })
+    } catch (error) {
+      console.info(`selection_panel_show_001 result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+    console.info('************* selection_panel_show_001 Test end*************');
+  });
+
+  /*
    * @tc.name:SystemApi_hide_001
    * @tc.desc:verify SystemApi of hide
    * @tc.type: FUNC
