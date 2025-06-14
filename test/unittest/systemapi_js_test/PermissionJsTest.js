@@ -60,5 +60,82 @@ describe("SystemApiJsTest", function () {
       console.info('************* SystemApi_createPanel_001 Test end*************');
     });
 
+    /*
+     * @tc.name:SystemApi_hide_001
+     * @tc.desc:verify SystemApi of hide
+     * @tc.type: FUNC
+     */
+    it('SystemApi_hide_001', 0, async function (done) {
+      console.info('************* SystemApi_hide_001 Test start*************');
+      try {
+        this.panel_.hide().then(() => {
+          console.info('SystemApi_hide_001 promise success');
+          expect(true).assertTrue();
+          done();
+        }).catch((error) => {
+          console.info(`SystemApi_hide_001 result: ${JSON.stringify(error)}`);
+          expect().assertFail();
+          done();
+        })
+      } catch (error) {
+        console.info(`SystemApi_hide_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      }
+      console.info('************* SystemApi_hide_001 Test end*************');
+    });
+
+    /*
+     * @tc.name:SystemApi_startMoving_001
+     * @tc.desc:verify SystemApi of startMoving
+     * @tc.type: FUNC
+     */
+    it('SystemApi_startMoving_001', 0, async function (done) {
+      console.info('************* SystemApi_startMoving_001 Test start*************');
+      try {
+        this.panel_.startMoving().then(() => {
+          console.info('SystemApi_startMoving_001 promise success');
+          expect(true).assertTrue();
+          done();
+        }).catch((error) => {
+          console.info(`SystemApi_startMoving_001 result: ${JSON.stringify(error)}`);
+          expect().assertFail();
+          done();
+        })
+      } catch (error) {
+        console.info(`SystemApi_startMoving_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      }
+      console.info('************* SystemApi_startMoving_001 Test end*************');
+    });
+
+    /*
+     * @tc.name:SystemApi_moveTo_001
+     * @tc.desc:verify SystemApi of moveTo
+     * @tc.type: FUNC
+     */
+    it('SystemApi_moveTo_001', 0, async function (done) {
+      console.info('************* SystemApi_moveTo_001 Test start*************');
+      try {
+        let x = 100;
+        let y = 100;
+        this.panel_.moveTo(x, y).then(() => {
+          console.info('SystemApi_moveTo_001 promise success');
+          expect(true).assertTrue();
+          done();
+        }).catch((error) => {
+          console.info(`SystemApi_moveTo_001 result: ${JSON.stringify(error)}`);
+          expect().assertFail();
+          done();
+        })
+      } catch (error) {
+        console.info(`SystemApi_moveTo_001 result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      }
+      console.info('************* SystemApi_moveTo_001 Test end*************');
+    });
+
 
 });
