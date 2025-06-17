@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include "gtest/gtest.h"
 #include <chrono>
 #include <thread>
-#include "gtest/gtest.h"
 
 #include "screenlock_manager.h"
 #include "selection_input_monitor.h"
@@ -32,7 +32,7 @@ struct EventStruct {
 
 std::shared_ptr<PointerEvent> GetPointerEvent()
 {
-    static std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
     PointerEvent::PointerItem pointerItem;
     pointerItem.SetDisplayX(100);
     pointerItem.SetDisplayY(200);
@@ -62,9 +62,16 @@ void LEFT_BUTTON_UP(std::shared_ptr<T> handler)
 }
 
 template <typename T>
+void LEFT_BUTTON_CLICK(std::shared_ptr<T> handler)
+{
+    LEFT_BUTTON_DOWN(handler);
+    LEFT_BUTTON_UP(handler);
+}
+
+template <typename T>
 void RIGHT_BUTTON_DOWN(std::shared_ptr<T> handler)
 {
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = GetPointerEvent();
     pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_RIGHT);
     pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_DOWN);
     handler->OnInputEvent(pointEvent);
@@ -73,7 +80,7 @@ void RIGHT_BUTTON_DOWN(std::shared_ptr<T> handler)
 template <typename T>
 void RIGHT_BUTTON_UP(std::shared_ptr<T> handler)
 {
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = GetPointerEvent();
     pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_RIGHT);
     pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_UP);
     handler->OnInputEvent(pointEvent);
@@ -114,14 +121,14 @@ void WAIT_TIMEOUT()
 void CHECK_INFO(const SelectionInfo& info)
 {
     EXPECT_NE(info.selectionType, 0);
-    EXPECT_NE(info.startDisplayX, 0);
-    EXPECT_NE(info.startDisplayY, 0);
-    EXPECT_NE(info.endDisplayX, 0);
-    EXPECT_NE(info.endDisplayY, 0);
-    EXPECT_NE(info.startWindowX, 0);
-    EXPECT_NE(info.startWindowY, 0);
-    EXPECT_NE(info.endWindowX, 0);
-    EXPECT_NE(info.endWindowY, 0);
+    EXPECT_GT(info.startDisplayX, 0);
+    EXPECT_GT(info.startDisplayY, 0);
+    EXPECT_GT(info.endDisplayX, 0);
+    EXPECT_GT(info.endDisplayY, 0);
+    EXPECT_GT(info.startWindowX, 0);
+    EXPECT_GT(info.startWindowY, 0);
+    EXPECT_GT(info.endWindowX, 0);
+    EXPECT_GT(info.endWindowY, 0);
 }
 
 class BaseSelectionInputMonitorTest : public testing::Test {
@@ -176,10 +183,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor002 start " << std::endl;
 
-    LEFT_BUTTON_DOWN(inputMonitor);
-    LEFT_BUTTON_UP(inputMonitor);
-    LEFT_BUTTON_DOWN(inputMonitor);
-    LEFT_BUTTON_UP(inputMonitor);
+    LEFT_BUTTON_CLICK(inputMonitor);
+    LEFT_BUTTON_CLICK(inputMonitor);
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
@@ -191,12 +196,9 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor003 start " << std::endl;
 
-    LEFT_BUTTON_DOWN(inputMonitor);
-    LEFT_BUTTON_UP(inputMonitor);
-    LEFT_BUTTON_DOWN(inputMonitor);
-    LEFT_BUTTON_UP(inputMonitor);
-    LEFT_BUTTON_DOWN(inputMonitor);
-    LEFT_BUTTON_UP(inputMonitor);
+    LEFT_BUTTON_CLICK(inputMonitor);
+    LEFT_BUTTON_CLICK(inputMonitor);
+    LEFT_BUTTON_CLICK(inputMonitor);
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
@@ -222,7 +224,6 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor005, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor005 start " << std::endl;
 
-    // double click
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
@@ -239,7 +240,6 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor006, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor006 start " << std::endl;
 
-    // triple click
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
@@ -261,7 +261,6 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor007, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor007 start " << std::endl;
 
-    // triple click
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
@@ -283,7 +282,6 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor008, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor008 start " << std::endl;
 
-    // triple click
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
@@ -308,7 +306,6 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor009, TestSize.Level1)
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
-    // move
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_MOVE(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
@@ -343,11 +340,10 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor011, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor011 start " << std::endl;
 
-    // move
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_MOVE(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
@@ -360,7 +356,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor011, TestSize.Level1)
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor012, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor012 start " << std::endl;
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
@@ -377,7 +373,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor012, TestSize.Level1)
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor013, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor013 start " << std::endl;
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
@@ -396,7 +392,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor013, TestSize.Level1)
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor014, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor014 start " << std::endl;
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
@@ -418,7 +414,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor014, TestSize.Level1)
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor015, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor015 start " << std::endl;
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
@@ -429,7 +425,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor015, TestSize.Level1)
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor016, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor016 start " << std::endl;
-    // ctrl
+
     CTRL_DOWN(inputMonitor);
     CTRL_UP(inputMonitor);
 
