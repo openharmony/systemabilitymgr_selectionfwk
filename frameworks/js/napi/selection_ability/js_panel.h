@@ -39,6 +39,7 @@ enum class JsEvent : uint32_t {
     GET_DISPLAYID,
     SET_IMMERSIVE_MODE,
     GET_IMMERSIVE_MODE,
+    START_MOVING,
     EVENT_END,
 };
 

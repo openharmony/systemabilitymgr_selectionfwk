@@ -12,50 +12,14 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//build/config/components/idl_tool/idl.gni")
 import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
 config("selection_sa_config") {
-  # visibility = [ ":*" ]
   include_dirs = [
     "include",
     "../utils/include",
     "${target_gen_dir}",
   ]
-}
-
-idl_interface_sources = [
-  "${target_gen_dir}/selection_service_proxy.cpp",
-  "${target_gen_dir}/selection_service_stub.cpp",
-]
-
-idl_gen_interface("selection_service_interface") {
-  src_idl = rebase_path("ISelectionService.idl")
-  dst_file = string_join(",", idl_interface_sources)
-}
-
-ohos_source_set("selection_service_proxy") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    cfi_vcall_icall_only = true
-    debug = false
-  }
-  include_dirs = [
-    "${target_gen_dir}",
-  ]
-
-  public_configs = [":selection_sa_config"]
-  output_values = get_target_outputs(":selection_service_interface")
-  sources = filter_include(output_values, [ "*_proxy.cpp" ])
-  deps = [ ":selection_service_interface" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-  part_name = "selectionfwk"
-  subsystem_name = "systemabilitymgr"
 }
 
 ohos_shared_library("selection_service") {
@@ -76,7 +40,6 @@ ohos_shared_library("selection_service") {
     "-std=c++17",
   ]
   configs = [ ":selection_sa_config", ]
-  output_values = get_target_outputs(":selection_service_interface")
 
   include_dirs = [
     "./focus_monitor/include",
@@ -88,21 +51,24 @@ ohos_shared_library("selection_service") {
     "src/selection_input_monitor.cpp",
     "focus_monitor/src/focus_change_listener.cpp",
     "focus_monitor/src/focus_monitor_manager.cpp",
+    "src/selection_app_validator.cpp",
     "src/selection_config.cpp",
     "src/selection_config_database.cpp",
     "src/sys_selection_config_repository.cpp",
     "src/selection_config_comparator.cpp",
+    "src/selection_common.cpp",
   ]
-  sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
-    ":selection_service_interface",
+    "${selection_fwk_root_path}/interfaces/idl:selection_service_interface",
     "${selection_fwk_root_path}/common:selection_common",
-    "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_listener_proxy",
+    "${selection_fwk_root_path}/interfaces/idl:selection_service_stub",
+    "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
   ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "napi:ace_napi",
     "hilog:libhilog",
@@ -112,7 +78,6 @@ ohos_shared_library("selection_service") {
     "pasteboard:pasteboard_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "screenlock_mgr:screenlock_client",
     "input:libmmi-client",
     "window_manager:libdm_lite",
     "window_manager:libwsutils",

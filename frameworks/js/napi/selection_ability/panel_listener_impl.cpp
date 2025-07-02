@@ -57,7 +57,7 @@ void PanelListenerImpl::OnPanelStatus(uint32_t windowId, const std::string& stat
     }
     CallbackVector callBacks = GetCallback(windowId, status);
     if (callBacks.empty()) {
-        SELECTION_HILOGE("callBack is nullptr!");
+        SELECTION_HILOGE("callBacks is empty!");
         return;
     }
     SELECTION_HILOGI("OnPanelStatus status: %{public}s", status.c_str());
@@ -144,7 +144,8 @@ void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId)
     });
 }
 
-void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId, std::shared_ptr<JSCallbackObject> cbObject)
+void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId,
+    std::shared_ptr<JSCallbackObject> cbObject)
 {
     callbacks_.ComputeIfPresent(windowId, [&type, cbObject](auto windowId, TypeMap& cbs) {
         auto it = cbs.find(type);

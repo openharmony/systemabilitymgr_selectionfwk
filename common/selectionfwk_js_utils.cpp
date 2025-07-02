@@ -24,14 +24,14 @@ constexpr size_t ARGC_MAX = 6;
 const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
     { ErrorCode::ERROR_PARAMETER_CHECK_FAILED, EXCEPTION_PARAMCHECK },
     { ErrorCode::ERROR_SELECTION_SERVICE, EXCEPTION_SELECTION_SERVICE },
-    { ErrorCode::ERROR_PANEL_DESTORYED, EXCEPTION_PANEL_DESTORYED },
+    { ErrorCode::ERROR_PANEL_DESTROYED, EXCEPTION_PANEL_DESTROYED },
     { ErrorCode::ERROR_INVALID_OPERATION, EXCEPTION_INVALID_OPERATION }
 };
 
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_PARAMCHECK, "The parameters check fails." },
     { EXCEPTION_SELECTION_SERVICE, "Selection service exception." },
-    { EXCEPTION_PANEL_DESTORYED, "This selection window has been destroyed." },
+    { EXCEPTION_PANEL_DESTROYED, "This selection window has been destroyed." },
     { EXCEPTION_INVALID_OPERATION, "Invalid operation. The selection app is not valid." }
 };
 

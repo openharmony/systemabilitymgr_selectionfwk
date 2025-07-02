@@ -43,6 +43,8 @@ void JsCallbackHandler::Execute(const std::shared_ptr<JSCallbackObject> &object,
     auto status = napi_call_function(object->env_, global, callback, argContainer.argc, argv, &output);
     if (status != napi_ok) {
         output = nullptr;
+        SELECTION_HILOGE("napi_call_function is failed!");
+        return;
     }
 }
 } // namespace SelectionFwk

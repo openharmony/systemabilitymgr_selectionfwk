@@ -1,17 +1,21 @@
 {
-  "name": "@ohos/selection_service",
+  "name": "@ohos/selectionfwk",
   "description": "Provide word selection capabilities",
   "version": "1.0",
   "license": "Apache License 2.0",
   "segment": {
-    "destPath": "foundation/systemabilitymgr/selection_service"
+    "destPath": "foundation/systemabilitymgr/selectionfwk"
   },
   "component": {
     "name": "selectionfwk",
     "subsystem": "systemabilitymgr",
-    "syscap": [],
+    "syscap": [
+      "SystemCapability.SelectionInput.Selection"
+    ],
     "features": [],
     "adapted_system_type": [
+      "mini",
+      "small",
       "standard"
     ],
     "rom": "5831KB",
@@ -21,7 +25,6 @@
         "c_utils",
         "eventhandler",
         "ipc",
-        "napi",
         "safwk",
         "hilog",
         "hitrace",
@@ -31,6 +34,7 @@
         "napi",
         "ability_base",
         "ability_runtime",
+        "access_token",
         "window_manager",
         "pasteboard",
         "relational_store",
@@ -40,7 +44,12 @@
         "ffrt",
         "config_policy",
         "os_account",
-        "screenlock_mgr"
+        "cJSON",
+        "common_event_service",
+        "hicollie",
+        "hisysevent",
+        "memmgr",
+        "resource_schedule_service"
       ],
       "third_party": [
       ]
@@ -53,17 +62,28 @@
         "//foundation/systemabilitymgr/selectionfwk/etc/para:selection_para_dac",
         "//foundation/systemabilitymgr/selectionfwk/service:selection_service",
         "//foundation/systemabilitymgr/selectionfwk/sa_profile:selection_service_sa_profile",
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_panel:selectionpanel_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_context:selectionextensioncontext_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_extension:selection_extension_ability_native",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_ability:selectionmanager_napi",
-        "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_ability:selection_ability"
+        "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_ability:selection_ability",
+        "//foundation/systemabilitymgr/selectionfwk/interfaces/inner_kits/selection_client:selection_client"
       ],
-      "inner_kits": [],
+      "inner_kits": [
+        {
+          "name": "//foundation/systemabilitymgr/selectionfwk/interfaces/inner_kits/selection_client:selection_client",
+          "header": {
+              "header_files": [
+                  "selection_client.h"
+              ],
+              "header_base": "//foundation/systemabilitymgr/selectionfwk/interfaces/inner_kits/selection_client/include"
+          }
+      }
+      ],
       "test": [
-        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_service_unit_test",
-        "//foundation/systemabilitymgr/selectionfwk/test/fuzztest:selection_service_fuzztest",
-        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_manager_ut"
+        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_manager_ut",
+        "//foundation/systemabilitymgr/selectionfwk/test/fuzztest:selection_service_fuzztest"
       ]
     }
   }

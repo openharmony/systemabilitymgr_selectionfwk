@@ -27,10 +27,9 @@ void FocusChangedListener::OnFocused(const sptr<Rosen::FocusChangeInfo> &focusCh
         SELECTION_HILOGE("error nullptr");
         return;
     }
-    SELECTION_HILOGI("windowId:%{public}d displayId: %{public}" PRIu64 " pid: %{public}d, uid: %{public}d",
-        focusChangeInfo->windowId_, focusChangeInfo->displayId_, focusChangeInfo->pid_, focusChangeInfo->uid_);
-    uint32_t windowType = static_cast<uint32_t>(focusChangeInfo->windowType_);
-    focusHandle_(true, focusChangeInfo->windowId_, windowType);
+    SELECTION_HILOGI("windowId:%{public}d displayId: %{public}" PRIu64,
+        focusChangeInfo->windowId_, focusChangeInfo->displayId_);
+    focusHandle_(focusChangeInfo, true);
 }
 
 void FocusChangedListener::OnUnfocused(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo)
@@ -41,8 +40,7 @@ void FocusChangedListener::OnUnfocused(const sptr<Rosen::FocusChangeInfo> &focus
     }
     SELECTION_HILOGI("windowId:%{public}d displayId: %{public}" PRIu64 " Windowtype: %{public}d",
         focusChangeInfo->windowId_, focusChangeInfo->displayId_, focusChangeInfo->windowType_);
-    uint32_t windowType = static_cast<uint32_t>(focusChangeInfo->windowType_);
-    focusHandle_(false, focusChangeInfo->windowId_, windowType);
+    focusHandle_(focusChangeInfo, false);
 }
 } // namespace SelectionFwk
 } // namespace OHOS

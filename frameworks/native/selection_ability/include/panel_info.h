@@ -20,56 +20,17 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-enum PanelType {
+enum class PanelType: uint32_t {
     MENU_PANEL = 1,
     MAIN_PANEL = 2,
 };
 
-struct PanelInfo : public Parcelable {
-    PanelType panelType = MAIN_PANEL;
+struct PanelInfo {
+    PanelType panelType{};
     int32_t x = 0;
     int32_t y = 0;
     int32_t width = 0;
     int32_t height = 0;
-
-    bool ReadFromParcel(Parcel &in)
-    {
-        int32_t panelTypeData = in.ReadInt32();
-        panelType = static_cast<PanelType>(panelTypeData);
-        x = in.ReadInt32();
-        y = in.ReadInt32();
-        width = in.ReadInt32();
-        height = in.ReadInt32();
-        return true;
-    }
-    bool Marshalling(Parcel &out) const
-    {
-        if (!out.WriteInt32(static_cast<int32_t>(panelType))) {
-            return false;
-        }
-        if (!out.WriteInt32(x)) {
-            return false;
-        }
-        if (!out.WriteInt32(y)) {
-            return false;
-        }
-        if (!out.WriteInt32(width)) {
-            return false;
-        }
-        if (!out.WriteInt32(height)) {
-            return false;
-        }
-        return true;
-    }
-    static PanelInfo *Unmarshalling(Parcel &in)
-    {
-        PanelInfo *data = new (std::nothrow) PanelInfo();
-        if (data && !data->ReadFromParcel(in)) {
-            delete data;
-            data = nullptr;
-        }
-        return data;
-    }
 };
 
 enum class ImmersiveMode : int32_t {

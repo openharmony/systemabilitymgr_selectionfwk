@@ -43,9 +43,9 @@ ohos_unittest("selection_service_unit_test") {
     "ipc:ipc_single",
     "init:libbeget_proxy",
     "input:libmmi-client",
+    "pasteboard:pasteboard_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "screenlock_mgr:screenlock_client",
   ]
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"
@@ -54,6 +54,9 @@ ohos_unittest("selection_service_unit_test") {
 group("selection_manager_ut") {
   testonly = true
   deps = [
-    "systemapi_js_test:SystemApiJsTest",
+    ":selection_service_unit_test",
+    "resource/ohos_test:copy_ohos_test",
+    "selection_manager_js_test:SelectionManagerJsTest",
+    "selection_manager_invalid_operation_js_test:SelectionManagerInvalidOperationJsTest",
   ]
 }

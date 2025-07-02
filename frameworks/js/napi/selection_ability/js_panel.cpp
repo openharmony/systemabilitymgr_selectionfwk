@@ -74,8 +74,10 @@ napi_value JsPanel::JsNew(napi_env env, napi_callback_info info)
         SELECTION_HILOGD("jsPanel finalize.");
         auto *jsPanel = reinterpret_cast<JsPanel *>(data);
         CHECK_RETURN_VOID(jsPanel != nullptr, "finalize nullptr!");
-        jsPanel->GetNative() = nullptr;
-        delete jsPanel;
+        jsPanel->GetNative().reset();
+        if (jsPanel != nullptr) {
+            delete jsPanel;
+        }
     };
     napi_value thisVar = nullptr;
     napi_status status = napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
@@ -129,13 +131,13 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_PANEL_DESTROYED);
             return napi_generic_failure;
         }
         auto code = ctxt->selectionPanel->SetUiContent(ctxt->path, env);
         jsQueue_.Pop();
         if (code != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(code);
-            JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to SetUiContent", TYPE_NONE);
             return napi_generic_failure;
         }
         return napi_ok;
@@ -155,11 +157,12 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
         jsQueue_.Push(ctxt->info);
         return napi_ok;
     };
-    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
         jsQueue_.Wait(ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_PANEL_DESTROYED);
             return;
         }
         auto code = SelectionAbility::GetInstance()->ShowPanel(ctxt->selectionPanel);
@@ -169,7 +172,6 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
             return;
         }
         ctxt->SetErrorCode(code);
-        JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to show", TYPE_NONE);
     };
     ctxt->SetAction(std::move(input));
     // 1 means JsAPI:show has 1 param at most.
@@ -187,11 +189,12 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
         jsQueue_.Push(ctxt->info);
         return napi_ok;
     };
-    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
         jsQueue_.Wait(ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_PANEL_DESTROYED);
             return;
         }
         auto code = SelectionAbility::GetInstance()->HidePanel(ctxt->selectionPanel);
@@ -201,7 +204,6 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
             return;
         }
         ctxt->SetErrorCode(code);
-        JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to hide", TYPE_NONE);
     };
     ctxt->SetAction(std::move(input));
     // 1 means JsAPI:hide has 1 param at most.
@@ -211,27 +213,34 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 {
-    napi_value self = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, 0, nullptr, &self, nullptr));
-    RESULT_CHECK_RETURN(env, (self != nullptr), JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
-                        "", TYPE_NONE, JsUtil::Const::Null(env));
-    void *native = nullptr;
-    NAPI_CALL(env, napi_unwrap(env, self, &native));
-    RESULT_CHECK_RETURN(env, (native != nullptr), JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
-                        "", TYPE_NONE, JsUtil::Const::Null(env));
-    auto selectionPanel = reinterpret_cast<JsPanel *>(native)->GetNative();
-    if (selectionPanel == nullptr) {
-        SELECTION_HILOGE("selectionPanel is nullptr!");
-        JsUtils::ThrowException(env, JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
-            "failed to start moving, selectionPanel is nullptr", TYPE_NONE);
-        return JsUtil::Const::Null(env);
-    }
+    SELECTION_HILOGD("StartMoving start!");
+    auto ctxt = std::make_shared<PanelContentContext>(env, info);
+    auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        ctxt->info = { std::chrono::system_clock::now(), JsEvent::START_MOVING };
+        jsQueue_.Push(ctxt->info);
+        return napi_ok;
+    };
 
-    auto ret = selectionPanel->StartMoving();
-    if (ret != ErrorCode::NO_ERROR) {
-        JsUtils::ThrowException(env, JsUtils::Convert(ret), "failed to start moving", TYPE_NONE);
-    }
-    return JsUtil::Const::Null(env);
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
+        jsQueue_.Wait(ctxt->info);
+        if (ctxt->selectionPanel == nullptr) {
+            SELECTION_HILOGE("selectionPanel is nullptr!");
+            jsQueue_.Pop();
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_PANEL_DESTROYED);
+            return;
+        }
+        auto code = ctxt->selectionPanel->StartMoving();
+        jsQueue_.Pop();
+        if (code != ErrorCode::NO_ERROR) {
+            ctxt->SetErrorCode(code);
+            return;
+        }
+        ctxt->SetState(napi_ok);
+    };
+    ctxt->SetAction(std::move(input));
+
+    AsyncCall asyncCall(env, info, ctxt, 1);
+    return asyncCall.Call(env, exec, "startMoving");
 }
 
 napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
@@ -247,24 +256,28 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         // 1 means the second param y<int32_t>
         PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[1], ctxt->y) == napi_ok, "y type must be number",
             TYPE_NONE, status);
+        PARAM_CHECK_RETURN(env, ctxt->x >= 0 && ctxt->y >= 0, "x/y must be positive",
+            TYPE_NONE, status);
         ctxt->info = { std::chrono::system_clock::now(), JsEvent::MOVE_TO };
         jsQueue_.Push(ctxt->info);
         return napi_ok;
     };
 
-    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
         int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         jsQueue_.Wait(ctxt->info);
         PrintEditorQueueInfoIfTimeout(start, ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_PANEL_DESTROYED);
             return;
         }
         auto code = ctxt->selectionPanel->MoveTo(ctxt->x, ctxt->y);
         jsQueue_.Pop();
         if(code != ErrorCode::NO_ERROR) {
-            JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to moveTo", TYPE_NONE);
+            ctxt->SetErrorCode(code);
+            return;
         }
         ctxt->SetState(napi_ok);
     };
@@ -301,6 +314,7 @@ napi_value JsPanel::Subscribe(napi_env env, napi_callback_info info)
         !EventChecker::IsValidEventType(EventSubscribeModule::PANEL, type) ||
         JsUtil::GetType(env, argv[1]) != napi_function) {
         SELECTION_HILOGE("subscribe failed, type: %{public}s!", type.c_str());
+        JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, "", TYPE_NONE);
         return nullptr;
     }
     SELECTION_HILOGD("subscribe type: %{public}s.", type.c_str());

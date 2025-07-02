@@ -21,6 +21,7 @@
 
 #include "ability_connect_callback_stub.h"
 #include "callback_object.h"
+#include "focus_change_info.h"
 #include "iselection_listener.h"
 #include "selection_service_stub.h"
 #include "refbase.h"
@@ -44,8 +45,6 @@ public:
     void OnAbilityConnectDone(
         const OHOS::AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
     void OnAbilityDisconnectDone(const OHOS::AppExecFwk::ElementName &element, int resultCode) override;
-private:
-    sptr<IRemoteObject> remoteObject_;
 };
 
 class SelectionService : public SystemAbility, public SelectionServiceStub {
@@ -57,8 +56,9 @@ public:
     SelectionService(int32_t saId, bool runOnCreate);
     ~SelectionService();
 
-    ErrCode RegisterListener(const sptr<IRemoteObject> &listener) override;
-    ErrCode UnregisterListener(const sptr<IRemoteObject> &listener) override;
+    ErrCode RegisterListener(const sptr<ISelectionListener>& listener) override;
+    ErrCode UnregisterListener(const sptr<ISelectionListener>& listener) override;
+    ErrCode IsCurrentSelectionApp(int pid, bool &resultValue) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
     void DisconnectCurrentExtAbility();
@@ -76,18 +76,19 @@ private:
     void InputMonitorCancel();
     void WatchParams();
     void InitFocusChangedMonitor();
-    void HandleFocusChanged(bool isOnFocused, uint32_t windowId, uint32_t windowType);
+    void CancelFocusChangedMonitor();
+    void HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused);
     void SynchronizeSelectionConfig();
     void GetAccountLocalId();
 
     int32_t inputMonitorId_ {-1};
-    static sptr<SelectionService> instance_;
-    static std::shared_mutex adminLock_;
     mutable std::mutex mutex_;
-    static sptr<ISelectionListener> listenerStub_;
+    static sptr<ISelectionListener> listener_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
-    int userId_ = -1;
-    bool isExistUid_ = false;
+    std::mutex connectInnerMutex_;
+    std::atomic<int> pid_ = -1;
+    std::atomic<int> userId_ = -1;
+    std::atomic<bool> isExistUid_ = false;
 };
 }
 

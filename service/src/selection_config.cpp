@@ -16,15 +16,16 @@
 #include "selection_config.h"
 
 #include <algorithm>
+#include <sstream>
 
 namespace OHOS {
 namespace SelectionFwk {
-int SelectionConfig::IsEnabled() const
+bool SelectionConfig::GetEnable() const
 {
     return isEnabled_;
 }
 
-int SelectionConfig::IsTriggered() const
+bool SelectionConfig::GetTriggered() const
 {
     return isTriggered_;
 }
@@ -34,17 +35,17 @@ int SelectionConfig::GetUid() const
     return uid_;
 }
 
-std::string SelectionConfig::GetBundleName() const
+std::string SelectionConfig::GetApplicationInfo() const
 {
-    return bundleName_;
+    return applicationInfo_;
 }
 
-void SelectionConfig::SetEnabled(int enabled)
+void SelectionConfig::SetEnabled(bool enabled)
 {
     isEnabled_ = enabled;
 }
 
-void SelectionConfig::SetTriggered(int isTriggered)
+void SelectionConfig::SetTriggered(bool isTriggered)
 {
     isTriggered_ = isTriggered;
 }
@@ -54,15 +55,16 @@ void SelectionConfig::SetUid(int uid)
     uid_ = uid;
 }
 
-void SelectionConfig::SetBundleName(const std::string &bundleName)
+void SelectionConfig::SetApplicationInfo(const std::string &applicationInfo)
 {
-    bundleName_ = bundleName;
+    applicationInfo_ = applicationInfo;
 }
 
 std::string SelectionConfig::ToString() const {
-    std::string str = "uid: " + std::to_string(uid_) + ", enable: " + std::to_string(isEnabled_) + ", trigger: " +
-    std::to_string(isTriggered_) + ", bundleName: " + bundleName_;
-    return str;
+    std::ostringstream oss;
+    oss << "enable: " << isEnabled_ << ", trigger: "
+        << isTriggered_ << ", applicationInfo: " << applicationInfo_;
+    return oss.str();
 }
 
 MemSelectionConfig& MemSelectionConfig::GetInstance()
@@ -73,42 +75,50 @@ MemSelectionConfig& MemSelectionConfig::GetInstance()
 
 void MemSelectionConfig::SetSelectionConfig(const SelectionConfig &config)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     delegate_ = config;
 }
 
 SelectionConfig& MemSelectionConfig::GetSelectionConfig()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return delegate_;
 }
 
-int MemSelectionConfig::IsEnabled() const
+bool MemSelectionConfig::GetEnable() const
 {
-    return delegate_.IsEnabled();
+    std::lock_guard<std::mutex> lock(mutex_);
+    return delegate_.GetEnable();
 }
 
-int MemSelectionConfig::IsTriggered() const
+bool MemSelectionConfig::GetTriggered() const
 {
-    return delegate_.IsTriggered();
+    std::lock_guard<std::mutex> lock(mutex_);
+    return delegate_.GetTriggered();
 }
 
-std::string MemSelectionConfig::GetBundleName() const
+std::string MemSelectionConfig::GetApplicationInfo() const
 {
-    return delegate_.GetBundleName();
+    std::lock_guard<std::mutex> lock(mutex_);
+    return delegate_.GetApplicationInfo();
 }
 
-void MemSelectionConfig::SetEnabled(int enabled)
+void MemSelectionConfig::SetEnabled(bool enabled)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     delegate_.SetEnabled(enabled);
 }
 
-void MemSelectionConfig::SetTriggered(int isTriggered)
+void MemSelectionConfig::SetTriggered(bool isTriggered)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     delegate_.SetTriggered(isTriggered);
 }
 
-void MemSelectionConfig::SetBundleName(const std::string &bundleName)
+void MemSelectionConfig::SetApplicationInfo(const std::string &applicationInfo)
 {
-    delegate_.SetBundleName(bundleName);
+    std::lock_guard<std::mutex> lock(mutex_);
+    delegate_.SetApplicationInfo(applicationInfo);
 }
 } // namespace SelectionFwk
 } // namespace OHOS

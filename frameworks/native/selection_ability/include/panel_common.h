@@ -38,7 +38,7 @@ struct HotArea {
     static std::string ToString(const std::vector<Rosen::Rect> &areas)
     {
         std::string areasStr = "[";
-        for (const auto area : areas) {
+        for (const auto& area : areas) {
             areasStr.append(area.ToString());
         }
         areasStr.append("]");

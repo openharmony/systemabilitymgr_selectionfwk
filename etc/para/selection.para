@@ -12,6 +12,6 @@
 # limitations under the License.
 
 sys.selection.switch = on
-sys.selection.trigger = ctrl
-sys.selection.app = com.hm.youdao/ExtensionAbility
+sys.selection.trigger = immediate
+sys.selection.app = com.huawei.hmos.vassistant/MiniMenuServiceExtAbility
 sys.selection.uid = -1

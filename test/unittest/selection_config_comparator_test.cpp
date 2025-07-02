@@ -19,7 +19,6 @@
 
 #define private public
 #include "selection_config_comparator.h"
-#include "screenlock_manager.h"
 #include "selection_config.h"
 
 namespace OHOS {
@@ -55,9 +54,15 @@ void SelectionConfigComparatorTest::TearDown()
     std::cout << "SelectionConfigComparatorTest TearDown" << std::endl;
 }
 
+void SetSelectionConfig(SelectionConfig& dbSelectionConfig, int uid, bool bEnable)
+{
+    dbSelectionConfig.SetUid(uid);
+    dbSelectionConfig.SetEnabled(bEnable);
+}
+
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator001
+ * @tc.desc: database testcase 001
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.Level1)
@@ -69,77 +74,70 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.L
     ASSERT_TRUE(result.shouldCreate);
 }
 
-
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator002
+ * @tc.desc: database testcase 002
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator002, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(true);
+    SetSelectionConfig(dbSelectionConfig, uid, true);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
     ASSERT_EQ(result.selectionConfig.GetUid(), 100);
-    ASSERT_TRUE(result.selectionConfig.IsEnabled());
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
 }
 
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator003
+ * @tc.desc: database testcase 003
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator003, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(true);
+    SetSelectionConfig(dbSelectionConfig, uid, true);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    sysSelectionConfig.SetUid(100);
-    sysSelectionConfig.SetEnabled(false);
+    SetSelectionConfig(sysSelectionConfig, uid, false);
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
     ASSERT_TRUE(result.shouldStop);
-    ASSERT_FALSE(result.selectionConfig.IsEnabled());
+    ASSERT_FALSE(result.selectionConfig.GetEnable());
 }
 
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator004
+ * @tc.desc: database testcase 004
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator004, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(true);
+    SetSelectionConfig(dbSelectionConfig, uid, true);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    sysSelectionConfig.SetUid(100);
-    sysSelectionConfig.SetEnabled(true);
+    SetSelectionConfig(sysSelectionConfig, uid, true);
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
 }
 
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator005
+ * @tc.desc: database testcase 005
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(false);
+    SetSelectionConfig(dbSelectionConfig, uid, false);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
@@ -148,43 +146,39 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.L
 }
 
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator006
+ * @tc.desc: database testcase 006
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator006, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(false);
+    SetSelectionConfig(dbSelectionConfig, uid, false);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    sysSelectionConfig.SetUid(100);
-    sysSelectionConfig.SetEnabled(false);
+    SetSelectionConfig(sysSelectionConfig, uid, false);
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
     ASSERT_TRUE(result.shouldStop);
 }
 
 /**
- * @tc.name: param check samgr ready event
- * @tc.desc: param check samgr ready event
+ * @tc.name: SelectionConfigComparator007
+ * @tc.desc: database testcase 007
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator007, TestSize.Level1)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    dbSelectionConfig.SetUid(100);
-    dbSelectionConfig.SetEnabled(false);
+    SetSelectionConfig(dbSelectionConfig, uid, false);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    sysSelectionConfig.SetUid(100);
-    sysSelectionConfig.SetEnabled(true);
+    SetSelectionConfig(sysSelectionConfig, uid, true);
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
-    ASSERT_TRUE(result.selectionConfig.IsEnabled());
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
 }
 }
 }

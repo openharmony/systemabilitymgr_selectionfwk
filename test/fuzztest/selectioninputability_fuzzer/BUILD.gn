@@ -44,7 +44,6 @@ ohos_fuzztest("SelectionInputAbilityFuzzTest") {
   deps = [
     "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",
     "${selection_fwk_root_path}/frameworks/native/selection_extension:selection_extension_ability_native",
-    "${selection_fwk_root_path}/service:selection_service_proxy",
     "${selection_fwk_root_path}/service:selection_service",
   ]
 

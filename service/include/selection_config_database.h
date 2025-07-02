@@ -29,7 +29,6 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-
 static std::string SELECTION_CONFIG_DB_PATH = "/data/service/el1/public/selection_service/";
 
 constexpr const char *SELECTION_CONFIG_DB_NAME = "selection_config.db";
@@ -66,8 +65,10 @@ public:
     int32_t RollBack();
 
 private:
-    SelectionConfigDataBase();
+    SelectionConfigDataBase(const std::shared_ptr<OHOS::NativeRdb::RdbStore>& store);
     DISALLOW_COPY_AND_MOVE(SelectionConfigDataBase);
+
+    static std::shared_ptr<OHOS::NativeRdb::RdbStore> CreateStore();
 
     static std::shared_ptr<SelectionConfigDataBase> instance_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store_;

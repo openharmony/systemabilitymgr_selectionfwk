@@ -19,7 +19,8 @@
 #include <utility>
 #include "selection_panel.h"
 #include "selection_log.h"
-#include "selection_panel_manger.h"
+#include "selection_panel_manager.h"
+#include "selection_app_validator.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -52,22 +53,35 @@ sptr<SelectionAbility> SelectionAbility::GetInstance()
 int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context,
     const PanelInfo &panelInfo, std::shared_ptr<SelectionPanel> &selectionPanel)
 {
-    SELECTION_HILOGI("SelectionAbility CreatePanel start.");
+    SELECTION_HILOGI("enter CreatePanel, panelInfo: {panelType: %{public}d}", panelInfo.panelType);
+    std::ostringstream buffer;
+    panels_.ForEach([&](const PanelType &panelType, auto &) {
+        buffer << static_cast<uint32_t>(panelType) << ",";
+        return false;
+    });
+    auto panelTypes = buffer.str();
+    SELECTION_HILOGI("panels_: %{public}s", panelTypes.c_str());
 
-    auto flag = panels_.ComputeIfAbsent(panelInfo.panelType,
-        [&panelInfo, &context, &selectionPanel](
+    if (!SelectionAppValidator::GetInstance().Validate()) {
+        SELECTION_HILOGE("bundleName is not valid");
+        return ErrorCode::ERROR_INVALID_OPERATION;
+    }
+
+    int32_t result = ErrorCode::NO_ERROR;
+    panels_.ComputeIfAbsent(panelInfo.panelType,
+        [&result, &panelInfo, &context, &selectionPanel] (
             const PanelType &panelType, std::shared_ptr<SelectionPanel> &panel) {
             selectionPanel = std::make_shared<SelectionPanel>();
-            auto ret = selectionPanel->CreatePanel(context, panelInfo);
-            if (ret == ErrorCode::NO_ERROR) {
+            result = selectionPanel->CreatePanel(context, panelInfo);
+            if (result == ErrorCode::NO_ERROR) {
                 panel = selectionPanel;
-                SelectionPanelManger::GetInstance().AddSelectionPanel(selectionPanel->GetWindowId(), selectionPanel);
+                SelectionPanelManager::GetInstance().AddSelectionPanel(selectionPanel->GetWindowId(), selectionPanel);
                 return true;
             }
             selectionPanel = nullptr;
             return false;
         });
-    return flag ? ErrorCode::NO_ERROR : ErrorCode::ERROR_SELECTION_SERVICE;
+    return result;
 }
 
 int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)

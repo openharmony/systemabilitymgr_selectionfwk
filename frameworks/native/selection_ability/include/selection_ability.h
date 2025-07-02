@@ -42,8 +42,6 @@ private:
     static std::mutex instanceLock_;
     static sptr<SelectionAbility> instance_;
 
-    std::mutex dataChannelLock_;
-
     ConcurrentMap<PanelType, std::shared_ptr<SelectionPanel>> panels_ {};
     std::atomic_bool isShowAfterCreate_ { false };
 

@@ -19,14 +19,15 @@
 #include <string>
 #include <i_input_event_consumer.h>
 #include "selection_interface.h"
-#include "PasteboardDisposableObserver.h"
+#include "pasteboard_disposable_observer.h"
 namespace OHOS::SelectionFwk {
 using namespace MMI;
 using namespace OHOS::MiscServices;
 
 constexpr const uint32_t DOUBLE_CLICK_TIME = 500;
+constexpr const uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
 
-typedef enum {
+enum class SelectInputState: uint32_t {
     SELECT_INPUT_INITIAL = 0,
     SELECT_INPUT_WORD_BEGIN = 1,
     SELECT_INPUT_WAIT_LEFT_MOVE = 2,
@@ -35,15 +36,15 @@ typedef enum {
     SELECT_INPUT_WAIT_TRIPLE_CLICK = 5,
     SELECT_INPUT_DOUBLE_CLICKED = 6,
     SELECT_INPUT_TRIPLE_CLICKED = 7,
-} SelectInputState;
+};
 
-typedef enum {
+enum class SelectInputSubState: uint32_t {
     SUB_INITIAL = 0,
     SUB_WAIT_POINTER_ACTION_BUTTON_DOWN = 1,
     SUB_WAIT_POINTER_ACTION_BUTTON_UP   = 2,
     SUB_WAIT_KEY_CTRL_DOWN = 3,
     SUB_WAIT_KEY_CTRL_UP = 4,
-} SelectInputSubState;
+};
 
 class BaseSelectionInputMonitor : public IInputEventConsumer {
 public:
@@ -78,49 +79,45 @@ private:
     bool IsSelectionDone() const;
 
 private:
-    mutable uint32_t curSelectState = SELECT_INPUT_INITIAL;
-    mutable uint32_t subSelectState = SUB_INITIAL;
+    mutable SelectInputState curSelectState = SelectInputState::SELECT_INPUT_INITIAL;
+    mutable SelectInputSubState subSelectState = SelectInputSubState::SUB_INITIAL;
     mutable int64_t lastClickTime = 0;
     mutable bool isTextSelected_ = false;
     mutable SelectionInfo selectionInfo_;
 };
 
-class SelectionInputMonitor;
-
 class SelectionPasteboardDisposableObserver : public PasteboardDisposableObserver {
 public:
-    SelectionPasteboardDisposableObserver(std::shared_ptr<const SelectionInputMonitor> pInputMonitor)
-        : pInputMonitor_(pInputMonitor) {
+    SelectionPasteboardDisposableObserver(const std::shared_ptr<BaseSelectionInputMonitor> &baseInputMonitor)
+        : baseInputMonitor_(baseInputMonitor) {
     }
     virtual ~SelectionPasteboardDisposableObserver() = default;
 
     void OnTextReceived(const std::string &text, int32_t errCode) override;
 
 private:
-    std::shared_ptr<const SelectionInputMonitor> pInputMonitor_;
+    std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
 };
 
-class SelectionInputMonitor : public IInputEventConsumer, public std::enable_shared_from_this<SelectionInputMonitor> {
+class SelectionInputMonitor : public IInputEventConsumer {
 public:
     SelectionInputMonitor() {
-        delegate_ = std::make_shared<BaseSelectionInputMonitor>();
+        baseInputMonitor_ = std::make_shared<BaseSelectionInputMonitor>();
     }
 
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
-    void OnSelectionTriggered(const std::string &text) const;
 
 private:
     void FinishedWordSelection() const;
     void InjectCtrlC() const;
-    void SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction) const;
+    void HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const;
 
 private:
-    std::shared_ptr<BaseSelectionInputMonitor> delegate_;
-    mutable std::shared_ptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
+    std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
+    mutable sptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
 };
-
 }
 
 #endif // SELECTION_INPUT_MONITOR_H

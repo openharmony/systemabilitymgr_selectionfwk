@@ -23,20 +23,9 @@ namespace SelectionFwk {
 
 std::shared_ptr<SelectionConfigDataBase> SelectionConfigDataBase::instance_ = nullptr;
 
-SelectionConfigDataBase::SelectionConfigDataBase()
+SelectionConfigDataBase::SelectionConfigDataBase(const std::shared_ptr<OHOS::NativeRdb::RdbStore>& store)
+    : store_(store)
 {
-    std::string selectiontDatabaseName = SELECTION_CONFIG_DB_PATH + SELECTION_CONFIG_DB_NAME;
-    int32_t errCode = OHOS::NativeRdb::E_OK;
-    OHOS::NativeRdb::RdbStoreConfig config(selectiontDatabaseName);
-    config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
-    SelectionConfigDataBaseCallBack sqliteOpenHelperCallback;
-    store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, sqliteOpenHelperCallback, errCode);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        SELECTION_HILOGE("GetRdbStore errCode :%{public}d", errCode);
-
-    } else {
-        SELECTION_HILOGE("GetRdbStore success :%{public}d", errCode);
-    }
 }
 
 std::shared_ptr<SelectionConfigDataBase> SelectionConfigDataBase::GetInstance()
@@ -45,7 +34,10 @@ std::shared_ptr<SelectionConfigDataBase> SelectionConfigDataBase::GetInstance()
     std::lock_guard<std::mutex> guard(instanceMutex);
     if (instance_ == nullptr) {
         SELECTION_HILOGI("reset to new SelectionConfigDataBase instance");
-        instance_.reset(new SelectionConfigDataBase());
+        auto store = SelectionConfigDataBase::CreateStore();
+        if (store != nullptr) {
+            instance_.reset(new SelectionConfigDataBase(store));
+        }
         return instance_;
     }
     return instance_;
@@ -101,11 +93,11 @@ int64_t SelectionConfigDataBase::Insert(const OHOS::NativeRdb::ValuesBucket &ins
     }
     int64_t outRowId = 0;
     int32_t ret = store_->Insert(outRowId, SELECTION_CONFIG_TABLE_NAME, insertValues);
-    SELECTION_HILOGI("Insert id=%{public}" PRIu64 "", outRowId);
     if (ret != OHOS::NativeRdb::E_OK) {
         SELECTION_HILOGE("Insert ret :%{public}d", ret);
         return SELECTION_CONFIG_RDB_EXECUTE_FAILTURE;
     }
+    SELECTION_HILOGI("Insert id=%{public}" PRIu64 "", outRowId);
     return outRowId;
 }
 
@@ -169,7 +161,8 @@ int32_t SelectionConfigDataBase::Delete(
     return SELECTION_CONFIG_OK;
 }
 
-int32_t SelectionConfigDataBase::ExecuteSql(const std::string &sql, const std::vector<OHOS::NativeRdb::ValueObject> &bindArgs)
+int32_t SelectionConfigDataBase::ExecuteSql(const std::string &sql,
+    const std::vector<OHOS::NativeRdb::ValueObject> &bindArgs)
 {
     if (store_ == nullptr) {
         SELECTION_HILOGE("ExecuteSql store_ is nullptr");
@@ -203,6 +196,22 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> SelectionConfigDataBase::Query(
     return store_->Query(predicates, columns);
 }
 
+std::shared_ptr<OHOS::NativeRdb::RdbStore> SelectionConfigDataBase::CreateStore() {
+    std::string selectionDatabaseName = SELECTION_CONFIG_DB_PATH + SELECTION_CONFIG_DB_NAME;
+    int32_t errCode = OHOS::NativeRdb::E_OK;
+    OHOS::NativeRdb::RdbStoreConfig config(selectionDatabaseName);
+    config.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
+    SelectionConfigDataBaseCallBack sqliteOpenHelperCallback;
+    auto store = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION,
+        sqliteOpenHelperCallback, errCode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        SELECTION_HILOGE("GetRdbStore errCode :%{public}d", errCode);
+    } else {
+        SELECTION_HILOGI("GetRdbStore success :%{public}d", errCode);
+    }
+    return store;
+}
+
 int32_t SelectionConfigDataBaseCallBack::OnCreate(OHOS::NativeRdb::RdbStore &store)
 {
     std::string sql = CREATE_SELECTION_CONFIG_TABLE;
@@ -215,7 +224,8 @@ int32_t SelectionConfigDataBaseCallBack::OnCreate(OHOS::NativeRdb::RdbStore &sto
     return SELECTION_CONFIG_OK;
 }
 
-int32_t SelectionConfigDataBaseCallBack::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
+int32_t SelectionConfigDataBaseCallBack::OnUpgrade(OHOS::NativeRdb::RdbStore &store, int32_t oldVersion,
+    int32_t newVersion)
 {
     SELECTION_HILOGI("DB OnUpgrade Enter %{public}d => %{public}d", oldVersion, newVersion);
     if (oldVersion >= newVersion) {
@@ -225,13 +235,14 @@ int32_t SelectionConfigDataBaseCallBack::OnUpgrade(OHOS::NativeRdb::RdbStore &st
     std::string sql = SQL_ADD_TOKEN_ID;
     int32_t ret = store.ExecuteSql(sql);
     if (ret != OHOS::NativeRdb::E_OK) {
-        // ignore sql error when tokenId is already exists
-        SELECTION_HILOGW("DB OnUpgrade failed: %{public}d", ret);
+        SELECTION_HILOGE("DB OnUpgrade failed: %{public}d", ret);
+        return SELECTION_CONFIG_RDB_EXECUTE_FAILTURE;
     }
     return SELECTION_CONFIG_OK;
 }
 
-int32_t SelectionConfigDataBaseCallBack::OnDowngrade(OHOS::NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
+int32_t SelectionConfigDataBaseCallBack::OnDowngrade(OHOS::NativeRdb::RdbStore &store, int32_t oldVersion,
+    int32_t newVersion)
 {
     SELECTION_HILOGI("DB OnDowngrade Enter");
     (void)store;
