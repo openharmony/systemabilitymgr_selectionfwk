@@ -32,7 +32,6 @@
 #include "async_call.h"
 #include "selection_panel.h"
 #include "panel_info.h"
-#include "context.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -82,14 +81,14 @@ private:
 
     JsSelectionEngineSetting() = default;
     static napi_value GetSEInstance(napi_env env, napi_callback_info info);
-    static SFErrorCode Register();
+    static SFErrorCode Register(napi_env env);
     static napi_value Write(napi_env env, const SelectionInfo &selectionInfo);
     static napi_status GetContext(napi_env env, napi_value in, std::shared_ptr<OHOS::AbilityRuntime::Context> &context);
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
     static sptr<ISelectionService> GetSelectionSystemAbility();
-    static void RegisterListerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging);
+    static SFErrorCode RegisterListenerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging);
     static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
     using EntrySetter = std::function<void(SelectionEntry &)>;
     std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);

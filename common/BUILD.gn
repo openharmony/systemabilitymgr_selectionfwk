@@ -55,6 +55,7 @@ ohos_static_library("selection_common") {
   external_deps = [
     "eventhandler:libeventhandler",
     "napi:ace_napi",
+    "hilog:libhilog",
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "ability_base:want",

@@ -42,7 +42,7 @@ struct InputAttribute {
     bool GetSecurityFlag() const
     {
         return inputPattern == PATTERN_PASSWORD || inputPattern == PATTERN_PASSWORD_SCREEN_LOCK ||
-            PATTERN_PASSWORD_NUMBER == inputPattern || PATTERN_NEWPASSWORD == inputPattern;
+            inputPattern == PATTERN_PASSWORD_NUMBER || inputPattern == PATTERN_NEWPASSWORD;
     }
 
     bool operator==(const InputAttribute &info) const
@@ -55,10 +55,10 @@ struct InputAttribute {
     {
         std::stringstream ss;
         ss << "[" << "inputPattern:" << inputPattern
-        << "enterKeyType:" << enterKeyType << "inputOption:" << inputOption
-        << "isTextPreviewSupported:" << isTextPreviewSupported << "bundleName:" << bundleName
-        << "immersiveMode:" << immersiveMode << "windowId:" << windowId
-        << "callingDisplayId:" << callingDisplayId << "]";
+        << ", enterKeyType:" << enterKeyType << ", inputOption:" << inputOption
+        << ", isTextPreviewSupported:" << isTextPreviewSupported << ", bundleName:" << bundleName
+        << ", immersiveMode:" << immersiveMode << ", windowId:" << windowId
+        << ", callingDisplayId:" << callingDisplayId << "]";
         return ss.str();
     }
 };

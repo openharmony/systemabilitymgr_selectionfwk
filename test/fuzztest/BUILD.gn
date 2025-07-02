@@ -18,5 +18,6 @@ group("selection_service_fuzztest") {
 
   deps = [
     "selectioninputability_fuzzer:fuzztest",
+    "selectioninputlistener_fuzzer:listenerfuzztest",
   ]
 }

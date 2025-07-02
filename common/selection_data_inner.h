@@ -111,6 +111,62 @@ struct SelectionInfoData : public Parcelable {
     }
 };
 
+enum class FocusChangeSource : uint32_t {
+    WindowManager,
+    InputManager,
+};
+
+class SelectionFocusChangeInfo : public Parcelable {
+public:
+    SelectionFocusChangeInfo() = default;
+    SelectionFocusChangeInfo(uint32_t winId, uint64_t displayId, int32_t pid, int32_t uid, uint32_t type,
+        bool isFocused, FocusChangeSource source): windowId_(winId), displayId_(displayId), pid_(pid), uid_(uid),
+        windowType_(type), isFocused_(isFocused), source_(source) {};
+
+    ~SelectionFocusChangeInfo() = default;
+
+    virtual bool Marshalling(Parcel& parcel) const
+    {
+        bool ret = parcel.WriteInt32(windowId_) && parcel.WriteUint64(displayId_) &&
+            parcel.WriteInt32(pid_) && parcel.WriteInt32(uid_) &&
+            parcel.WriteUint32(static_cast<uint32_t>(windowType_)) &&
+            parcel.WriteBool(isFocused_) &&
+            parcel.WriteUint32(static_cast<uint32_t>(source_));
+        return ret;
+    }
+
+    static SelectionFocusChangeInfo* Unmarshalling(Parcel& parcel)
+    {
+        auto focusChangeInfo = new SelectionFocusChangeInfo();
+        bool res = parcel.ReadInt32(focusChangeInfo->windowId_) && parcel.ReadUint64(focusChangeInfo->displayId_) &&
+            parcel.ReadInt32(focusChangeInfo->pid_) && parcel.ReadInt32(focusChangeInfo->uid_) &&
+            parcel.ReadUint32(focusChangeInfo->windowType_) &&
+            parcel.ReadBool(focusChangeInfo->isFocused_);
+        if (!res) {
+            delete focusChangeInfo;
+            return nullptr;
+        }
+        focusChangeInfo->source_ = static_cast<FocusChangeSource>(parcel.ReadUint32());
+        return focusChangeInfo;
+    }
+
+    std::string ToString() const
+    {
+        std::ostringstream oss;
+        oss << "SelectionFocusChangeInfo { windowId: " << windowId_ << ", displayId: \"" << displayId_ <<
+            ", windowType: " << windowType_ << ", isFocused: " << isFocused_ <<
+            ", source_: " << static_cast<uint32_t>(source_) << "}";
+        return oss.str();
+    }
+
+    int32_t windowId_ = -1;
+    uint64_t displayId_ = 0;
+    int32_t pid_ = -1;
+    int32_t uid_ = -1;
+    uint32_t windowType_ = 1;
+    bool isFocused_ = false;
+    FocusChangeSource source_ = FocusChangeSource::WindowManager;
+};
 }
 }
 

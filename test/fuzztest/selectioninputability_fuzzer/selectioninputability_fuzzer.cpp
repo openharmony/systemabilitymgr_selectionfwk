@@ -46,6 +46,10 @@ sptr<IRemoteObject> GetSelectionSystemAbility()
 void TestSendRequest(uint32_t code)
 {
     sptr<IRemoteObject> systemAbility = GetSelectionSystemAbility();
+    if (systemAbility == nullptr) {
+        SELECTION_HILOGE("get system ability is nullptr!");
+        return;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

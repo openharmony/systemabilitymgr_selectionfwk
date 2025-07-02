@@ -47,7 +47,7 @@ private:
         int32_t primaryKeyIndex;
         int32_t uidIndex;
         int32_t enableIndex;
-        int32_t bundleNameIndex;
+        int32_t applicationInfoIndex;
         int32_t triggerIndex;
         int32_t shortcutKeysIndex;
     };

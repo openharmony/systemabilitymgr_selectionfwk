@@ -27,8 +27,8 @@ extern "C" {
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD002901
 
-#ifndef SELETION_DEBUG_ENABLE
-#define SELETION_DEBUG_ENABLE 0
+#ifndef SELECTION_DEBUG_ENABLE
+#define SELECTION_DEBUG_ENABLE 0
 #endif
 
 #define __BASE_FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -57,7 +57,7 @@ enum {
     ERROR_PARAMETER_CHECK_FAILED,
 
     ERROR_SELECTION_SERVICE,
-    ERROR_PANEL_DESTORYED,
+    ERROR_PANEL_DESTROYED,
     ERROR_INVALID_OPERATION
 };
 }; // namespace ErrorCode

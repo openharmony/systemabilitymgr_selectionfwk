@@ -28,6 +28,7 @@
 #include "napi_base_context.h"
 #include "js_panel.h"
 #include "js_selection_utils.h"
+#include "selection_app_validator.h"
 
 using namespace OHOS;
 namespace OHOS {
@@ -45,15 +46,13 @@ std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nu
 sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
 sptr<ISelectionService> JsSelectionEngineSetting::abilityManager_ { nullptr };
 
-napi_value JsSelectionEngineSetting::GetSelectionAbility(napi_env env, napi_callback_info info)
-{
-    SELECTION_HILOGI("SelectionEngineSetting---GetSelectionAbility");
-
-    return GetSEInstance(env, info);
-}
-
 napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info info)
 {
+    if (!SelectionAppValidator::GetInstance().Validate()) {
+        JsUtils::ThrowException(env, JsUtils::Convert(ErrorCode::ERROR_INVALID_OPERATION),
+            "BundleName is invalid", TYPE_NONE);
+        return nullptr;
+    }
     size_t argc = ARGC_TWO;
     napi_value argv[ARGC_TWO] = { nullptr };
     napi_value thisVar = nullptr;
@@ -65,6 +64,7 @@ napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info 
         !EventChecker::IsValidEventType(EventSubscribeModule::SELECTION_METHOD_ABILITY, type) ||
         JsUtil::GetType(env, argv[1]) != napi_function) {
         SELECTION_HILOGE("subscribe failed, type: %{public}s!", type.c_str());
+        JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, "", TYPE_NONE);
         return nullptr;
     }
     SELECTION_HILOGI("subscribe type: %{public}s.", type.c_str());
@@ -92,6 +92,7 @@ napi_value JsSelectionEngineSetting::UnSubscribe(napi_env env, napi_callback_inf
     if (argc < 1 || !JsUtil::GetValue(env, argv[0], type) ||
         !EventChecker::IsValidEventType(EventSubscribeModule::SELECTION_METHOD_ABILITY, type)) {
         SELECTION_HILOGE("unsubscribe failed, type: %{public}s!", type.c_str());
+        JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, "", TYPE_NONE);
         return nullptr;
     }
 
@@ -142,9 +143,7 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
         napi_typeof(env, argv[0], &valueType);
         PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
         napi_status status = GetContext(env, argv[0], ctxt->context);
-        if (status != napi_ok) {
-            return status;
-        }
+        PARAM_CHECK_RETURN(env, status == napi_ok, "js param context covert failed.", TYPE_NONE, napi_invalid_arg);
         // 1 means parameter of info<PanelInfo>
         napi_typeof(env, argv[1], &valueType);
         PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
@@ -154,14 +153,17 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
             %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
             ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
         PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
+        PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
+            ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",
+            TYPE_NONE, napi_invalid_arg);
         return status;
     };
 
-    auto exec = [env, ctxt](AsyncCall::Context *ctx) {
+    auto exec = [ctxt](AsyncCall::Context *ctx) {
         auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
-        if(ret != ErrorCode::NO_ERROR) {
+        if (ret != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(ret);
-            JsUtils::ThrowException(env, JsUtils::Convert(ret), "CreatePanel failed!", TYPE_NONE);
+            return;
         }
         ctxt->SetState(napi_ok);
     };
@@ -201,10 +203,10 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
         CHECK_RETURN(constructor != nullptr, "failed to get panel constructor.", napi_invalid_arg);
         napi_status status = napi_instanceof(env, argv[0], constructor, &isPanel);
         CHECK_RETURN((status == napi_ok) && isPanel, "param verification failed, it's not expected panel instance!",
-            status);
+            napi_invalid_arg);
         JsPanel *jsPanel = nullptr;
         status = napi_unwrap(env, argv[0], (void **)(&jsPanel));
-        CHECK_RETURN((status == napi_ok) && (jsPanel != nullptr), "failed to unwrap JsPanel!", status);
+        CHECK_RETURN((status == napi_ok) && (jsPanel != nullptr), "failed to unwrap JsPanel!", napi_invalid_arg);
         ctxt->panel = jsPanel->GetNative();
         CHECK_RETURN((ctxt->panel != nullptr), "panel is nullptr!", napi_invalid_arg);
         return status;
@@ -217,7 +219,7 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
         auto errCode = SelectionAbility::GetInstance()->DestroyPanel(ctxt->panel);
         if (errCode != ErrorCode::NO_ERROR) {
             SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", JsUtils::Convert(errCode));
-            JsUtils::ThrowException(env, JsUtils::Convert(errCode), "DestroyPanel failed!", TYPE_NONE);
+            ctxt->SetErrorCode(errCode);
             return napi_generic_failure;
         }
         ctxt->panel = nullptr;
@@ -301,23 +303,8 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
         SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
         return;
     }
-    proxy->UnregisterListener(listenerStub_->AsObject());
+    proxy->UnregisterListener(listenerStub_);
     listenerStub_ = nullptr;
-}
-
-napi_value JsSelectionEngineSetting::GetSEInstance(napi_env env, napi_callback_info info)
-{
-    napi_value instance = nullptr;
-    napi_value cons = nullptr;
-    if (napi_get_reference_value(env, KDSRef_, &cons) != napi_ok) {
-        SELECTION_HILOGI("failed to get reference value.");
-        return nullptr;
-    }
-    if (napi_new_instance(env, cons, 0, nullptr, &instance) != napi_ok) {
-        SELECTION_HILOGI("failed to new instance.");
-        return nullptr;
-    }
-    return instance;
 }
 
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelectionEngineSetting()
@@ -340,38 +327,42 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
     return selectionDelegate_;
 }
 
-void JsSelectionEngineSetting::RegisterListerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging)
+SFErrorCode JsSelectionEngineSetting::RegisterListenerToService(
+    std::shared_ptr<JsSelectionEngineSetting> &selectionEnging)
 {
     auto proxy = GetSelectionSystemAbility();
     if (proxy == nullptr) {
         SELECTION_HILOGE("selection system ability is nullptr!");
-        return;
+        return EXCEPTION_SELECTION_SERVICE;
     }
     listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
     if (listenerStub_ == nullptr) {
         SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
-        return;
+        return EXCEPTION_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("Begin calling SA RegisterListener!");
-    proxy->RegisterListener(listenerStub_->AsObject());
+    if (proxy->RegisterListener(listenerStub_) != ERR_OK) {
+        return EXCEPTION_SELECTION_SERVICE;
+    }
+
+    return EXCEPTION_SUCCESS;
 }
 
-SFErrorCode JsSelectionEngineSetting::Register()
+SFErrorCode JsSelectionEngineSetting::Register(napi_env env)
 {
     auto delegate = GetJsSelectionEngineSetting();
     if (delegate == nullptr) {
         SELECTION_HILOGE("failed to get delegate!");
         return EXCEPTION_SELECTION_SERVICE;
     }
-    RegisterListerToService(delegate);
-    return EXCEPTION_SUCCESS;
+    
+    return RegisterListenerToService(delegate);
 };
 
 napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
 {
     SELECTION_HILOGI("napi init");
     napi_property_descriptor descriptor[] = {
-        DECLARE_NAPI_FUNCTION("getSelectionAbility", GetSelectionAbility),
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("createPanel", CreatePanel),
@@ -379,10 +370,11 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor),
         descriptor));
-    if (Register() != EXCEPTION_SUCCESS) {
+    if (Register(env) != EXCEPTION_SUCCESS) {
         SELECTION_HILOGE("regist lister to service failed!");
         return nullptr;
     }
+    SelectionAppValidator::GetInstance().SetValid();
     return exports;
 }
 
@@ -435,7 +427,6 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
 {
     SELECTION_HILOGD("OnSelectionEvent begin");
     std::string type = "selectionCompleted";
-
     auto entry = GetEntry(type, [&selectionInfo](SelectionEntry &entry) {entry.selectionInfo = selectionInfo; });
     if (entry == nullptr) {
         SELECTION_HILOGE("failed to get SelectionEntry entry!");
@@ -448,7 +439,7 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
         return 1;
     }
 
-    SELECTION_HILOGI("selection text is [%{public}s]", entry->selectionInfo.text.c_str());
+    SELECTION_HILOGI("selection text length is [%{public}lu]", entry->selectionInfo.text.length());
     auto task = [entry]() {
         auto paramGetter = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
             if (argc == 0) {

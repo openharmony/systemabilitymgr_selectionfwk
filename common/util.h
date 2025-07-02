@@ -118,7 +118,9 @@ public:
         }
         ~ScopeGuard()
         {
-            napi_close_handle_scope(env_, scope_);
+            if (scope_ != nullptr) {
+                napi_close_handle_scope(env_, scope_);
+            }
         }
 
     private:

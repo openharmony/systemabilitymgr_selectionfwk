@@ -17,17 +17,26 @@
 #define SELECTION_FOCUS_MONITOR_MANAGER_H
 
 #include <functional>
+#include "focus_change_info.h"
+#ifdef SCENE_BOARD_ENABLE
+#include "window_manager_lite.h"
+#else
+#include "window_manager.h"
+#endif
 
 namespace OHOS {
 namespace SelectionFwk {
-using FocusHandle = std::function<void(bool, int32_t, uint32_t)>;
+using FocusHandle = std::function<void(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool)>;
 class FocusMonitorManager {
 public:
     static FocusMonitorManager &GetInstance();
     void RegisterFocusChangedListener(const FocusHandle &handle);
+    void UnregisterFocusChangedListener();
 
 private:
     FocusMonitorManager() = default;
+private:
+    sptr<OHOS::Rosen::IFocusChangedListener> focusListener_ = nullptr;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

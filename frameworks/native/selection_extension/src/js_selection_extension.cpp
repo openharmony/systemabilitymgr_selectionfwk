@@ -40,7 +40,8 @@ napi_value AttachSelectionExtensionContext(napi_env env, void* value, void*)
         return nullptr;
     }
     napi_value object = CreateJsSelectionExtensionContext(env, ptr);
-    auto systemModule = JsRuntime::LoadSystemModuleByEngine(env, "selectionInput.SelectionExtensionContext", &object, 1);
+    auto systemModule = JsRuntime::LoadSystemModuleByEngine(env, "selectionInput.SelectionExtensionContext",
+        &object, 1);
     if (systemModule == nullptr) {
         SELECTION_HILOGE("failed to load system module by engine!");
         return nullptr;
@@ -148,6 +149,11 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
 {
     SELECTION_HILOGI("JsSelectionExtension::CallObjectMethod(%{public}s), start.", methodName);
 
+    if (argc > 0 && argv == nullptr) {
+        SELECTION_HILOGE("argc > 0 && argv == nullptr.");
+        return nullptr; 
+    }
+
     if (jsObj_ == nullptr) {
         SELECTION_HILOGE("not found JsSelectionExtension.js.");
         return nullptr;
@@ -178,21 +184,23 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
 void JsSelectionExtension::GetSrcPath(std::string& srcPath)
 {
     if (!Extension::abilityInfo_->isModuleJson) {
-        /* temporary compatibility api8 + config.json */
-        srcPath.append(Extension::abilityInfo_->package);
-        srcPath.append("/assets/js/");
+        std::filesystem::path modulePath(Extension::abilityInfo_->package);
+        modulePath /= "assets/js";
+        
         if (!Extension::abilityInfo_->srcPath.empty()) {
-            srcPath.append(Extension::abilityInfo_->srcPath);
+            modulePath /= Extension::abilityInfo_->srcPath;
         }
-        srcPath.append("/").append(Extension::abilityInfo_->name).append(".abc");
+        
+        modulePath /= (Extension::abilityInfo_->name + ".abc");
+        srcPath = modulePath.string();
         return;
     }
 
     if (!Extension::abilityInfo_->srcEntrance.empty()) {
-        srcPath.append(Extension::abilityInfo_->moduleName + "/");
-        srcPath.append(Extension::abilityInfo_->srcEntrance);
-        srcPath.erase(srcPath.rfind('.'));
-        srcPath.append(".abc");
+        std::filesystem::path modulePath(Extension::abilityInfo_->moduleName);
+        modulePath /= Extension::abilityInfo_->srcEntrance;
+        modulePath.replace_extension(".abc");
+        srcPath = modulePath.string();
     }
 }
 
@@ -206,7 +214,8 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
     }
     SELECTION_HILOGD("JsSelectionExtension::Init CreateJsSelectionExtensionContext.");
     napi_value contextObj = CreateJsSelectionExtensionContext(env, context);
-    auto shellContextRef = jsRuntime_.LoadSystemModule("selectionInput.SelectionExtensionContext", &contextObj, ARGC_ONE);
+    auto shellContextRef = jsRuntime_.LoadSystemModule("selectionInput.SelectionExtensionContext",
+        &contextObj, ARGC_ONE);
     if (shellContextRef == nullptr) {
         SELECTION_HILOGE("shellContextRef is nullptr!");
         return;
@@ -221,13 +230,17 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
         SELECTION_HILOGE("workContext is nullptr!");
         return;
     }
-    napi_coerce_to_native_binding_object(env, contextObj, DetachCallbackFunc, AttachSelectionExtensionContext,
-                                         workContext, nullptr);
+    napi_status status = napi_coerce_to_native_binding_object(env, contextObj, DetachCallbackFunc,
+        AttachSelectionExtensionContext, workContext, nullptr);
+    if (status != napi_ok) {
+        SELECTION_HILOGE("napi_coerce_to_native_binding_object failed!");
+        return;
+    }
     SELECTION_HILOGD("JsSelectionExtension::Init Bind.");
     context->Bind(jsRuntime_, shellContextRef.release());
     SELECTION_HILOGD("JsSelectionExtension::SetProperty.");
     napi_set_named_property(env, obj, "context", contextObj);
-    napi_status status = napi_wrap(
+    status = napi_wrap(
         env, contextObj, workContext,
         [](napi_env, void* data, void*) {
             SELECTION_HILOGI("Finalizer for weak_ptr input method extension context is called.");

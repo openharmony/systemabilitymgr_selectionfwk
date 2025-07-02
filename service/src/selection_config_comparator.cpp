@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <sstream>
 #include "selection_config_comparator.h"
 #include "selection_log.h"
 
@@ -20,21 +21,21 @@ namespace OHOS {
 namespace SelectionFwk {
 
 std::string ComparisionResult::ToString() const {
-    std::string result = "";
-    result = "ComparisionResult: shouldCreate: " + std::to_string(shouldCreate) + " shouldStop: " +
-        std::to_string(shouldStop) + " direction: " + std::to_string(static_cast<int>(direction)) +
-        " selectionConfig: [ " + selectionConfig.ToString() + "]";
-    return result;
+    std::ostringstream oss;
+    oss << "ComparisionResult: shouldCreate: " << shouldCreate
+        << " shouldStop: " << shouldStop
+        << " direction: " << static_cast<int>(direction)
+        << " selectionConfig: [ " << selectionConfig.ToString() << "]";
+    return oss.str();
 }
 
 ComparisionResult SelectionConfigComparator::Compare(int uid, const SelectionConfig &sysSelectionConfig,
     std::optional<SelectionConfig> &dbSelectionConfig)
 {
-    SELECTION_HILOGI("sysSelectionConfig: %{public}s", sysSelectionConfig.ToString().c_str());
     if (dbSelectionConfig.has_value()) {
-        SELECTION_HILOGI("dbSelectionConfig: %{public}s", dbSelectionConfig->ToString().c_str());
+        SELECTION_HILOGI("dbSelectionConfig has value");
     } else {
-        SELECTION_HILOGE("dbSelectionConfig is nullopt!");
+        SELECTION_HILOGI("dbSelectionConfig is nullopt!");
     }
     auto result = DoCompare(uid, sysSelectionConfig, dbSelectionConfig);
     SELECTION_HILOGI("result: %{public}s", result.ToString().c_str());
@@ -51,7 +52,7 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
         return result;
     }
 
-    if (dbSelectionConfig.value().IsEnabled()) {
+    if (dbSelectionConfig.value().GetEnable()) {
         if (sysSelectionConfig.GetUid() != uid) {
             result.direction = FromDbToSys;
             result.selectionConfig = dbSelectionConfig.value();
@@ -59,7 +60,7 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
         }
         result.direction = FromSysToDb;
         result.selectionConfig = sysSelectionConfig;
-        if (!sysSelectionConfig.IsEnabled()) {
+        if (!sysSelectionConfig.GetEnable()) {
             result.shouldStop = true;
         }
         return result;
@@ -73,7 +74,7 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
 
     result.direction = FromSysToDb;
     result.selectionConfig = sysSelectionConfig;
-    if (!sysSelectionConfig.IsEnabled()) {
+    if (!sysSelectionConfig.GetEnable()) {
         result.shouldStop = true;
     }
 

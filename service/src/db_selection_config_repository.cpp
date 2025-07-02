@@ -53,9 +53,9 @@ int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
     ValuesBucket values;
     values.Clear();
     values.PutInt("uid", uid);
-    values.PutInt("enable", info.IsEnabled());
-    values.PutInt("trigger", info.IsTriggered());
-    values.PutString("bundleName", info.GetBundleName());
+    values.PutInt("enable", info.GetEnable());
+    values.PutInt("trigger", info.GetTriggered());
+    values.PutString("bundleName", info.GetApplicationInfo());
     int ret = selectionDatabase_->BeginTransaction();
     if (ret < SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("BeginTransaction error: %{public}d", ret);
@@ -86,8 +86,8 @@ int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
         (void)selectionDatabase_->RollBack();
         return ret;
     }
-    SELECTION_HILOGI("add success: uid=%{public}d enable=%{public}d trigger=%{public}d bundleName=%{public}s",
-        uid, info.IsEnabled(), info.IsTriggered(), info.GetBundleName().c_str());
+    SELECTION_HILOGI("add success: enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
+        info.GetEnable(), info.GetTriggered(), info.GetApplicationInfo().c_str());
     return ret;
 }
 
@@ -101,8 +101,8 @@ std::optional<SelectionConfig> DbSelectionConfigRepository::GetOneByUserId(int u
     if (GetConfigFromDatabase(rdbPredicates, columns, info) != SELECTION_CONFIG_OK) {
         return std::nullopt;
     }
-    SELECTION_HILOGI("uid=%{public}d enable=%{public}d trigger=%{public}d bundleName=%{public}s",
-        uid, info.IsEnabled(), info.IsTriggered(), info.GetBundleName().c_str());
+    SELECTION_HILOGI("enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
+        info.GetEnable(), info.GetTriggered(), info.GetApplicationInfo().c_str());
     return info;
 }
 
@@ -151,7 +151,7 @@ int DbSelectionConfigRepository::ProcessQueryResult(const std::shared_ptr<OHOS::
 
     bool endFlag = false;
     int enable = 0;
-    std::string bundleName = "";
+    std::string applicationInfo = "";
     int trigger = 0;
     int uid = -1;
 
@@ -161,16 +161,16 @@ int DbSelectionConfigRepository::ProcessQueryResult(const std::shared_ptr<OHOS::
             return -1;
         }
         if (resultSet->GetInt(table.enableIndex, enable) == E_OK &&
-            resultSet->GetString(table.bundleNameIndex, bundleName) == E_OK &&
+            resultSet->GetString(table.applicationInfoIndex, applicationInfo) == E_OK &&
             resultSet->GetInt(table.triggerIndex, trigger) == E_OK &&
             resultSet->GetInt(table.uidIndex, uid) == E_OK) {
-            info.SetEnabled(enable);
-            info.SetTriggered(trigger);
-            info.SetBundleName(bundleName);
+            info.SetEnabled(enable == 1? true : false);
+            info.SetTriggered(trigger  == 1? true: false);
+            info.SetApplicationInfo(applicationInfo);
             info.SetUid(uid);
         }
-        SELECTION_HILOGI("enable=%{public}d trigger=%{public}d bundleName=%{public}s uid=%{public}d",
-            enable, trigger, bundleName.c_str(), uid);
+        SELECTION_HILOGI("enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
+            enable, trigger, applicationInfo.c_str());
     }
 
     int position = 0;
@@ -209,7 +209,7 @@ int DbSelectionConfigRepository::RetrieveResultSetMetadata(
             table.enableIndex = i;
         }
         if (columnName == "bundleName") {
-            table.bundleNameIndex = i;
+            table.applicationInfoIndex = i;
         }
         if (columnName == "trigger") {
             table.triggerIndex = i;
@@ -221,7 +221,7 @@ int DbSelectionConfigRepository::RetrieveResultSetMetadata(
     table.rowCount = rowCount;
     table.columnCount = columnCount;
     SELECTION_HILOGI("info[%{public}d/%{public}d]: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d/%{public}d",
-        rowCount, columnCount, table.primaryKeyIndex, table.uidIndex, table.enableIndex, table.bundleNameIndex,
+        rowCount, columnCount, table.primaryKeyIndex, table.uidIndex, table.enableIndex, table.applicationInfoIndex,
         table.triggerIndex, table.shortcutKeysIndex);
     return SELECTION_CONFIG_OK;
 }

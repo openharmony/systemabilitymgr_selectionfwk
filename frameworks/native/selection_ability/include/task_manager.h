@@ -59,7 +59,7 @@ public:
     int32_t WaitExec(uint64_t seqId, uint32_t timeoutMs, std::function<void()>);
 
 private:
-    friend class SlectionAbility;
+    friend class SelectionAbility;
     friend class TaskAmsInit;
     void SetInited(bool flag);
 

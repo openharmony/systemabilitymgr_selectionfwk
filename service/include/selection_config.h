@@ -17,28 +17,29 @@
 #define SELECTION_CONFIG_H
 
 #include <string>
+#include <mutex>
 #include "selection_config.h"
 
 namespace OHOS {
 namespace SelectionFwk {
 class SelectionConfig {
 public:
-    int IsEnabled() const;
-    int IsTriggered() const;
+    bool GetEnable() const;
+    bool GetTriggered() const;
     int GetUid() const;
-    std::string GetBundleName() const;
-    void SetEnabled(int enabled);
-    void SetTriggered(int isTriggered);
-    void SetBundleName(const std::string &bundleName);
+    std::string GetApplicationInfo() const;
+    void SetEnabled(bool enabled);
+    void SetTriggered(bool isTriggered);
+    void SetApplicationInfo(const std::string &applicationInfo);
     void SetUid(int uid);
 
     std::string ToString() const;
 
 private:
-    int isEnabled_ = 1;
-    int isTriggered_ = 1;
+    bool isEnabled_ = true;
+    bool isTriggered_ = true;
     int uid_ = 0;
-    std::string bundleName_ = "com.hm.youdao/ExtensionAbility";
+    std::string applicationInfo_ = "com.hm.youdao/ExtensionAbility";
 };
 
 
@@ -47,17 +48,18 @@ public:
     static MemSelectionConfig &GetInstance();
     SelectionConfig &GetSelectionConfig();
     void SetSelectionConfig(const SelectionConfig &config);
-    int IsEnabled() const;
-    int IsTriggered() const;
-    std::string GetBundleName() const;
-    void SetEnabled(int enabled);
-    void SetTriggered(int isTriggered);
-    void SetBundleName(const std::string &bundleName);
+    bool GetEnable() const;
+    bool GetTriggered() const;
+    std::string GetApplicationInfo() const;
+    void SetEnabled(bool enabled);
+    void SetTriggered(bool isTriggered);
+    void SetApplicationInfo(const std::string &applicationInfo);
 
 private:
     MemSelectionConfig() = default;
     ~MemSelectionConfig() = default;
     SelectionConfig delegate_;
+    mutable std::mutex mutex_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

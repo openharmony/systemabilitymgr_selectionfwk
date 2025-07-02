@@ -16,8 +16,10 @@
 #include "selection_listener_impl.h"
 #include "selection_log.h"
 #include "selection_data_inner.h"
-#include "selection_panel_manger.h"
-
+#include "selection_panel_manager.h"
+#include "selection_ability.h"
+#include "wm_common.h"
+#include "window.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -29,7 +31,7 @@ static void CopySelectionData(const SelectionInfoData& src, SelectionInfo& dst)
 
 ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& selectionInfoData)
 {
-    SELECTION_HILOGI("Recveive selection data: %{public}s", selectionInfoData.data.text.c_str());
+    SELECTION_HILOGI("Recveive selection data length: %{public}lu", selectionInfoData.data.text.length());
     SelectionInfo selectionInfo;
     CopySelectionData(selectionInfoData, selectionInfo);
     if (selectionI_ == nullptr) {
@@ -40,35 +42,26 @@ ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& select
     return 0;
 }
 
-ErrCode SelectionListenerImpl::FocusChange(uint32_t windowID, uint32_t windowType)
+ErrCode SelectionListenerImpl::FocusChange(const SelectionFocusChangeInfo& focusChangeInfo)
 {
-    SELECTION_HILOGI("Recveive windowID: %{public}d", windowID);
-    if (selectionI_ == nullptr) {
-        SELECTION_HILOGE("selectionI_ is nullptr");
-        return 1;
+    SELECTION_HILOGI("Recveive FocusChange: %{public}s.", focusChangeInfo.ToString().c_str());
+    if (!focusChangeInfo.isFocused_) {
+        return NO_ERROR;
+    }
+    auto selectionAppPid = getpid();
+    if (selectionAppPid == focusChangeInfo.pid_) {
+        SELECTION_HILOGI("No need to hide or destory selection panel because window of selection app is focused.");
+        return NO_ERROR;
     }
 
-    auto& panelManager = SelectionPanelManger::GetInstance();
-    if (!panelManager.FindWindowID(windowID)) {
-        return 0;
-    }
-    auto selectionPanel = panelManager.GetSelectionPanel(windowID);
-    if (selectionPanel == nullptr) {
-        SELECTION_HILOGE("get selectionPanel is nullptr, windowID: %{public}d", windowID);
-        return 1;
-    }
-    if (selectionPanel->GetPanelType() == PanelType::MENU_PANEL) {
-        SELECTION_HILOGI("hide windowID: %{public}d", windowID);
-        panelManager.GetSelectionPanel(windowID)->HidePanel();
+    auto& panelManager = SelectionPanelManager::GetInstance();
+    if (!panelManager.FindWindowID(focusChangeInfo.windowId_)) {
+        SELECTION_HILOGI("The focus window is not a selection window, hide or destroy selection panels.");
+        panelManager.Dispose();
+        return NO_ERROR;
     }
 
-    if (selectionPanel->GetPanelType() == PanelType::MAIN_PANEL) {
-        SELECTION_HILOGI("destroy windowID: %{public}d", windowID);
-        panelManager.GetSelectionPanel(windowID)->DestroyPanel();
-        panelManager.RemoveSelectionPanel(windowID);
-    }
-    return 0;
+    return NO_ERROR;
 }
-
 } // namespace SelectionFramework
 } // namespace OHOS

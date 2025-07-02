@@ -29,14 +29,14 @@ public:
     void DisableSAService();
 
 private:
-    void SetEnabled(int enabled);
-    void SetTriggered(int isTriggered);
+    void SetEnabled(bool enabled);
+    void SetTriggered(bool isTriggered);
     void SetUid(int uid);
-    void SetBundleName(const std::string &bundleName);
-    int IsEnabled();
-    int IsTriggered();
+    void SetApplicationInfo(const std::string &applicationInfo);
+    int GetEnable();
+    int GetTriggered();
     int GetUid();
-    std::string GetBundleName();
+    std::string GetApplicationInfo();
     static std::shared_ptr<SysSelectionConfigRepository> instance_;
 };
 } // namespace SelectionFwk

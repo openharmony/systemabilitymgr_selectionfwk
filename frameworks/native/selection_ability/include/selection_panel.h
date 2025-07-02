@@ -30,11 +30,16 @@
 #include "wm_common.h"
 #include "window.h"
 #include "ui/rs_surface_node.h"
-#include "selection_window_info.h"
 #include "panel_status_listener.h"
 
 namespace OHOS {
 namespace SelectionFwk {
+enum class SelectionWindowStatus : uint32_t {
+    HIDDEN,
+    DESTROYED,
+    NONE
+};
+ 
 class SelectionPanel {
 public:
     static constexpr uint32_t INVALID_WINDOW_ID = 0;
@@ -53,7 +58,7 @@ public:
     bool IsDestroyed() const;
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
     void ClearPanelListener(const std::string &type);
-    int32_t GetWindowId();
+    uint32_t GetWindowId();
 
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
@@ -67,6 +72,7 @@ private:
     static uint32_t GenerateSequenceId();
     void PanelStatusChange(const SelectionWindowStatus &status);
     bool MarkListener(const std::string &type, bool isRegister);
+    bool IsPanelListenerClearable();
 
     PanelType panelType_ = PanelType::MENU_PANEL;
     int32_t x_ = 0;
@@ -84,8 +90,8 @@ private:
     std::atomic<bool> isWaitSetUiContent_ { true };
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
     bool destroyedRegistered_ = false;
-    bool hiddedRegistered_ = false;
-
+    bool hiddenRegistered_ = false;
+    SelectionWindowStatus windowStatus_ = SelectionWindowStatus::NONE;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

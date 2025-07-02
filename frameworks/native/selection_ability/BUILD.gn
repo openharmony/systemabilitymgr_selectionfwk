@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//build/config/components/idl_tool/idl.gni")
 import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 
 config("selection_listener_config") {
@@ -23,39 +22,6 @@ config("selection_listener_config") {
     "${selection_fwk_root_path}/common",
     "${selection_fwk_root_path}/frameworks/common",
   ]
-}
-
-idl_interface_sources = [
-  "${target_gen_dir}/selection_listener_proxy.cpp",
-  "${target_gen_dir}/selection_listener_stub.cpp",
-]
-
-idl_gen_interface("selection_listener_interface") {
-  src_idl = rebase_path("ISelectionListener.idl")
-  dst_file = string_join(",", idl_interface_sources)
-}
-
-ohos_source_set("selection_listener_proxy") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  include_dirs = [
-    "${target_gen_dir}",
-  ]
-
-  public_configs = [":selection_listener_config"]
-  output_values = get_target_outputs(":selection_listener_interface")
-  sources = filter_include(output_values, [ "*_proxy.cpp" ])
-  deps = [ ":selection_listener_interface" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_single",
-  ]
-  part_name = "selectionfwk"
-  subsystem_name = "systemabilitymgr"
 }
 
 ohos_shared_library("selection_ability") {
@@ -70,7 +36,6 @@ ohos_shared_library("selection_ability") {
     ubsan = true
   }
   configs = [ ":selection_listener_config", ]
-  output_values = get_target_outputs(":selection_listener_interface")
 
   sources = [
     "src/selection_ability.cpp",
@@ -78,11 +43,13 @@ ohos_shared_library("selection_ability") {
     "src/selection_panel.cpp",
     "src/task_manager.cpp",
     "src/tasks/task.cpp",
+    "src/selection_app_validator.cpp",
+    "src/selection_panel_manager.cpp",
   ]
-  sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
     "${selection_fwk_root_path}/common:selection_common",
-    ":selection_listener_interface",
+    "${selection_fwk_root_path}/interfaces/idl:selection_listener_interface",
+    "${selection_fwk_root_path}/interfaces/idl:selection_listener_stub",
   ]
 
   external_deps = [
@@ -92,6 +59,7 @@ ohos_shared_library("selection_ability") {
     "ability_base:configuration",
     "ability_base:want",
     "ability_runtime:ability_context_native",
+    "ability_runtime:app_context",
     "bundle_framework:appexecfwk_base",
     "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
@@ -103,6 +71,7 @@ ohos_shared_library("selection_ability") {
     "samgr:samgr_proxy",
     "window_manager:libdm",
     "window_manager:libwsutils",
+    "ability_runtime:ability_manager",
   ]
 
   public_external_deps = [ "window_manager:libwm" ]
