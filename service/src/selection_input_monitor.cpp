@@ -531,7 +531,7 @@ void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &te
         SELECTION_HILOGI("Error receiving text, errCode: %{public}d", errCode);
         return;
     }
-    SELECTION_HILOGI("Text received length: %{public}lu.", text.length());
+    SELECTION_HILOGI("Text received length: %{public}u.", text.length());
     if (!baseInputMonitor_) {
         return;
     }
@@ -545,7 +545,7 @@ void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &te
     selectionInfo.text = text;
     SelectionInfoData infoData;
     infoData.data = selectionInfo;
-    SELECTION_HILOGI("SelectionInfoData length: %{public}lu.", infoData.ToString().length());
+    SELECTION_HILOGI("SelectionInfoData length: %{public}u.", infoData.ToString().length());
     sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
     if (listener == nullptr) {
         SELECTION_HILOGE("Selection listener is nullptr");

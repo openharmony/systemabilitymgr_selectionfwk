@@ -439,7 +439,7 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
         return 1;
     }
 
-    SELECTION_HILOGI("selection text length is [%{public}lu]", entry->selectionInfo.text.length());
+    SELECTION_HILOGI("selection text length is [%{public}u]", entry->selectionInfo.text.length());
     auto task = [entry]() {
         auto paramGetter = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
             if (argc == 0) {

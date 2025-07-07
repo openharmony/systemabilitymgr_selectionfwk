@@ -31,7 +31,7 @@ static void CopySelectionData(const SelectionInfoData& src, SelectionInfo& dst)
 
 ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& selectionInfoData)
 {
-    SELECTION_HILOGI("Recveive selection data length: %{public}lu", selectionInfoData.data.text.length());
+    SELECTION_HILOGI("Recveive selection data length: %{public}u", selectionInfoData.data.text.length());
     SelectionInfo selectionInfo;
     CopySelectionData(selectionInfoData, selectionInfo);
     if (selectionI_ == nullptr) {
