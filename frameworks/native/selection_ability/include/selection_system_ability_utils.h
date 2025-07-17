@@ -13,9 +13,19 @@
  * limitations under the License.
  */
 
-sequenceable selection_data_inner..OHOS.SelectionFwk.SelectionInfoData;
+#ifndef FRAMEWORKS_SELECTION_ABILITY_INCLUDE_SELECTION_SYSTREM_ABILITY_UTILS_H
+#define FRAMEWORKS_SELECTION_ABILITY_INCLUDE_SELECTION_SYSTREM_ABILITY_UTILS_H
 
-interface OHOS.SelectionFwk.ISelectionListener {
-    void OnSelectionChange([in] SelectionInfoData selectionInfoData);
-    void FocusChange([in] unsigned int windowID, [in] unsigned int windowType);
-}
+#include "refbase.h"
+#include "iselection_service.h"
+
+namespace OHOS {
+namespace SelectionFwk {
+class SelectionSystemAbilityUtils : public RefBase {
+public:
+    static bool IsSelectionSystemAbilityExistent();
+    static sptr<ISelectionService> GetSelectionSystemAbility();
+};
+} // namespace SelectionFwk
+} // namespace OHOS
+#endif // FRAMEWORKS_SELECTION_ABILITY_INCLUDE_SELECTION_SYSTREM_ABILITY_UTILS_H

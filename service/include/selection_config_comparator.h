@@ -30,6 +30,7 @@ struct ComparisionResult {
     SyncDirection direction = FromDbToSys;
     bool shouldStop = false;
     bool shouldCreate = false;
+    bool shouldRestartApp = false;
     SelectionConfig selectionConfig;
 
     std::string ToString() const;

@@ -59,6 +59,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_001', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompletedtest', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_001 is failed`);
@@ -83,6 +89,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_002', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted');
       console.info(`selectionfwk_on_selectionCompleted_002 is failed`);
@@ -103,6 +115,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_003', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_003 callback enter`);
@@ -127,6 +145,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_004', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on(null, (info) => {
         console.info(`selectionfwk_on_selectionCompleted_004 callback enter`);
@@ -150,6 +174,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_005', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on(undefined, (info) => {
         console.info(`selectionfwk_on_selectionCompleted_005 callback enter`);
@@ -173,6 +203,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_006', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', null);
       console.info(`selectionfwk_on_selectionCompleted_006 is failed`);
@@ -193,6 +229,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_007', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', undefined);
       console.info(`selectionfwk_on_selectionCompleted_007 is failed`);
@@ -213,6 +255,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_001', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.off('selectionCompletedtest', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_001 is failed`);
@@ -235,6 +283,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_002', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.off();
       console.info(`selectionfwk_off_selectionCompleted_002 is failed`);
@@ -255,6 +309,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_003', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_003 callback enter`);
@@ -279,6 +339,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_004', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_004 callback enter`);
@@ -303,6 +369,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_005', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_005 callback enter`);
@@ -327,6 +399,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_006', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_006 callback enter`);
@@ -351,6 +429,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_off_selectionCompleted_007', 0, async function (done) {
     console.info('************* selectionfwk_off_selectionCompleted_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_007 callback enter`);
@@ -375,6 +459,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_001', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.createPanel({stageMode : false});
       expect().assertFail();
@@ -394,6 +484,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_002', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_002 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MENU_PANEL,
@@ -420,6 +516,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_003', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_003 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MENU_PANEL,
@@ -446,6 +548,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_004', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_004 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panelTemp;
     try {
       let panelInfo = {
@@ -477,6 +585,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_005', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_005 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -503,6 +617,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_006', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_006 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -529,6 +649,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_007', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_007 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -555,6 +681,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_008', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_008 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -581,6 +713,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_009', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_009 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -607,6 +745,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_010', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_010 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.createPanel({stageMode : false}, null);
       expect().assertFail();
@@ -626,6 +770,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_011', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_011 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.createPanel({stageMode : false}, undefined);
       expect().assertFail();
@@ -645,6 +795,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_012', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_012 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -671,6 +827,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_createPanel_013', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_013 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MAIN_PANEL,
@@ -697,6 +859,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_destroyPanel_001', 0, async function (done) {
     console.info('************* selectionfwk_destroyPanel_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.destroyPanel();
       expect().assertFail();
@@ -716,6 +884,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_destroyPanel_002', 0, async function (done) {
     console.info('************* selectionfwk_destroyPanel_002 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panel = 1;
       await selectionManager.destroyPanel(panel);
@@ -736,6 +910,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_destroyPanel_003', 0, async function (done) {
     console.info('************* selectionfwk_destroyPanel_003 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await selectionManager.destroyPanel(panel);
@@ -757,6 +937,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_destroyPanel_004', 0, async function (done) {
     console.info('************* selectionfwk_destroyPanel_004 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.destroyPanel(null);
       console.info(`selectionfwk_destroyPanel_004 promise success`);
@@ -777,6 +963,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_destroyPanel_005', 0, async function (done) {
     console.info('************* selectionfwk_destroyPanel_005 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       await selectionManager.destroyPanel(undefined);
       console.info(`selectionfwk_destroyPanel_005 promise success`);
@@ -797,6 +989,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selection_panel_setUiContent_001', 0, async function (done) {
     console.info('************* selection_panel_setUiContent_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
      await panel.setUiContent();
@@ -819,6 +1017,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selection_panel_setUiContent_002', 0, async function (done) {
     console.info('************* selection_panel_setUiContent_002 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.setUiContent(20);
@@ -841,6 +1045,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selection_panel_setUiContent_003', 0, async function (done) {
     console.info('************* selection_panel_setUiContent_003 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     await destroySelectionPanel(panel);
     try {
@@ -862,6 +1072,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selection_panel_setUiContent_004', 0, async function (done) {
     console.info('************* selection_panel_setUiContent_004 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.setUiContent(null);
@@ -883,6 +1099,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selection_panel_setUiContent_005', 0, async function (done) {
     console.info('************* selection_panel_setUiContent_005 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.setUiContent(undefined);
@@ -904,6 +1126,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(20);
@@ -926,6 +1154,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_002 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(20, '20');
@@ -948,6 +1182,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_003', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_003 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     await destroySelectionPanel(panel);
     try {
@@ -969,6 +1209,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_004', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_004 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(50, 50);
@@ -991,6 +1237,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_005', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_005 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(-1, 50);
@@ -1013,6 +1265,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_006', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_006 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(50, -1);
@@ -1035,6 +1293,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_moveTo_007', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_007 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(null, 50);
@@ -1057,6 +1321,12 @@ describe("SelectionManagerJsTest", function () {
   */
   it('selectionfwk_panel_moveTo_008', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_008 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(undefined, 50);
@@ -1079,6 +1349,12 @@ describe("SelectionManagerJsTest", function () {
   */
   it('selectionfwk_panel_moveTo_009', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_009 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(50, null);
@@ -1101,6 +1377,12 @@ describe("SelectionManagerJsTest", function () {
   */
   it('selectionfwk_panel_moveTo_010', 0, async function (done) {
     console.info('************* selectionfwk_panel_moveTo_010 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.moveTo(50, undefined);
@@ -1123,6 +1405,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_show_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_show_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     await destroySelectionPanel(panel);
     try {
@@ -1144,6 +1432,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyedTest', (info) => {
@@ -1168,6 +1462,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed');
@@ -1190,6 +1490,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_003', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1215,6 +1521,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_004', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on(null, (info) => {
@@ -1240,6 +1552,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_005', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on(undefined, (info) => {
@@ -1265,6 +1583,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_006', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', null);
@@ -1287,6 +1611,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_destroyed_007', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_destroyed_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', undefined);
@@ -1309,6 +1639,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.off('destroyedTest', (info) => {
@@ -1333,6 +1669,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.off(() => {
@@ -1356,6 +1698,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_003', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1382,6 +1730,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_004', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1408,6 +1762,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_005', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1434,6 +1794,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_006', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1460,6 +1826,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_destroyed_007', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_destroyed_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('destroyed', (info) => {
@@ -1486,6 +1858,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hiddenTest', (info) => {
@@ -1510,6 +1888,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden');
@@ -1532,6 +1916,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_003', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1557,6 +1947,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_004', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on(null, (info) => {
@@ -1582,6 +1978,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_005', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on(undefined, (info) => {
@@ -1607,6 +2009,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_006', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', null);
@@ -1629,6 +2037,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_on_hidden_007', 0, async function (done) {
     console.info('************* selectionfwk_panel_on_hidden_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', undefined);
@@ -1651,6 +2065,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.off('hiddenTest', (info) => {
@@ -1675,6 +2095,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_002*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.off(() => {
@@ -1698,6 +2124,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_003', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_003*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1724,6 +2156,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_004', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_004*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1750,6 +2188,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_005', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_005*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1776,6 +2220,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_006', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_006*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1802,6 +2252,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_off_hidden_007', 0, async function (done) {
     console.info('************* selectionfwk_panel_off_hidden_007*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       panel.on('hidden', (info) => {
@@ -1828,6 +2284,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_hide_001', 0, async function (done) {
     console.info('************* selectionfwk_panel_hide_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     await destroySelectionPanel(panel);
     try {
@@ -1849,6 +2311,12 @@ describe("SelectionManagerJsTest", function () {
    */
   it('selectionfwk_panel_hide_002', 0, async function (done) {
     console.info('************* selectionfwk_panel_hide_002 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     let panel = await createSelectionPanel();
     try {
       await panel.hide();

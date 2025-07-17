@@ -63,6 +63,9 @@ public:
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
 private:
+    bool IsSelectionSystemAbilityExistent();
+
+private:
     inline static const std::unordered_map<SelectionWindowStatus, std::string> panelStatusMap_ {
         { SelectionWindowStatus::HIDDEN, "hidden" },
         { SelectionWindowStatus::DESTROYED, "destroyed" }
@@ -91,7 +94,6 @@ private:
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
     bool destroyedRegistered_ = false;
     bool hiddenRegistered_ = false;
-    SelectionWindowStatus windowStatus_ = SelectionWindowStatus::NONE;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

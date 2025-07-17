@@ -34,6 +34,12 @@ describe("SelectionManagerInvalidOperationJsTest", function () {
    */
   it('selectionfwk_on_selectionCompleted_invalid_operation_001', 0, async function (done) {
     console.info('************* selectionfwk_on_selectionCompleted_invalid_operation_001*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_invalid_operation_001 is failed`);
@@ -56,6 +62,12 @@ describe("SelectionManagerInvalidOperationJsTest", function () {
    */
   it('selectionfwk_createPanel_invalid_operation_001', 0, async function (done) {
     console.info('************* selectionfwk_createPanel_invalid_operation_001 Test start*************');
+    if (!canIUse('SystemCapability.SelectionInput.Selection')) {
+      console.info('can not use SystemCapability.SelectionInput.Selection');
+      expect(true).assertTrue();
+      done();
+      return;
+    }
     try {
       let panelInfo = {
         panelType: PanelType.MENU_PANEL,

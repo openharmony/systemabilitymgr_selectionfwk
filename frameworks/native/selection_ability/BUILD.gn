@@ -45,6 +45,7 @@ ohos_shared_library("selection_ability") {
     "src/tasks/task.cpp",
     "src/selection_app_validator.cpp",
     "src/selection_panel_manager.cpp",
+    "src/selection_system_ability_utils.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/common:selection_common",

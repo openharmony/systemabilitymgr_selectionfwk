@@ -16,20 +16,19 @@
 #include "js_selection_engine_setting.h"
 
 #include "event_checker.h"
-#include "iservice_registry.h"
 #include "selection_ability.h"
 #include "selection_js_utils.h"
 #include "callback_handler.h"
 #include "napi/native_node_api.h"
 #include "selection_listener_impl.h"
 #include "selection_log.h"
-#include "system_ability_definition.h"
 #include "util.h"
 #include "napi_base_context.h"
 #include "js_panel.h"
 #include "js_selection_utils.h"
 #include "selection_app_validator.h"
 #include "selection_api_event_reporter.h"
+#include "selection_system_ability_utils.h"
 
 using namespace OHOS;
 namespace OHOS {
@@ -45,7 +44,6 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::selectionDel
 std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
 sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
-sptr<ISelectionService> JsSelectionEngineSetting::abilityManager_ { nullptr };
 
 napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info info)
 {
@@ -244,25 +242,6 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
     return asyncCall.Call(env, exec, "destroyPanel");
 }
 
-sptr<ISelectionService> JsSelectionEngineSetting::GetSelectionSystemAbility()
-{
-    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        SELECTION_HILOGE("system ability manager is nullptr!");
-        return nullptr;
-    }
-
-    sptr<IRemoteObject> systemAbility = nullptr;
-    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
-    if (systemAbility == nullptr) {
-        SELECTION_HILOGE("get system ability is nullptr!");
-        return nullptr;
-    }
-
-    abilityManager_ = iface_cast<ISelectionService>(systemAbility);
-    return abilityManager_;
-}
-
 void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string type,
     std::shared_ptr<JSCallbackObject> callbackObj)
 {
@@ -310,7 +289,7 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
         jsCbMap_.erase(type);
     }
 
-    auto proxy = GetSelectionSystemAbility();
+    auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
     if (proxy == nullptr || listenerStub_ == nullptr) {
         SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
         return;
@@ -342,7 +321,7 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
 SFErrorCode JsSelectionEngineSetting::RegisterListenerToService(
     std::shared_ptr<JsSelectionEngineSetting> &selectionEnging)
 {
-    auto proxy = GetSelectionSystemAbility();
+    auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
     if (proxy == nullptr) {
         SELECTION_HILOGE("selection system ability is nullptr!");
         return EXCEPTION_SELECTION_SERVICE;
@@ -384,8 +363,8 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
         descriptor));
     NAPI_CALL(env, napi_set_named_property(env, exports, "SelectionType", GetJsSelectionTypeProperty(env)));
     if (Register(env) != EXCEPTION_SUCCESS) {
-        SELECTION_HILOGE("regist lister to service failed!");
-        return nullptr;
+        SELECTION_HILOGE("Failed to register lister to service!");
+        return exports;
     }
     SelectionAppValidator::GetInstance().SetValid();
     return exports;
@@ -496,5 +475,6 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
     eventHandler->PostTask(task, type, 0, AppExecFwk::EventQueue::Priority::VIP);
     return 0;
 }
+
 }
 }

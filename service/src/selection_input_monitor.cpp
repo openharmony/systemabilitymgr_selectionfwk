@@ -470,9 +470,13 @@ void SelectionInputMonitor::FinishedWordSelection() const
     }
     baseInputMonitor_->ResetFinishedState();
     if (pasteboardObserver_ == nullptr) {
-         pasteboardObserver_ = sptr<SelectionPasteboardDisposableObserver>::MakeSptr(baseInputMonitor_);
+        pasteboardObserver_ = sptr<SelectionPasteboardDisposableObserver>::MakeSptr(baseInputMonitor_);
     }
 
+    if (SelectionService::GetInstance()->GetScreenLockedFlag()) {
+        SELECTION_HILOGW("The screen is locked, skip notifying selection info.");
+        return;
+    }
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
     if (IsAppInBlacklist(selectionInfo.bundleName)) {
         SELECTION_HILOGW("The app [%{public}s] is in the blacklist, skip notifying selection info.",

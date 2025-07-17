@@ -24,6 +24,7 @@
 #include "selection_log.h"
 #include "selectionmethod_trace.h"
 #include "selection_panel_manager.h"
+#include "selection_system_ability_utils.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -65,7 +66,7 @@ int32_t SelectionPanel::CreatePanel(
     sptr<Rosen::Window> window = Rosen::Window::Create(windowName, baseOp, context, wmError);
     SELECTION_HILOGI("Window creation returns %{public}d", wmError);
     if (!window) {
-        SELECTION_HILOGE("Window creation failed");
+        SELECTION_HILOGE("Faied to create window, errCode: %{public}d", wmError);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     window_ = window;
@@ -108,10 +109,6 @@ int32_t SelectionPanel::SetPanelProperties()
 
 int32_t SelectionPanel::DestroyPanel()
 {
-    if (windowStatus_ == SelectionWindowStatus::DESTROYED) {
-        SELECTION_HILOGE("window has destroyed!");
-        return ErrorCode::NO_ERROR;
-    }
     auto ret = HidePanel();
     if (ret != ErrorCode::NO_ERROR) {
         SELECTION_HILOGE("SelectionPanel, hide panel failed, ret: %{public}d!", ret);
@@ -121,9 +118,12 @@ int32_t SelectionPanel::DestroyPanel()
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto result = window_->Destroy();
+    if (result != WMError::WM_OK) {
+        SELECTION_HILOGE("destroy failed. ret: %{public}d", result);
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
     window_ = nullptr;
     SELECTION_HILOGI("destroy ret: %{public}d", result);
-    windowStatus_ = SelectionWindowStatus::DESTROYED;
     PanelStatusChange(SelectionWindowStatus::DESTROYED);
     return ErrorCode::NO_ERROR;
 }
@@ -144,6 +144,10 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
         SELECTION_HILOGE("window is destroyed!");
         return ErrorCode::ERROR_PANEL_DESTROYED;
     }
+    if (!IsSelectionSystemAbilityExistent()) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     WMError ret = WMError::WM_OK;
 
     ret = window_->NapiSetUIContent(contentInfo, env, nullptr);
@@ -172,6 +176,10 @@ int32_t SelectionPanel::ShowPanel()
         SELECTION_HILOGE("window is destroyed!");
         return ErrorCode::ERROR_PANEL_DESTROYED;
     }
+    if (!IsSelectionSystemAbilityExistent()) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     int32_t iCounter = 0;
     while (isWaitSetUiContent_.load() && iCounter < MAXWAITTIMES) {
         usleep(WAITTIME);
@@ -198,7 +206,6 @@ int32_t SelectionPanel::ShowPanel()
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("Selection panel shown successfully.");
-    windowStatus_ = SelectionWindowStatus::NONE;
     return ErrorCode::NO_ERROR;
 }
 
@@ -206,7 +213,7 @@ bool SelectionPanel::IsShowing()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_SELECTION_SERVICE;
+        return false;
     }
     auto windowState = window_->GetWindowState();
     if (windowState == WindowState::STATE_SHOWN) {
@@ -240,11 +247,6 @@ void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
 int32_t SelectionPanel::HidePanel()
 {
     SELECTION_HILOGD("SelectionPanel start");
-    if (windowStatus_ == SelectionWindowStatus::HIDDEN) {
-        SELECTION_HILOGE("window has hidden!");
-        return ErrorCode::NO_ERROR;
-    }
-
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_PANEL_DESTROYED;
@@ -257,6 +259,10 @@ int32_t SelectionPanel::HidePanel()
         SELECTION_HILOGI("panel already hidden.");
         return ErrorCode::NO_ERROR;
     }
+    if (!IsSelectionSystemAbilityExistent()) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     auto ret = WMError::WM_OK;
     {
         SelectionMethodSyncTrace tracer("SelectionPanel_HidePanel");
@@ -268,7 +274,6 @@ int32_t SelectionPanel::HidePanel()
     }
     SELECTION_HILOGI("success, panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
         static_cast<int32_t>(panelType_), x_, y_, width_, height_);
-    windowStatus_ = SelectionWindowStatus::HIDDEN;
     PanelStatusChange(SelectionWindowStatus::HIDDEN);
     return ErrorCode::NO_ERROR;
 }
@@ -298,6 +303,10 @@ int32_t SelectionPanel::StartMoving()
         SELECTION_HILOGE("window is destroyed!");
         return ErrorCode::ERROR_PANEL_DESTROYED;
     }
+    if (!IsSelectionSystemAbilityExistent()) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     auto ret = window_->StartMoveWindow();
     if (ret == WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT) {
         SELECTION_HILOGE("window manager service not support error ret = %{public}d.", ret);
@@ -322,6 +331,10 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
         SELECTION_HILOGE("window is destroyed!");
         return ErrorCode::ERROR_PANEL_DESTROYED;
     }
+    if (!IsSelectionSystemAbilityExistent()) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     auto ret = window_->MoveTo(x, y);
     SELECTION_HILOGI("x/y: %{public}d/%{public}d, ret = %{public}d", x, y, ret);
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
@@ -385,5 +398,10 @@ uint32_t SelectionPanel::GetWindowId()
     std::lock_guard<std::mutex> lock(windowMutex_);
     return window_->GetWindowId();
 }
+
+bool SelectionPanel::IsSelectionSystemAbilityExistent() {
+    return SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent();
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

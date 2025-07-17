@@ -72,6 +72,8 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.L
     std::optional<SelectionConfig> dbSelectionConfig = std::nullopt;
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfig);
     ASSERT_TRUE(result.shouldCreate);
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
 }
 
 /**
@@ -90,6 +92,7 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator002, TestSize.L
     ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
     ASSERT_EQ(result.selectionConfig.GetUid(), 100);
     ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_FALSE(result.shouldStop);
 }
 
 /**
@@ -109,6 +112,7 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator003, TestSize.L
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
     ASSERT_TRUE(result.shouldStop);
     ASSERT_FALSE(result.selectionConfig.GetEnable());
+    ASSERT_FALSE(result.shouldRestartApp);
 }
 
 /**
@@ -126,6 +130,8 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator004, TestSize.L
     SetSelectionConfig(sysSelectionConfig, uid, true);
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
 }
 
 /**
@@ -142,6 +148,7 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.L
     SelectionConfig sysSelectionConfig;
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_TRUE(result.shouldStop);
+    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
     ASSERT_EQ(result.selectionConfig.GetUid(), 100);
 }
 
@@ -161,6 +168,7 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator006, TestSize.L
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
     ASSERT_TRUE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
 }
 
 /**
@@ -179,6 +187,31 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator007, TestSize.L
     auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
     ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
+}
+
+/**
+ * @tc.name: SelectionConfigComparator008
+ * @tc.desc: database testcase 008
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator008, TestSize.Level1)
+{
+    int uid = 100;
+    std::string appInfo = "com.example.test/SelectionExtensionAbility";
+    SelectionConfig dbSelectionConfig;
+    SetSelectionConfig(dbSelectionConfig, uid, true);
+    dbSelectionConfig.SetApplicationInfo(appInfo);
+    std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
+    SelectionConfig sysSelectionConfig;
+    sysSelectionConfig.SetApplicationInfo(appInfo);
+    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
+    ASSERT_TRUE(result.shouldRestartApp);
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_FALSE(result.shouldStop);
 }
 }
 }
