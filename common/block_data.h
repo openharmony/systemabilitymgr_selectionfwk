@@ -23,7 +23,7 @@ namespace SelectionFwk {
 template<typename T>
 class BlockData {
 public:
-    explicit BlockData(uint32_t interval, const T &invalid = T()) : INTERVAL(interval), data_(invalid)
+    explicit BlockData(uint32_t interval, const T &invalid = T()) : interval_(interval), data_(invalid)
     {
     }
 
@@ -43,7 +43,7 @@ public:
     T GetValue()
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cv_.wait_for(lock, std::chrono::milliseconds(INTERVAL), [this]() { return isSet_; });
+        cv_.wait_for(lock, std::chrono::milliseconds(interval_), [this]() { return isSet_; });
         T data = data_;
         return data;
     }
@@ -51,7 +51,7 @@ public:
     bool GetValue(T &data)
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cv_.wait_for(lock, std::chrono::milliseconds(INTERVAL), [this]() { return isSet_; });
+        cv_.wait_for(lock, std::chrono::milliseconds(interval_), [this]() { return isSet_; });
         data = data_;
         return isSet_;
     }
@@ -65,7 +65,7 @@ public:
 
 private:
     bool isSet_ = false;
-    const uint32_t INTERVAL;
+    const uint32_t interval_;
     T data_;
     std::mutex mutex_;
     std::condition_variable cv_;

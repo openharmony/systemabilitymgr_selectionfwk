@@ -59,7 +59,7 @@ napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, &data));
     std::string type;
     // 2 means least param num.
-    if (argc < 2 || !JsUtil::GetValue(env, argv[0], type) ||
+    if (argc < ARGC_TWO || !JsUtil::GetValue(env, argv[0], type) ||
         !EventChecker::IsValidEventType(EventSubscribeModule::SELECTION_METHOD_ABILITY, type) ||
         JsUtil::GetType(env, argv[1]) != napi_function) {
         SELECTION_HILOGE("subscribe failed, type: %{public}s!", type.c_str());
@@ -131,35 +131,38 @@ napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
     return napi_ok;
 }
 
+napi_status JsSelectionEngineSetting::CheckPanelInfoAndConext(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<PanelContext> ctxt)
+{
+    PARAM_CHECK_RETURN(env, argc >= ARGC_TWO, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
+    napi_valuetype valueType = napi_undefined;
+    // 0 means parameter of ctx<BaseContext>
+    napi_typeof(env, argv[0], &valueType);
+    PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
+    napi_status status = GetContext(env, argv[0], ctxt->context);
+    PARAM_CHECK_RETURN(env, status == napi_ok, "js param context covert failed.", TYPE_NONE, napi_invalid_arg);
+    // 1 means parameter of info<PanelInfo>
+    napi_typeof(env, argv[1], &valueType);
+    PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
+        napi_invalid_arg);
+    status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
+    SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
+        %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
+        ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
+    PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
+    PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
+        ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",
+        TYPE_NONE, napi_invalid_arg);
+    return status;
+}
+
 napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_info info)
 {
     SELECTION_HILOGI("SelectionEngineSetting CreatePanel start.");
     auto eventReporter = std::make_shared<SelectionApiEventReporter>("createPanel");
     auto ctxt = std::make_shared<PanelContext>();
-    auto inputInner = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        PARAM_CHECK_RETURN(env, argc >= 2, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
-        napi_valuetype valueType = napi_undefined;
-        // 0 means parameter of ctx<BaseContext>
-        napi_typeof(env, argv[0], &valueType);
-        PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
-        napi_status status = GetContext(env, argv[0], ctxt->context);
-        PARAM_CHECK_RETURN(env, status == napi_ok, "js param context covert failed.", TYPE_NONE, napi_invalid_arg);
-        // 1 means parameter of info<PanelInfo>
-        napi_typeof(env, argv[1], &valueType);
-        PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
-            napi_invalid_arg);
-        status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
-        SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
-            %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
-            ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
-        PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
-        PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
-            ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",
-            TYPE_NONE, napi_invalid_arg);
-        return status;
-    };
     auto input = [=](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        napi_status status = inputInner(env, argc, argv, self);
+        napi_status status = CheckPanelInfoAndConext(env, argc, argv, ctxt);
         if (status != napi_ok) {
             SELECTION_HILOGI("Check parameter invalid, Report error message to hiappevent");
             eventReporter->WriteEndEvent(SelectionApiEventReporter::API_FAIL, SFErrorCode::EXCEPTION_PARAMCHECK);
@@ -238,7 +241,7 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
 
     ctxt->SetAction(std::move(input), std::move(output));
     // 2 means JsAPI:destroyPanel has 2 params at most.
-    AsyncCall asyncCall(env, info, ctxt, 2);
+    AsyncCall asyncCall(env, info, ctxt, ARGC_TWO);
     return asyncCall.Call(env, exec, "destroyPanel");
 }
 

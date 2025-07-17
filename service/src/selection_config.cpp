@@ -60,7 +60,8 @@ void SelectionConfig::SetApplicationInfo(const std::string &applicationInfo)
     applicationInfo_ = applicationInfo;
 }
 
-std::string SelectionConfig::ToString() const {
+std::string SelectionConfig::ToString() const
+{
     std::ostringstream oss;
     oss << "enable: " << isEnabled_ << ", trigger: "
         << isTriggered_ << ", applicationInfo: " << applicationInfo_;

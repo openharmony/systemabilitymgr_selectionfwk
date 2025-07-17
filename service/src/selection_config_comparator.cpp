@@ -19,9 +19,10 @@
 
 namespace OHOS {
 namespace SelectionFwk {
-static const std::string DEFAULT_SELECTION_APP = "com.huawei.hmos.vassistant/MiniMenuServiceExtAbility";
+static const std::string DEFAULT_SELECTION_APP = "com.selection.selectionapplication/SelectionExtensionAbility";
 
-std::string ComparisionResult::ToString() const {
+std::string ComparisionResult::ToString() const
+{
     std::ostringstream oss;
     oss << "ComparisionResult: shouldCreate: " << shouldCreate
         << " shouldStop: " << shouldStop

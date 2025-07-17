@@ -28,7 +28,7 @@ FocusMonitorManager &FocusMonitorManager::GetInstance()
 void FocusMonitorManager::RegisterFocusChangedListener(const FocusHandle &handle)
 {
     if (focusListener_ != nullptr) {
-         SELECTION_HILOGE("focusListener_ has been registered by others.");
+        SELECTION_HILOGE("focusListener_ has been registered by others.");
         return;
     }
 

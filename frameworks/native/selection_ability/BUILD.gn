@@ -41,8 +41,6 @@ ohos_shared_library("selection_ability") {
     "src/selection_ability.cpp",
     "src/selection_listener_impl.cpp",
     "src/selection_panel.cpp",
-    "src/task_manager.cpp",
-    "src/tasks/task.cpp",
     "src/selection_app_validator.cpp",
     "src/selection_panel_manager.cpp",
     "src/selection_system_ability_utils.cpp",

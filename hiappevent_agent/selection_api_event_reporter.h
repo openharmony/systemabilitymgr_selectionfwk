@@ -24,11 +24,13 @@ namespace OHOS {
 namespace SelectionFwk {
 class RandomGenerator {
 public:
-    RandomGenerator() {
+    RandomGenerator()
+    {
         engine_ = std::make_unique<std::mt19937>(rd_());
     }
 
-    int Generate() {
+    int Generate()
+    {
         std::uniform_int_distribution<int> dist;
         std::lock_guard<std::mutex> lock(mtx_);
         return dist(*engine_);

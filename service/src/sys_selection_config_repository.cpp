@@ -111,7 +111,7 @@ int SysSelectionConfigRepository::GetUid()
         return -1;
     }
 
-    if (!isNumber(uidStr)) {
+    if (!IsNumber(uidStr)) {
         SELECTION_HILOGE("uidStr maybe not all of digit!");
         return -1;
     }
@@ -123,8 +123,8 @@ int SysSelectionConfigRepository::GetUid()
         return -1;
     }
 
-    if ((uidStr.length() == maxLen) && 
-        ((uidStr[0] != '-' && uidStr > "2147483647") || 
+    if ((uidStr.length() == maxLen) &&
+        ((uidStr[0] != '-' && uidStr > "2147483647") ||
          (uidStr[0] == '-' && uidStr > "-2147483648"))) {
         SELECTION_HILOGE("uidStr exceeds the range of int!");
         return -1;

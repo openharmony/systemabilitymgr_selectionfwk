@@ -43,7 +43,7 @@ SelectionApiEventReporter::SelectionApiEventReporter(const std::string& apiName)
 
 void SelectionApiEventReporter::WriteEndEvent(const int result, const int32_t errCode)
 {
-    SELECTION_HILOGI("Begin to WriteEndEvent with result: %{public}d, errCode: %{public}d",result, errCode);
+    SELECTION_HILOGI("Begin to WriteEndEvent with result: %{public}d, errCode: %{public}d", result, errCode);
     int64_t endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     HiviewDFX::HiAppEvent::Event event("api_diagnostic", "api_exec_end", HiviewDFX::HiAppEvent::BEHAVIOR);

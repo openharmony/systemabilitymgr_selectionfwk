@@ -114,17 +114,11 @@ struct JsPropertyInfo {
 class JsUtils {
 public:
     static void ThrowException(napi_env env, int32_t err, const std::string &msg, TypeCode type);
-
     static void ThrowException(napi_env env, int32_t err, const std::string &msg = "");
-
     static napi_value ToError(napi_env env, int32_t code, const std::string &msg);
-
     static int32_t Convert(int32_t code);
-
     static bool Equals(napi_env env, napi_value value, napi_ref copy, std::thread::id threadId);
-
     static void *GetNativeSelf(napi_env env, napi_callback_info info);
-
     static const std::string ToMessage(int32_t code);
 
     template<typename T>
@@ -147,24 +141,16 @@ public:
     static napi_status GetValue(napi_env env, napi_value in, bool &out);
     static napi_status GetValue(napi_env env, napi_value in, double &out);
     static napi_status GetValue(napi_env env, napi_value in, std::string &out);
-
-
     static napi_status GetValue(napi_env env, napi_value in, const std::string &type, napi_value &out);
     static napi_status GetValue(napi_env env, napi_value in, std::vector<uint8_t> &out);
-
-
     static napi_value GetValue(napi_env env, const std::vector<uint8_t> &in);
     static napi_status GetValue(napi_env env, const std::string &in, napi_value &out);
 
 private:
     static const std::map<int32_t, int32_t> ERROR_CODE_MAP;
-
     static const std::map<int32_t, std::string> ERROR_CODE_CONVERT_MESSAGE_MAP;
-
     static const std::map<int32_t, std::string> PARAMETER_TYPE;
-
     static constexpr int32_t ERROR_CODE_QUERY_FAILED = 1;
-
     static constexpr uint8_t MAX_ARGMENT_COUNT = 10;
 };
 } // namespace SelectionFwk

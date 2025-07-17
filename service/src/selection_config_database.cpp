@@ -196,7 +196,8 @@ std::shared_ptr<OHOS::NativeRdb::ResultSet> SelectionConfigDataBase::Query(
     return store_->Query(predicates, columns);
 }
 
-std::shared_ptr<OHOS::NativeRdb::RdbStore> SelectionConfigDataBase::CreateStore() {
+std::shared_ptr<OHOS::NativeRdb::RdbStore> SelectionConfigDataBase::CreateStore()
+{
     std::string selectionDatabaseName = SELECTION_CONFIG_DB_PATH + SELECTION_CONFIG_DB_NAME;
     int32_t errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(selectionDatabaseName);

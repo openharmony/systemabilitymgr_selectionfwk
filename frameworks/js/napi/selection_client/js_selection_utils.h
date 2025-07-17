@@ -36,7 +36,6 @@ namespace SelectionFwk {
 class JsSelectionUtils {
 public:
     static napi_status GetValue(napi_env env, napi_value in, PanelInfo &out);
-
 };
 } // namespace SelectionFwk
 } // namespace OHOS

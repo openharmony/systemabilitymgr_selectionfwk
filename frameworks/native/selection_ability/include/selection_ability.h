@@ -44,7 +44,6 @@ private:
 
     ConcurrentMap<PanelType, std::shared_ptr<SelectionPanel>> panels_ {};
     std::atomic_bool isShowAfterCreate_ { false };
-
 };
 } // namespace SelectionFwk
 } // namespace OHOS

@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
-#include <memory> 
+#include <memory>
 #include <string>
 #include <atomic>
 
