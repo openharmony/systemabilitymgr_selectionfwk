@@ -21,7 +21,8 @@
 namespace OHOS {
 namespace SelectionFwk {
 
-bool SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent() {
+bool SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent()
+{
     sptr<ISelectionService> abilityManager = GetSelectionSystemAbility();
     return abilityManager != nullptr;
 }

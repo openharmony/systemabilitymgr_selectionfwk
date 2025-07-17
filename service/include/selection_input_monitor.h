@@ -113,12 +113,12 @@ private:
     void FinishedWordSelection() const;
     void InjectCtrlC() const;
     void HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const;
-    bool IsAppInBlacklist(const std::string& bundleName) const;
+    bool IsAppInBlocklist(const std::string& bundleName) const;
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
     mutable sptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
-    std::vector<std::string> appBlacklist_;
+    std::vector<std::string> appBlocklist_;
 };
 }
 

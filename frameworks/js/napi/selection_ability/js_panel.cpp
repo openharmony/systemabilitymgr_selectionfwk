@@ -276,7 +276,7 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         }
         auto code = ctxt->selectionPanel->MoveTo(ctxt->x, ctxt->y);
         jsQueue_.Pop();
-        if(code != ErrorCode::NO_ERROR) {
+        if (code != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(code);
             return;
         }

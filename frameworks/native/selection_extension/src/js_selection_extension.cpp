@@ -151,7 +151,7 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
 
     if (argc > 0 && argv == nullptr) {
         SELECTION_HILOGE("argc > 0 && argv == nullptr.");
-        return nullptr; 
+        return nullptr;
     }
 
     if (jsObj_ == nullptr) {

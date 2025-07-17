@@ -91,6 +91,8 @@ private:
     using EntrySetter = std::function<void(SelectionEntry &)>;
     std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);
     static napi_value GetJsSelectionTypeProperty(napi_env env);
+    static napi_status CheckPanelInfoAndConext(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<PanelContext> ctxt);
 
 private:
     static const std::string KDS_CLASS_NAME;

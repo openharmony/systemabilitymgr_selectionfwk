@@ -107,7 +107,8 @@ SelectionService::~SelectionService()
     SELECTION_HILOGI("[~SelectionService]");
 }
 
-sptr<ISelectionListener> SelectionService::GetListener() {
+sptr<ISelectionListener> SelectionService::GetListener()
+{
     std::lock_guard<std::mutex> lock(mutex_);
     return listener_;
 }
@@ -314,7 +315,7 @@ void SelectionService::DisconnectCurrentExtAbility()
     SELECTION_HILOGI("[selectevent] DisconnectAbility success.");
 }
 
-int32_t SelectionService::ConnectNewExtAbility( const std::string& bundleName, const std::string& abilityName)
+int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName)
 {
     SELECTION_HILOGI("Start new SelectionExtension, bundleName:%{public}s, abilityName:%{public}s", bundleName.c_str(),
         abilityName.c_str());

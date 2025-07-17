@@ -21,6 +21,10 @@
 
 namespace OHOS {
 namespace SelectionFwk {
+const int DISPLAY_X_OFFSET = 100;
+const int DISPLAY_Y_OFFSET = 200;
+const int WINDOW_X_OFFSET = 50;
+const int WINDOW_Y_OFFSET = 60;
 
 using namespace testing::ext;
 
@@ -33,10 +37,10 @@ std::shared_ptr<PointerEvent> GetPointerEvent()
 {
     std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
     PointerEvent::PointerItem pointerItem;
-    pointerItem.SetDisplayX(100);
-    pointerItem.SetDisplayY(200);
-    pointerItem.SetWindowX(50);
-    pointerItem.SetWindowY(60);
+    pointerItem.SetDisplayX(DISPLAY_X_OFFSET);
+    pointerItem.SetDisplayY(DISPLAY_Y_OFFSET);
+    pointerItem.SetWindowX(WINDOW_X_OFFSET);
+    pointerItem.SetWindowY(WINDOW_Y_OFFSET);
 
     pointEvent->AddPointerItem(pointerItem);
     return pointEvent;

@@ -38,7 +38,7 @@ private:
     bool isEnabled_ = true;
     bool isTriggered_ = false;
     int uid_ = -1;
-    std::string applicationInfo_ = "com.huawei.hmos.vassistant/MiniMenuServiceExtAbility";
+    std::string applicationInfo_ = "com.selection.selectionapplication/SelectionExtensionAbility";
 };
 
 

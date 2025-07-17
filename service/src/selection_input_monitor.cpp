@@ -32,7 +32,8 @@ using namespace OHOS::EventFwk;
 bool BaseSelectionInputMonitor::ctrlSelectFlag = false;
 std::atomic<uint32_t> selSeqId = 0;
 
-static int64_t GetCurrentTimeMillis() {
+static int64_t GetCurrentTimeMillis()
+{
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
@@ -43,11 +44,13 @@ uint32_t GenerateSequenceId()
     return selSeqId.fetch_add(1, std::memory_order_seq_cst);
 }
 
-bool BaseSelectionInputMonitor::IsTextSelected() const {
+bool BaseSelectionInputMonitor::IsTextSelected() const
+{
     return isTextSelected_;
 }
 
-const SelectionInfo& BaseSelectionInputMonitor::GetSelectionInfo() const {
+const SelectionInfo& BaseSelectionInputMonitor::GetSelectionInfo() const
+{
     return selectionInfo_;
 }
 
@@ -112,8 +115,7 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> point
     }
     SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState);
 
-    switch (curSelectState)
-    {
+    switch (curSelectState) {
         case SelectInputState::SELECT_INPUT_INITIAL:
             InputInitialProcess(pointerEvent);
             break;
@@ -182,9 +184,9 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
     SELECTION_HILOGI("ListWindowInfo ret: %{public}d, infos size: %{public}zu", ret, infos.size());
     for (unsigned int i = 0; i < infos.size(); i++) {
         auto info = infos[i];
-        SELECTION_HILOGI("ListWindowInfo bundleName: %{public}s, windowtype:%{public}d, width:%{public}d, \
-        height:%{public}d", info->windowMetaInfo.bundleName.c_str(), info->windowMetaInfo.windowType,
-        info->windowLayoutInfo.rect.width_, info->windowLayoutInfo.rect.height_);
+        SELECTION_HILOGI("WindowInfo bundleName:%{public}s, windowtype:%{public}d, width:%{public}d, height:%{public}d",
+            info->windowMetaInfo.bundleName.c_str(), info->windowMetaInfo.windowType,
+            info->windowLayoutInfo.rect.width_, info->windowLayoutInfo.rect.height_);
     }
     if (ret == Rosen::WMError::WM_OK && infos.size() > 0) {
         selectionInfo_.bundleName = infos[0]->windowMetaInfo.bundleName;
@@ -226,7 +228,8 @@ void BaseSelectionInputMonitor::SaveSelectionType() const
     }
 }
 
-bool BaseSelectionInputMonitor::IsSelectionDone() const {
+bool BaseSelectionInputMonitor::IsSelectionDone() const
+{
     if (curSelectState != SelectInputState::SELECT_INPUT_LEFT_MOVE &&
         curSelectState != SelectInputState::SELECT_INPUT_DOUBLE_CLICKED &&
         curSelectState != SelectInputState::SELECT_INPUT_TRIPLE_CLICKED) {
@@ -343,7 +346,7 @@ void BaseSelectionInputMonitor::InputWordJudgeTripleClickProcess(std::shared_ptr
 {
     int32_t action = pointerEvent->GetPointerAction();
     if (subSelectState == SelectInputSubState::SUB_INITIAL && action == PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
-         SELECTION_HILOGI("Begin JudgeTripleClick.");
+        SELECTION_HILOGI("Begin JudgeTripleClick.");
         JudgeTripleClick();
     }  else {
         SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.", subSelectState, action);
@@ -406,11 +409,10 @@ void BaseSelectionInputMonitor::ResetState() const
     SELECTION_HILOGD("ResetFinishedState.");
 }
 
-SelectionInputMonitor::SelectionInputMonitor() {
+SelectionInputMonitor::SelectionInputMonitor()
+{
     baseInputMonitor_ = std::make_shared<BaseSelectionInputMonitor>();
-    appBlacklist_ = {
-        "com.huawei.hmos.hishell",
-        "com.huawei.hmos.filemanager"
+    appBlocklist_ = {
     };
 }
 
@@ -459,8 +461,9 @@ void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> po
     }
 }
 
-bool SelectionInputMonitor::IsAppInBlacklist(const std::string& bundleName) const {
-    return std::find(appBlacklist_.begin(), appBlacklist_.end(), bundleName) != appBlacklist_.end();
+bool SelectionInputMonitor::IsAppInBlocklist(const std::string& bundleName) const
+{
+    return std::find(appBlocklist_.begin(), appBlocklist_.end(), bundleName) != appBlocklist_.end();
 }
 
 void SelectionInputMonitor::FinishedWordSelection() const
@@ -478,8 +481,8 @@ void SelectionInputMonitor::FinishedWordSelection() const
         return;
     }
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
-    if (IsAppInBlacklist(selectionInfo.bundleName)) {
-        SELECTION_HILOGW("The app [%{public}s] is in the blacklist, skip notifying selection info.",
+    if (IsAppInBlocklist(selectionInfo.bundleName)) {
+        SELECTION_HILOGW("The app [%{public}s] is in the blocklist, skip notifying selection info.",
             selectionInfo.bundleName.c_str());
         return;
     }

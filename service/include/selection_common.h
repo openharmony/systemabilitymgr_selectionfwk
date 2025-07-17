@@ -16,6 +16,6 @@
 #ifndef SELECTION_COMMON_H
 #define SELECTION_COMMON_H
 
-bool isNumber(const std::string& str);
+bool IsNumber(const std::string& str);
 
 #endif // SELECTION_COMMON_H

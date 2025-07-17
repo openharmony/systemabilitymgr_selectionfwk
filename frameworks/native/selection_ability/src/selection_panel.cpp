@@ -16,7 +16,7 @@
 #include "selection_panel.h"
 
 #include <tuple>
-#include <thread> 
+#include <thread>
 #include <chrono>
 
 #include "display_manager.h"
@@ -399,7 +399,8 @@ uint32_t SelectionPanel::GetWindowId()
     return window_->GetWindowId();
 }
 
-bool SelectionPanel::IsSelectionSystemAbilityExistent() {
+bool SelectionPanel::IsSelectionSystemAbilityExistent()
+{
     return SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent();
 }
 

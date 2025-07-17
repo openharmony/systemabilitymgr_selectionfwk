@@ -29,7 +29,8 @@ namespace SelectionFwk {
 struct SelectionInfoData : public Parcelable {
     SelectionInfo data;
 
-    bool ReadFromParcel(Parcel &in) {
+    bool ReadFromParcel(Parcel &in)
+    {
         data.selectionType = static_cast<SelectionType>(in.ReadInt8());
         data.text = in.ReadString();
         data.startDisplayX = in.ReadInt32();
@@ -46,7 +47,8 @@ struct SelectionInfoData : public Parcelable {
         return true;
     }
 
-    bool Marshalling(Parcel &out) const {
+    bool Marshalling(Parcel &out) const
+    {
         if (!out.WriteInt8(static_cast<int8_t>(data.selectionType))) {
             return false;
         }
@@ -89,7 +91,8 @@ struct SelectionInfoData : public Parcelable {
         return true;
     }
 
-    static SelectionInfoData *Unmarshalling(Parcel &in) {
+    static SelectionInfoData *Unmarshalling(Parcel &in)
+    {
         SelectionInfoData *data = new (std::nothrow) SelectionInfoData();
         if (data && !data->ReadFromParcel(in)) {
             delete data;
@@ -98,7 +101,8 @@ struct SelectionInfoData : public Parcelable {
         return data;
     }
 
-    std::string ToString() const {
+    std::string ToString() const
+    {
         std::ostringstream oss;
         oss << "SelectionInfo { selectionType: " << data.selectionType <<
             ", text.length: " << data.text.length() <<
