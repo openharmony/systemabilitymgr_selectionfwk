@@ -26,7 +26,7 @@
 #include "panel_info.h"
 
 namespace OHOS {
-namespace SelectionFwk{
+namespace SelectionFwk {
 class SelectionAbility : public RefBase {
 public:
     SelectionAbility();

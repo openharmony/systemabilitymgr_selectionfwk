@@ -19,12 +19,14 @@
 
 namespace OHOS {
 namespace SelectionFwk {
+static const std::string DEFAULT_SELECTION_APP = "com.huawei.hmos.vassistant/MiniMenuServiceExtAbility";
 
 std::string ComparisionResult::ToString() const {
     std::ostringstream oss;
     oss << "ComparisionResult: shouldCreate: " << shouldCreate
         << " shouldStop: " << shouldStop
         << " direction: " << static_cast<int>(direction)
+        << " shouldRestartApp: " << shouldRestartApp
         << " selectionConfig: [ " << selectionConfig.ToString() << "]";
     return oss.str();
 }
@@ -48,8 +50,10 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
     ComparisionResult result;
     if (!dbSelectionConfig.has_value()) {
         result.shouldCreate  = true;
-        result.selectionConfig = sysSelectionConfig;
         result.selectionConfig.SetUid(uid);
+        result.selectionConfig.SetEnabled(true);
+        result.selectionConfig.SetTriggered(false);
+        result.selectionConfig.SetApplicationInfo(DEFAULT_SELECTION_APP);
         return result;
     }
 
@@ -57,6 +61,10 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
         if (sysSelectionConfig.GetUid() != uid) {
             result.direction = FromDbToSys;
             result.selectionConfig = dbSelectionConfig.value();
+            auto appInfoFromDB = dbSelectionConfig.value().GetApplicationInfo();
+            if (appInfoFromDB == sysSelectionConfig.GetApplicationInfo()) {
+                result.shouldRestartApp = true;
+            }
             return result;
         }
         result.direction = FromSysToDb;

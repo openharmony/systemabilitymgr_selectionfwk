@@ -38,7 +38,9 @@ static napi_module _module = {
     .nm_register_func = Init,
     .nm_modname = "selectionInput.selectionManager",
     .nm_priv = ((void *)0),
-    .reserved = { 0 } };
+    .reserved = { 0 }
+};
+
 /*
  * module register
  */

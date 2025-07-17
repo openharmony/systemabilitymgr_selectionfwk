@@ -8,13 +8,18 @@
             "distributed": false,
             "bootphase": "BootStartPhase",
             "dump_level": 1,
-            "auto-restart" : true,
+            "auto-restart": true,
             "start-on-demand": {
                 "allow-update": true,
                 "param": [
                     {
-                        "name":"sys.selection.switch",
-                        "value":"on"
+                        "name": "sys.selection.switch",
+                        "value": "on"
+                    }
+                ],
+                "commonevent": [
+                    {
+                        "name": "usual.event.USER_SWITCHED"
                     }
                 ]
             },
@@ -22,8 +27,8 @@
                 "allow-update": true,
                 "param": [
                     {
-                        "name":"sys.selection.switch",
-                        "value":"off"
+                        "name": "sys.selection.switch",
+                        "value": "off"
                     }
                 ]
             }

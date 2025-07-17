@@ -64,13 +64,22 @@ SelectionConfig SysSelectionConfigRepository::GetSysParameters()
 
 void SysSelectionConfigRepository::DisableSAService()
 {
-    SetParameter(SELECTION_SWITCH, "off");
+    auto ret = SetParameter(SELECTION_SWITCH, "off");
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to SetParameter(%{public}s, off), ret: %{public}d", SELECTION_SWITCH, ret);
+    }
 }
 
 int SysSelectionConfigRepository::GetEnable()
 {
     char value[BUFFER_LEN];
-    GetParameter(SELECTION_SWITCH, "", value, BUFFER_LEN);
+    auto ret = GetParameter(SELECTION_SWITCH, "", value, BUFFER_LEN);
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to GetParameter(%{public}s), ret: %{public}d", SELECTION_SWITCH, ret);
+        return 0;
+    }
+
+    SELECTION_HILOGI("GetParameter(%{public}s) returns [%{public}s]", SELECTION_SWITCH, value);
     if (strcmp(value, "on") == 0) {
         return 1;
     }
@@ -80,7 +89,13 @@ int SysSelectionConfigRepository::GetEnable()
 int SysSelectionConfigRepository::GetTriggered()
 {
     char value[BUFFER_LEN];
-    GetParameter(SELECTION_TRIGGER, "", value, BUFFER_LEN);
+    auto ret = GetParameter(SELECTION_TRIGGER, "", value, BUFFER_LEN);
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to GetParameter(%{public}s), ret: %{public}d", SELECTION_TRIGGER, ret);
+        return 0;
+    }
+
+    SELECTION_HILOGI("GetParameter(%{public}s) returns [%{public}s]", SELECTION_TRIGGER, value);
     if (strcmp(value, "ctrl") == 0) {
         return 1;
     }
@@ -90,8 +105,9 @@ int SysSelectionConfigRepository::GetTriggered()
 int SysSelectionConfigRepository::GetUid()
 {
     std::string uidStr;
-    if (OHOS::system::GetStringParameter(SELECTION_UID, uidStr) != 0) {
-        SELECTION_HILOGE("GetStringParameter failed for SELECTION_UID");
+    auto ret = OHOS::system::GetStringParameter(SELECTION_UID, uidStr);
+    if (ret != 0) {
+        SELECTION_HILOGE("Failed to GetStringParameter(%{public}s), ret: %{public}d", SELECTION_UID, ret);
         return -1;
     }
 
@@ -132,31 +148,41 @@ std::string SysSelectionConfigRepository::GetApplicationInfo()
 void SysSelectionConfigRepository::SetEnabled(bool enabled)
 {
     SELECTION_HILOGI("enabled: %{public}d", enabled);
-    if (enabled) {
-        SetParameter(SELECTION_SWITCH, "on");
-    } else {
-        SetParameter(SELECTION_SWITCH, "off");
+    auto value = enabled ? "on" : "off";
+    auto ret = SetParameter(SELECTION_SWITCH, value);
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to SetParameter(%{public}s, %{public}s), ret: %{public}d",
+            SELECTION_SWITCH, value, ret);
     }
 }
 
 void SysSelectionConfigRepository::SetTriggered(bool isTriggered)
 {
-    if (isTriggered) {
-        SetParameter(SELECTION_TRIGGER, "ctrl");
-    } else {
-        SetParameter(SELECTION_TRIGGER, "");
+    auto value = isTriggered ? "ctrl" : "";
+    auto ret = SetParameter(SELECTION_TRIGGER, value);
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to SetParameter(%{public}s, %{public}s), ret: %{public}d",
+            SELECTION_TRIGGER, value, ret);
     }
 }
 
 void SysSelectionConfigRepository::SetUid(int uid)
 {
     std::string uidStr = std::to_string(uid);
-    SetParameter(SELECTION_UID, uidStr.c_str());
+    auto ret = SetParameter(SELECTION_UID, uidStr.c_str());
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to SetParameter(%{public}s, %{public}s), ret: %{public}d",
+            SELECTION_UID, uidStr.c_str(), ret);
+    }
 }
 
 void SysSelectionConfigRepository::SetApplicationInfo(const std::string &applicationInfo)
 {
-    SetParameter(SELECTION_APPLICATION, applicationInfo.c_str());
+    auto ret = SetParameter(SELECTION_APPLICATION, applicationInfo.c_str());
+    if (ret < 0) {
+        SELECTION_HILOGE("Failed to SetParameter(%{public}s, %{public}s), ret: %{public}d",
+            SELECTION_APPLICATION, applicationInfo.c_str(), ret);
+    }
 }
 } // namespace SelectionFwk
 } // namespace OHOS

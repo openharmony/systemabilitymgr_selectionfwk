@@ -24,7 +24,6 @@
 #include "callback_object.h"
 #include "iremote_stub.h"
 #include "iselection_listener.h"
-#include "iselection_service.h"
 #include "napi/native_api.h"
 #include "refbase.h"
 #include "selection_interface.h"
@@ -87,7 +86,6 @@ private:
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
-    static sptr<ISelectionService> GetSelectionSystemAbility();
     static SFErrorCode RegisterListenerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging);
     static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
     using EntrySetter = std::function<void(SelectionEntry &)>;
@@ -102,7 +100,6 @@ private:
     static std::shared_ptr<JsSelectionEngineSetting> selectionDelegate_;
     std::recursive_mutex mutex_;
     static sptr<ISelectionListener> listenerStub_;
-    static sptr<ISelectionService> abilityManager_;
     static std::mutex eventHandlerMutex_;
     static std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };

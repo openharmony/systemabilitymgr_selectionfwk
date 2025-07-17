@@ -35,6 +35,12 @@ enum SelectionConfigErrCode {
     SELECTION_CONFIG_NOT_FOUND = -8,
 };
 
+enum SelectionServiceError {
+    INVALID_DATA = 1,
+    UNAUTHENTICATED_ERROR,
+    NOT_SYSTEM_APP_ERROR,
+};
+
 } // namespace USB
 } // namespace OHOS
 #endif // SELECTION_ERRORS_H

@@ -21,6 +21,7 @@
 #include "selection_log.h"
 #include "selection_panel_manager.h"
 #include "selection_app_validator.h"
+#include "selection_system_ability_utils.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -62,6 +63,10 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
     auto panelTypes = buffer.str();
     SELECTION_HILOGI("panels_: %{public}s", panelTypes.c_str());
 
+    if (!SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent()) {
+        SELECTION_HILOGE("selection system ability is not existent!");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
     if (!SelectionAppValidator::GetInstance().Validate()) {
         SELECTION_HILOGE("bundleName is not valid");
         return ErrorCode::ERROR_INVALID_OPERATION;
@@ -81,7 +86,11 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
             selectionPanel = nullptr;
             return false;
         });
-    return flag ? result : ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+
+    if (!flag && result == ErrorCode::NO_ERROR) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+    }
+    return result;
 }
 
 int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
@@ -91,6 +100,11 @@ int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &se
         SELECTION_HILOGE("panel is nullptr!");
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
+    if (!SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent()) {
+        SELECTION_HILOGE("selection system ability is not existent!");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
     auto ret = selectionPanel->DestroyPanel();
     if (ret == ErrorCode::NO_ERROR) {
         PanelType panelType = selectionPanel->GetPanelType();
@@ -124,5 +138,6 @@ int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selec
     }
     return ErrorCode::NO_ERROR;
 }
+
 } // namespace SelectionFwk
 } // namespace OHOS
