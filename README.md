@@ -1,35 +1,18 @@
-# selectionfwk
+# 划词服务子系统
 
-## 介绍
-从API version 20开始，新增划词服务模块，该模块具有跨应用文本处理及系统管理划词应用的能力。
+## 简介
 
-该模块主要用于文本翻译、内容摘要、术语解释等场景。例如用户选中外文新闻中的单词时，可显示翻译结果；在阅读类应用中，可通过选中内容快速生成内容摘要；在学习类应用中，可识别用户选中的专业术语，提供即时解释卡片等。
+该仓主要存放划词服务子系统的源码信息。划词服务子系统具有全局获取用户选中文本及管理划词应用的能力。
 
-### 框架原理
+### 内容介绍
 
-划词服务主要依托多模和剪贴板等领域，对外提供全局划词功能。该服务的核心业务流程主要分为以下几个步骤：
-- 步骤一：划词服务可以根据系统设置中的开关按需启停。在启动时，会拉起用户选择的划词应用（未选择时，默认拉起最早安装的划词应用）。对应下图序号①②。
-- 步骤二：在运行时，会监听多模事件以识别用户划词操作。在识别到用户想要触发划词后，会向剪贴板传递划词标记并注册回调函数。同时，会通过多模向被划词应用注入模拟的CTRL+C操作。对应下图序号③④⑤⑥。
-- 步骤三：被划词应用在收到CTRL+C后，会触发复制操作，将当前用户选中的内容写入剪贴板。剪贴板在收到数据后，会回传文本内容给划词服务。最终，划词服务将内容传递给划词应用，由划词应用进行相应业务逻辑的处理，弹出划词窗口。对应下图序号⑦⑧⑨。
+开发者可通过调用该子系统提供的接口，在现有应用的基础上，轻松实现划词扩展能力。该扩展能力支持在全局范围内捕获用户选中的文本内容。开发者可基于捕获到的文本内容实现自己的业务逻辑，如文本翻译、内容摘要、智能扩写等。同时，划词服务子系统提供了完善的面板管理能力，支持开发者创建、显示、移动、隐藏、销毁面板。开发者可自定义面板的UI样式与交互逻辑，灵活呈现翻译结果、摘要信息等内容，最终实现“选中文本—>弹出智能面板”的流畅体验。
 
-![划词服务框架原理图](figures/selection-service-schematic.png)
+### 框架图
 
-### 仓路径
-/foundation/systemabilitymgr/selectionfwk
+![划词服务框架原理图](figures/selectionfwk-architecture.png)
 
-### 接口说明
-当前划词服务提供的接口均为系统接口，暂未对三方划词应用开放。划词服务接口详细说明请参考[划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)和[划词管理](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)。
-
-### 约束限制
-- 支持外接键盘和鼠标的[PC/2in1](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/quick-start/module-configuration-file.md#devicetypes标签)设备。
-
-- 支持获取文本类型的划词内容，最大长度限制为6000个字节。
-
-- 支持在扩展屏上使用，不支持跨设备使用。
-
-- 当前接口为系统接口，计划于API version 22开放为公共接口。
-
-更多介绍见[划词服务应用开发文档](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md)。
+如上图所示，划词服务主要包含划词内容管理、划词事件处理、划词配置管理三个模块。其中，划词内容管理模块主要负责校验剪贴板服务传递的用户划词内容，确保其为纯文本且不为空，并过滤掉划词内容中的空白字符，然后传递给划词应用。划词事件处理模块主要负责处理多模输入模块传递的键鼠事件，通过事件驱动划词服务内部的状态机，以识别用户的双击、三击和单击滑动操作。划词配置管理模块主要负责管理划词服务的配置项，如划词触发方式、划词应用切换和划词服务开关等。所有的配置项均支持用户级绑定与持久化存储。有关划词服务及其他相关模块的详细介绍可参见[划词服务子系统概述](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-intro-sys.md)。
 
 
 ## 目录
@@ -54,7 +37,18 @@
 │   ├── utils                                       # 核心服务工具代码目录
 ```
 
-## 编译步骤
+## 约束
+
+- 支持外接键盘和鼠标的[PC/2in1](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/quick-start/module-configuration-file.md#devicetypes标签)设备。
+
+- 支持获取文本类型的划词内容，最大长度限制为6000个字节。
+
+- 支持在扩展屏上使用，不支持跨设备使用。
+
+- 对于不支持复制或只能在当前应用内复制粘贴的被划词应用，划词功能会失效。因此，建议开发者在开发划词应用时配置相应的黑名单或白名单。
+
+
+## 编译构建
 
 - 全量编译
 
@@ -73,45 +67,28 @@
     $ ./build.sh --product-name rk3568 --ccache --build-target selectionfwk
     ```
 
-## 测试步骤
 
-1. 测试方法
+## 说明
 
-    查看服务进程
-    ```
-    # ps -ef | grep selection
-    ```
-    启动划词服务
-    ```
-    # param set sys.selection.switch on
-    ```
-    关闭划词服务
-    ```
-    # param set sys.selection.switch off
-    ```
-    切换划词应用
-    ```
-    # param set sys.selection.app com.selection.selectionapplication/SelectionExtensionAbility
-    ```
-    设置划词触发方式
-    ```
-    # param set sys.selection.trigger "immediate"
-    ```
+### 接口说明
 
-2. 获取日志命令
+划词服务提供了[selectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)、[selectionExtensionContext](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionContext-sys.md)、[selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)、[selectionPanel](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionPanel-sys.md)四个模块的接口供开发者使用。其中，selectionExtensionAbility模块负责划词扩展的声明周期管理；selectionExtensionContext模块负责划词扩展的上下文管理；selectionManager模块是划词服务提供的核心模块，负责监听划词完成事件、获取划词内容、管理划词面板等；selectionPanel模块提供了划词面板的属性和信息。selectionManager模块中的常用接口如下表所示：
 
-    打开debug日志
-    ```
-    # hilog -b D
-    ```
-    过滤日志
-    ```
-    # hilog -T SELECTION_SERVICE
-    ```
+| 名称 | 描述 |
+| ---- | ---- |
+| on(type: 'selectionCompleted', callback: Callback\<SelectionInfo\>): void | 订阅划词完成事件，使用`callback`回调函数。 |
+| getSelectionContent(): Promise\<string\> | 获取选中文本的内容。 |
+| createPanel(ctx: Context, info: PanelInfo): Promise\<Panel\> | 创建划词面板。 |
+| show(): Promise\<void\> | 显示面板。 |
+| hide(): Promise\<void\> | 隐藏面板。 |
+| startMoving(): Promise\<void\> | 使当前划词面板可以随鼠标拖动。 |
+| moveTo(x: number, y: number): Promise\<void\> | 移动划词面板至屏幕指定位置。 |
 
-## 参与贡献
+### 使用说明
 
-1.  Fork 本仓库
-2.  提交代码
-3.  新建 Pull Request
-4.  commit完成即可
+具体使用方法请参考[实现一个划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-application-guide-sys.md)。
+
+
+## 相关仓
+
+[划词服务](https://gitcode.com/openharmony-sig/systemabilitymgr_selectionfwk)
