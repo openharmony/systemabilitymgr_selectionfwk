@@ -1,34 +1,16 @@
 # selectionfwk
 
-## Description
-Starting from API version 20, a new word selection service module has been introduced, which enables cross-application text processing and system-level management of word selection applications.
+## Introduction
+This repository primarily stores the source code information of the Selection Service Subsystem, which has the capability to globally capture user-selected text and manage selection applications.
 
-This module is primarily designed for scenarios such as text translation, content summarization, and terminology explanation. For instance, when a user selects a word from foreign news articles, the translated result can be displayed. In reading applications, selected content can be quickly summarized. In learning applications, it can identify selected professional terms and provide instant explanation cards.
+### Content Introduction
+Developers can easily achieve word extension capabilities on existing applications by calling the interfaces provided by this subsystem. This extension capability supports capturing user selected text content on a global scale. Developers can implement their own business logic based on captured text content, such as text translation, content summarization, intelligent expansion, etc. At the same time, the word drawing service subsystem provides comprehensive panel management capabilities, supporting developers to create, display, move, hide, and destroy panels. Developers can customize the UI style and interaction logic of the panel, flexibly present translation results, summary information, and other content, ultimately achieving a smooth experience of "selecting text ->popping up the smart panel".
 
-### Framework Principles
-The word selection service primarily relies on domains such as multimodal and clipboard to provide global word selection functionality externally. The core business process of this service is mainly divided into the following steps:
-- Step 1: The word selection service can be started or stopped on demand based on the switch in the system settings. When activated, it will launch the user-selected word selection app (if no selection is made, the earliest installed word selection app will be launched by default). Corresponding to the numbered items ① and ② in the figure below.
-- Step 2: During runtime, it monitors multimodal events to detect user word selection actions. Once the user's word selection operation is recognized, it transmits word selection markers to the clipboard and registers a callback function. Simultaneously, it injects simulated CTRL+C operations into the target application via multimodal interfaces. This corresponds to sequence numbers ③④⑤⑥ in the figure below.
-- Step 3: After receiving the CTRL+C command, the highlighted word application triggers the copy operation, writing the currently selected content to the clipboard. Upon receiving the data, the clipboard transmits the text content back to the highlighting service. Finally, the highlighting service passes the content to the highlighted word application, which processes the corresponding business logic and displays the highlighting window. This corresponds to the numbered steps ⑦, ⑧, and ⑨ in the diagram below.
+### Architectural Diagram
 
-![Architectural Diagram of the Selection Service Framework](figures/selection-service-schematic-en.png)
+![Architectural Diagram of the Selection Service Framework](figures/selectionfwk-architecture-en.png)
 
-### Repository Path
-/foundation/systemabilitymgr/selectionfwk
-
-### Interface Specification
-The interfaces currently provided by the selection input service are all system interfaces and have not yet been opened up to third-party selection input applications. For detailed information on the selection input service interface, please refer to [selectionInput.SelectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md) and [selectionInput.selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md).
-
-### Constraints and Restrictions
-- The [PC/2-in-1](https://gitcode.com/openharmony/docs/blob/master/en/application-dev/quick-start/module-configuration-file.md#deviceTypes) device supports external keyboards and mice.
-
-- Support for retrieving text selections, with a maximum length of 6,000 bytes.
-
-- Supports use on extended screens, does not support cross device use.
-
-- The current interfaces are system interfaces and are planned to be opened as public interfaces in API version 22.
-
-For more information, please refer to [the development documentation of the selection service application](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md).
+As shown in the above figure, the selection service mainly includes three modules: selection content management, selection event processing, and selection configuration management. Among them, the selection content management module mainly verifies the selection content received by the selection service from the clipboard service to ensure that it is text content. At the same time, it will filter out the blank characters and pass them to the selection application. The selection event processing module is mainly responsible for processing keyboard and mouse events transmitted by the multimodal input module, driving the internal state machine of the selection service through events to recognize user double clicks, triple clicks, and single click sliding operations. The selection configuration management module is mainly responsible for managing the configuration items of selection services, such as selection triggering methods, selection application switching, selection service switches, etc. These configuration items can be bound to users and persistent. For a detailed introduction to selection services and other modules, please refer to [Overview of selection service subsystem](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-intro-sys.md).
 
 ## Directory Structure
 
@@ -52,6 +34,17 @@ For more information, please refer to [the development documentation of the sele
 │   ├── utils                                       # Core service utility code
 ```
 
+### Constraints and Restrictions
+
+- The [PC/2-in-1](https://gitcode.com/openharmony/docs/blob/master/en/application-dev/quick-start/module-configuration-file.md#deviceTypes) device supports external keyboards and mice.
+
+- Support for retrieving text selections, with a maximum length of 6,000 bytes.
+
+- Supports use on extended screens, does not support cross device use.
+
+- For applications that do not support copying or can only be copied and pasted within the current application, the word marking function will become invalid. Therefore, it is recommended that developers configure corresponding blacklists or whitelists when developing word drawing applications.
+
+
 ## Build Steps
 
 - Full Build
@@ -71,45 +64,28 @@ For more information, please refer to [the development documentation of the sele
     $ ./build.sh --product-name rk3568 --ccache --build-target selectionfwk
     ```
 
-## Testing Steps
 
-1. Testing Methods
+## Instructions
 
-    Check the service process:
-    ```
-    # ps -ef | grep selection
-    ```
-    Start the selection service:
-    ```
-    # param set sys.selection.switch on
-    ```
-    Stop the selection service:
-    ```
-    # param set sys.selection.switch off
-    ```
-    Switch the selection application:
-    ```
-    # param set sys.selection.app com.selection.selectionapplication/SelectionExtensionAbility
-    ```
-    Set the selection trigger method:
-    ```
-    # param set sys.selection.trigger "immediate"
-    ```
+### Interface Description
 
-2. Log Retrieval Commands
+Selection service provides [selectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)、[selectionExtensionContext](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionContext-sys.md)、[selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)、[selectionPanel](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionPanel-sys.md).The interfaces of the four modules are available for developers to use. Among them, the selectionExtendeAbility module is responsible for managing the selectionextension; The selectionExtendeContext module is responsible for managing the context of selectionextension; The selectionManager module is the core module provided by the selection service, responsible for monitoring selection completion events, obtaining selection content, managing selection panels, etc; The selectionPanel module provides properties and information for the word panel. The commonly used interfaces in the selectionManager module are shown in the following table:
 
-    Enable debug logs:
-    ```
-    # hilog -b D
-    ```
-    Filter logs:
-    ```
-    # hilog -T SELECTION_SERVICE
-    ```
+| name | description |
+| ---- | ---- |
+| on(type: 'selectionCompleted', callback: Callback\<SelectionInfo\>): void | Subscription completion event, use the callback function. |
+| getSelectionContent(): Promise\<string\> | Retrieve the content of the selected text. |
+| createPanel(ctx: Context, info: PanelInfo): Promise\<Panel\> | Create selection panel. |
+| show(): Promise\<void\> | Shwo panel. |
+| hide(): Promise\<void\> | Hide panel |
+| startMoving(): Promise\<void\> | Enable the current panel to be dragged with the mouse. |
+| moveTo(x: number, y: number): Promise\<void\> | Move the panel to the designated position on the screen. |
 
-## Contribution
+### Instructions for Use
 
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
+Please refer to the specific usage method[Implement a selection extensionability](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-application-guide-sys.md)。
+
+
+## Related code repository
+
+[Selection Service](https://gitcode.com/openharmony-sig/systemabilitymgr_selectionfwk)
