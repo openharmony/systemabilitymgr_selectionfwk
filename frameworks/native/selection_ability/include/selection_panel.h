@@ -56,6 +56,7 @@ public:
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
     void ClearPanelListener(const std::string &type);
     uint32_t GetWindowId();
+    bool IsPanelShowing();
 
 private:
     std::string GeneratePanelName();

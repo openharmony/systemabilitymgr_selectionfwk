@@ -65,6 +65,7 @@ public:
 
     virtual bool IsSelectionTriggered() const;
     virtual const SelectionInfo& GetSelectionInfo() const;
+    virtual bool IsInputWordEnd() const;
 
 private:
     void ProcessInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
@@ -125,6 +126,8 @@ public:
 
     bool GetCanGetSelectionContentFlag() const;
     void SetCanGetSelectionContentFlag(bool flag) const;
+    int32_t SetPanelShowingStatus(bool status) const;
+    bool GetPanelShowingStatus() const;
 
 private:
     void InitUidev();
@@ -132,6 +135,9 @@ private:
     int32_t InjectCtrlC() const;
     void HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const;
     bool IsAppInBlocklist(const std::string& bundleName) const;
+    void CloseTimerAndDisconnectExt() const;
+    void HandleWordSelected() const;
+    uint32_t GetTimeout() const;
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
@@ -139,6 +145,8 @@ private:
     int fd_ = -1;
     struct uinput_user_dev uidev_;
     mutable bool canGetSelectionContentFlag_ = false;
+    mutable uint32_t disconnectTimerId_ = 0;
+    mutable bool isPanelShowing_ = false;
 };
 }
 
