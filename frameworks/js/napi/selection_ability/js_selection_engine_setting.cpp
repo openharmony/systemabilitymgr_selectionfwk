@@ -504,9 +504,6 @@ napi_status JsSelectionEngineSetting::CheckArguments(napi_env env, size_t argc, 
     PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
         napi_invalid_arg);
     status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
-    SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
-        %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
-        ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
     PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
     PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
         ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",

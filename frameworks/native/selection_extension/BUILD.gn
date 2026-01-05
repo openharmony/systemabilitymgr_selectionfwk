@@ -64,6 +64,7 @@ ohos_shared_library("selection_extension_ability_native") {
     "ipc:ipc_napi",
     "napi:ace_napi",
     "hilog:libhilog",
+    "window_manager:libwm",
   ]
 
   relative_install_dir = "extensionability/"
