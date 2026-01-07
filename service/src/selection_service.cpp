@@ -43,9 +43,11 @@
 #include "system_ability_status_change_listener.h"
 #include "common_event_support.h"
 #include "hisysevent_adapter.h"
+#include "selection_timer.h"
 
 #define SELECTION_MAX_TRY_TIMES 50
 #define SELECTION_SLEEP_TIME 100
+#define SELECTION_UINT32_MAX UINT32_MAX
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -93,15 +95,12 @@ void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementN
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
     auto curAppInfo = selectionConfig.GetApplicationInfo();
     if (selectionConfig.GetEnable() && needReconnectWithException && curAppInfo == disconnectAppInfo) {
-        SELECTION_HILOGE("Restart app [%{public}s] because it may have disconnected abnormally.", curAppInfo.c_str());
-        auto ret = SelectionService::GetInstance()->ConnectNewExtAbility(element.GetBundleName(),
-            element.GetAbilityName());
-        SELECTION_HILOGI("Reconnect extension ability ret = %{public}d", ret);
+        SELECTION_HILOGE("do not restart app [%{public}s] even it disconnected abnormally.", curAppInfo.c_str());
     }
     SELECTION_HILOGI("OnAbilityDisconnectDone end.");
 }
 
-void SelectionExtensionAbilityConnection::WaitForConnect()
+int32_t SelectionExtensionAbilityConnection::WaitForConnect()
 {
     SELECTION_HILOGI("WaitForConnect start.");
     std::unique_lock<std::mutex> lock(connectMutex_);
@@ -109,15 +108,12 @@ void SelectionExtensionAbilityConnection::WaitForConnect()
     auto future = connectPromise_->get_future();
     lock.unlock();
     auto status = future.wait_for(std::chrono::seconds(TIMEOUT_FOR_CONNECT_DISCONNECT));
-    if (status == std::future_status::ready) {
-        SELECTION_HILOGI("WaitForConnect ready.");
-    } else {
-        SELECTION_HILOGE("WaitForConnect not ready, status:%{public}d.", status);
-    }
-    SELECTION_HILOGI("WaitForConnect end.");
+    SELECTION_CHECK(status == std::future_status::ready, return -1, "WaitForConnect timeout: %{public}d.", status);
+    SELECTION_HILOGI("WaitForConnect success.");
+    return 0;
 }
 
-void SelectionExtensionAbilityConnection::WaitForDisconnect()
+int32_t SelectionExtensionAbilityConnection::WaitForDisconnect()
 {
     SELECTION_HILOGI("WaitForDisconnect start.");
     std::unique_lock<std::mutex> lock(disconnectMutex_);
@@ -125,12 +121,9 @@ void SelectionExtensionAbilityConnection::WaitForDisconnect()
     auto future = disconnectPromise_->get_future();
     lock.unlock();
     auto status = future.wait_for(std::chrono::seconds(TIMEOUT_FOR_CONNECT_DISCONNECT));
-    if (status == std::future_status::ready) {
-        SELECTION_HILOGI("WaitForDisconnect ready.");
-    } else {
-        SELECTION_HILOGE("WaitForDisconnect not ready, status:%{public}d.", status);
-    }
-    SELECTION_HILOGI("WaitForDisconnect end.");
+    SELECTION_CHECK(status == std::future_status::ready, return -1, "WaitForDisConnect timeout: %{public}d.", status);
+    SELECTION_HILOGI("WaitForDisconnect success.");
+    return 0;
 }
 
 SelectionSysEventReceiver::SelectionSysEventReceiver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -253,6 +246,21 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
     return ret;
 }
 
+ErrCode SelectionService::SetPanelShowingStatus(bool status)
+{
+    SELECTION_HILOGI("[SelectionService] SetPanelShowingStatus in");
+    if (!IsSystemCalling()) {
+        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
+    }
+
+    if (!inputMonitor_) {
+        return SelectionServiceError::INVALID_DATA;
+    }
+
+    auto ret = inputMonitor_->SetPanelShowingStatus(status);
+    return ret;
+}
+
 int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     SELECTION_HILOGI("Dump start.");
@@ -288,8 +296,10 @@ int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &ar
 
 static void WatchEnableSwitch(const char *key, const char *value, void *context)
 {
-    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
     SELECTION_HILOGI("%{public}s: value=[%{public}s], DEFAULT_SWITCH =[%{public}s]", key, value, DEFAULT_SWITCH);
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_CHECK(selectionService != nullptr, return, "selectionService is nullptr");
     bool isEnabledValue = (strcmp(value, DEFAULT_SWITCH) == 0);
     SELECTION_HILOGI("isEnabledValue is %{public}d", isEnabledValue);
     MemSelectionConfig::GetInstance().SetEnabled(isEnabledValue);
@@ -299,8 +309,10 @@ static void WatchEnableSwitch(const char *key, const char *value, void *context)
 
 static void WatchTriggerMode(const char *key, const char *value, void *context)
 {
-    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
     SELECTION_HILOGI("WatchTriggerMode begin, %{public}s: value=%{public}s", key, value);
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_CHECK(selectionService != nullptr, return, "selectionService is nullptr");
     bool triggerValue = (strcmp(value, DEFAULT_TRIGGER) == 0);
     SELECTION_HILOGI("triggerValue is %{public}d", triggerValue);
     MemSelectionConfig::GetInstance().SetTriggered(triggerValue);
@@ -310,16 +322,10 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
 
 static void WatchAppSwitch(const char *key, const char *value, void *context)
 {
+    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
     SELECTION_HILOGI("WatchAppSwitch begin, %{public}s: value=%{public}s", key, value);
     SelectionService *selectionService = static_cast<SelectionService *>(context);
-    if (selectionService == nullptr) {
-        SELECTION_HILOGE("selectionService is nullptr");
-        return;
-    }
-    if (value == nullptr) {
-        SELECTION_HILOGE("value is nullptr");
-        return;
-    }
+    SELECTION_CHECK(selectionService != nullptr, return, "selectionService is nullptr");
 
     const std::string appInfoStr = value;
     auto appInfo = ParseAppInfo(appInfoStr);
@@ -332,8 +338,29 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
         SELECTION_HILOGI("Do not reconnect ability because switch is off.");
         return;
     }
-    auto ret = selectionService->ReconnectExtAbility(std::get<0>(appInfo.value()), std::get<1>(appInfo.value()));
-    SELECTION_HILOGI("ReconnectExtAbility ret = %{public}d", ret);
+    SELECTION_HILOGI("app switch, disconnect current extAbility");
+    selectionService->DisconnectCurrentExtAbility();
+}
+
+static uint32_t StrToUint(const std::string &value)
+{
+    errno = 0;
+    char *pEnd = nullptr;
+    uint64_t result = std::strtoul(value.c_str(), &pEnd, 0);
+    if (pEnd == value.c_str() || result > SELECTION_UINT32_MAX || errno == ERANGE) {
+        return 0;
+    }
+    return static_cast<uint32_t>(result);
+}
+
+static void WatchTimeoutChange(const char *key, const char *value, void *context)
+{
+    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
+    SELECTION_HILOGI("WatchTimeoutChange begin, %{public}s: value=%{public}s", key, value);
+    const std::string timeoutStr(value);
+    uint32_t timeout = StrToUint(timeoutStr);
+    SELECTION_CHECK(timeout != 0, return, "Invild timeout");
+    MemSelectionConfig::GetInstance().SetTriggered(timeout);
 }
 
 void SelectionService::PersistSelectionConfig()
@@ -344,9 +371,7 @@ void SelectionService::PersistSelectionConfig()
     }
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
     int ret = DbSelectionConfigRepository::GetInstance()->Save(GetUserId(), selectionConfig);
-    if (ret != SELECTION_CONFIG_OK) {
-        SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
-    }
+    SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
 }
 
 void SelectionService::HandleCommonEvent(const CommonEventData &data)
@@ -402,7 +427,13 @@ int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, 
         connectInner_ = nullptr;
         return ret;
     }
-    connectInner_->WaitForConnect();
+    ret = connectInner_->WaitForConnect();
+    if (ret != 0) {
+        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName, ret,
+            static_cast<int32_t>(SelectFailedReason::CONNECT_EXTENTION_TIMEOUT));
+        SELECTION_HILOGI("[selectevent] StartExtensionAbility timeout.");
+        return ret;
+    }
     SELECTION_HILOGI("[selectevent] StartExtensionAbility success.");
     return 0;
 }
@@ -411,25 +442,93 @@ void SelectionService::DoDisconnectCurrentExtAbility()
 {
     pid_.store(-1);
     SELECTION_HILOGI("Disconnect current extensionAbility");
-    if (connectInner_ == nullptr) {
-        SELECTION_HILOGE("connectInner_ is null");
-        return;
-    }
+    SELECTION_CHECK(connectInner_ != nullptr, return, "connectInner_ is null");
 
     connectInner_->needReconnectWithException = false;
     int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(connectInner_);
-    if (ret != ERR_OK) {
-        SELECTION_HILOGE("DisconnectServiceAbility failed, ret: %{public}d", ret);
-        return;
+    SELECTION_CHECK(ret == ERR_OK, return, "DisconnectServiceAbility failed, ret: %{public}d", ret);
+    ret = connectInner_->WaitForDisconnect();
+    if (ret != 0) {
+        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(connectInner_->connectedAbilityInfo.value().bundleName,
+            ret, static_cast<int32_t>(SelectFailedReason::DISCONNECT_EXTENSION_TIMEOUT));
     }
-    connectInner_->WaitForDisconnect();
     connectInner_ = nullptr;
     SELECTION_HILOGI("[selectevent] DisconnectAbility success.");
+}
+
+bool SelectionService::HasExtAbilityConnection() const
+{
+    if (connectInner_ != nullptr && connectInner_->connectedAbilityInfo.has_value()) {
+        return true;
+    }
+    SELECTION_HILOGI("No selection extension is connected");
+    return false;
+}
+
+int SelectionService::GetCurrentSelectionAppInfo(std::string &bundleName, std::string &abilityName)
+{
+    const std::string appInfoStr = MemSelectionConfig::GetInstance().GetApplicationInfo();
+    auto appInfo = ParseAppInfo(appInfoStr);
+    if (!appInfo.has_value()) {
+        return -1;
+    }
+    bundleName = std::get<0>(appInfo.value());
+    abilityName = std::get<1>(appInfo.value());
+    return 0;
+}
+
+bool SelectionService::IsAnySelectionPanelShowing()
+{
+    std::vector<sptr<OHOS::Rosen::WindowVisibilityInfo>> windowVisibilityInfos;
+#ifdef SCENE_BOARD_ENABLE
+    Rosen::WMError ret = Rosen::WindowManagerLite::GetInstance().GetVisibilityWindowInfo(windowVisibilityInfos);
+#else
+    Rosen::WMError ret = Rosen::WindowManager::GetInstance().GetVisibilityWindowInfo(windowVisibilityInfos);
+#endif
+    SELECTION_CHECK(ret == OHOS::Rosen::WMError::WM_OK, return false,
+        "GetVisibilityWindowInfo error, ret is: %{public}d", ret);
+    
+    std::string currentBundleName;
+    std::string currentAbilityName;
+    SELECTION_CHECK(GetCurrentSelectionAppInfo(currentBundleName, currentAbilityName) == 0, return false,
+        "current appInfo is empty");
+    SELECTION_CHECK(currentBundleName != "" && currentAbilityName != "", return false,
+        "bundleName or ability is empty string");
+
+    for (auto windowVisibilityInfo : windowVisibilityInfos) {
+        if (currentBundleName == windowVisibilityInfo->GetBundleName() ||
+            currentAbilityName == windowVisibilityInfo->GetAbilityName()) {
+            SELECTION_HILOGI("the panel is showing");
+            return true;
+        }
+    }
+    SELECTION_HILOGI("there is no panel showing");
+    return false;
+}
+
+int SelectionService::ConnectExtAbilityFromConfig()
+{
+    std::string bundleName;
+    std::string abilityName;
+    SELECTION_CHECK(GetCurrentSelectionAppInfo(bundleName, abilityName) == 0, return -1, "current appInfo is empty");
+    std::lock_guard<std::mutex> lockGuard(connectMutex_);
+    int ret = DoConnectNewExtAbility(bundleName, abilityName);
+    SELECTION_HILOGI("ConnectExtAbilityFromConfig ret = %{public}d", ret);
+    return ret;
 }
 
 int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName)
 {
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
+    AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
+    if (connectInner_ != nullptr &&
+        connectInner_->connectedAbilityInfo.has_value() &&
+        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
+        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
+            "has been connected.",
+            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
+        return 0;
+    }
     return DoConnectNewExtAbility(bundleName, abilityName);
 }
 
@@ -447,9 +546,9 @@ int32_t SelectionService::ReconnectExtAbility(const std::string& bundleName, con
         return 0;
     }
     DoDisconnectCurrentExtAbility();
-    auto ret = DoConnectNewExtAbility(bundleName, abilityName);
+    /* no need to connect extension ability, the function name should change */
     SELECTION_HILOGI("ReconnectExtAbility end.");
-    return ret;
+    return 0;
 }
 
 void SelectionService::DisconnectCurrentExtAbility()
@@ -471,6 +570,9 @@ void SelectionService::WatchParams()
     }
     if (WatchParameter(SYS_SELECTION_APP, WatchAppSwitch, this) != 0) {
         SELECTION_HILOGE("Failed to watch SYS_SELECTION_APP");
+    }
+    if (WatchParameter(SYS_SELECTION_TIMEOUT, WatchTimeoutChange, this) != 0) {
+        SELECTION_HILOGE("Failed to watch SYS_SELECTION_TIMEOUT");
     }
     SELECTION_HILOGI("WatchParams end");
 }
@@ -509,9 +611,12 @@ void SelectionService::SynchronizeSelectionConfig()
     SelectionConfig sysSelectionConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
     SELECTION_HILOGI("sysSelectionConfig: %{public}s", sysSelectionConfig.ToString().c_str());
     auto dbSelectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(userId_.load());
-    auto result = SelectionConfigComparator::GetInstance().Compare(
-        userId_.load(), sysSelectionConfig, dbSelectionConfig,
-        (connectInner_ ? connectInner_->connectedAbilityInfo : std::nullopt));
+    ComparisionResult result;
+    {
+        std::lock_guard<std::mutex> lockGuard(connectMutex_);
+        auto result = SelectionConfigComparator::GetInstance().Compare(userId_.load(), sysSelectionConfig,
+            dbSelectionConfig, (connectInner_ ? connectInner_->connectedAbilityInfo : std::nullopt));
+    }
     MemSelectionConfig::GetInstance().SetSelectionConfig(result.selectionConfig);
 
     if (result.direction == SyncDirection::FromDbToSys) {
@@ -520,17 +625,13 @@ void SelectionService::SynchronizeSelectionConfig()
     } else if (result.direction == SyncDirection::FromSysToDb) {
         SELECTION_HILOGI("FromSysToDb result: %{public}s", result.ToString().c_str());
         auto ret = DbSelectionConfigRepository::GetInstance()->Save(userId_.load(), result.selectionConfig);
-        if (ret != SELECTION_CONFIG_OK) {
-            SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
-        }
+        SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
     }
 
     if (result.shouldCreate) {
         SELECTION_HILOGI("result.shouldCreate");
         auto ret = DbSelectionConfigRepository::GetInstance()->Save(userId_.load(), result.selectionConfig);
-        if (ret != SELECTION_CONFIG_OK) {
-            SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
-        }
+        SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
         SELECTION_HILOGI("result.selectionConfig.isEnable = %{public}d", result.selectionConfig.GetEnable());
         SysSelectionConfigRepository::GetInstance()->SetSysParameters(result.selectionConfig);
     }
@@ -549,7 +650,6 @@ void SelectionService::SynchronizeSelectionConfig()
 
     if (result.shouldStart) {
         SELECTION_HILOGI("result.shouldStart");
-        ConnectNewExtAbility(std::get<0>(appInfo.value()), std::get<1>(appInfo.value()));
     }
 
     if (result.shouldRestartApp) {
@@ -585,7 +685,7 @@ void SelectionService::WatchExtAbilityInstalled(const std::string& bundleName, c
         bundleName.c_str(), abilityName.c_str(), targetBundleName.c_str(), targetAbilityName.c_str());
 
     if (targetBundleName == bundleName) {
-        DoConnectNewExtAbility(targetBundleName, targetAbilityName);
+        SELECTION_HILOGI("user is installing the selection extension app: %{public}s", bundleName.c_str());
     }
 }
 
@@ -602,7 +702,7 @@ void SelectionService::OnStart()
     }
     Publish(SelectionService::GetInstance());
     HisyseventAdapter::GetInstance()->StartHisyseventTimer();
-    SELECTION_HILOGI("[selectevent][SelectionService][OnStart]end.");
+    SELECTION_HILOGI("timer init, [selectevent][SelectionService][OnStart]end.");
 }
 
 void SelectionService::OnStop()
@@ -657,7 +757,6 @@ void SelectionService::RegisterSystemAbilityStatusChangeListener()
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
-    std::lock_guard<std::mutex> lock(initMutex_);
     if (isMonitorInitialized_) {
         SELECTION_HILOGE("The monitor has been initialized.");
         return;
@@ -732,7 +831,6 @@ void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &fo
 void SelectionService::SubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("SubscribeSysEventReceiver start.");
-    std::lock_guard<std::mutex> lock(initMutex_);
     if (isCommonEventInitialized_) {
         SELECTION_HILOGE("The common event has been subscribed.");
         return;
@@ -747,10 +845,7 @@ void SelectionService::SubscribeSysEventReceiver()
     subscribeInfo.SetThreadMode(CommonEventSubscribeInfo::COMMON);
     selectionSysEventReceiver_ = std::make_shared<SelectionSysEventReceiver>(subscribeInfo);
     bool subResult = CommonEventManager::SubscribeCommonEvent(selectionSysEventReceiver_);
-    if (!subResult) {
-        SELECTION_HILOGE("subscribe common event failed");
-        return;
-    }
+    SELECTION_CHECK(subResult, return, "subscribe common event failed");
     isCommonEventInitialized_ = true;
     SELECTION_HILOGI("subscribe common event success");
 }
@@ -758,10 +853,7 @@ void SelectionService::SubscribeSysEventReceiver()
 void SelectionService::UnsubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("UnsubscribeSysEventReceiver start.");
-    if (!isCommonEventInitialized_) {
-        SELECTION_HILOGE("The common event has not been subscribed.");
-        return;
-    }
+    SELECTION_CHECK(isCommonEventInitialized_, return, "The common event has not been subscribed.");
 
     bool subResult = CommonEventManager::UnSubscribeCommonEvent(selectionSysEventReceiver_);
     if (!subResult) {
@@ -788,13 +880,14 @@ void SelectionService::UnloadService()
     int32_t ret = samgr->UnloadSystemAbility(SELECTION_FWK_SA_ID);
     if (ret != ERR_NONE) {
         SELECTION_HILOGE("Failed to unload system selection_service,  ret = [%{public}d].", ret);
+    } else {
+        SELECTION_HILOGI("UnloadSystemAbility selection_service success");
     }
-    SELECTION_HILOGI("UnloadSystemAbility selection_service success");
 }
 
 void SelectionService::PerformParamBootCompleted(const char* key, const char* value, void* context)
 {
-    SELECTION_HILOGI("%{public}s: value=[%{public}s]", key, value);
+    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
     if (strcmp(value, "true") != 0) {
         return;
     }

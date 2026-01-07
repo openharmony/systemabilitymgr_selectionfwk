@@ -9,6 +9,7 @@
             "bootphase": "BootStartPhase",
             "dump_level": 1,
             "auto-restart": true,
+            "min_hdi_proxy_version": [],
             "start-on-demand": {
                 "allow-update": true,
                 "param": [

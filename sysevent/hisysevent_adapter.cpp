@@ -13,27 +13,26 @@
  * limitations under the License.
  */
 
-#define SELECTION_HISYSEVENT_REPORT_TIME (24 * 60 * 60 * 1000)   // 24h
+#define SELECTION_HISYSEVENT_REPORT_TIME (12 * 60 * 60 * 1000)   // 12h
 
 #include "hisysevent_adapter.h"
+#include "selection_timer.h"
 
 using namespace OHOS::HiviewDFX;
 using namespace OHOS::SelectionFwk;
 namespace {
 // fail event
-constexpr const char* SPAWN_CHILD_PROCESS_FAIL = "SPAWN_CHILD_PROCESS_FAIL";
-// statistic event
-constexpr const char* SPAWN_PROCESS_DURATION = "SPAWN_PROCESS_DURATION";
-
+constexpr const char* SELECTION_PROCESS_ABNORMAL = "SELECTION_PROCESS_ABNORMAL";
 // param
-constexpr const char* PROCESS_NAME = "PROCESS_NAME";
+constexpr const char* FAIL_REASON = "FAIL_REASON";
+constexpr const char* BUNDLE_NAME = "BUNDLE_NAME";
 constexpr const char* ERROR_CODE = "ERROR_CODE";
-constexpr const char* SPAWN_RESULT = "SPAWN_RESULT";
-constexpr const char* MAXDURATION = "MAXDURATION";
-constexpr const char* MINDURATION = "MINDURATION";
-constexpr const char* TOTALDURATION = "TOTALDURATION";
-constexpr const char* EVENTCOUNT = "EVENTCOUNT";
-constexpr const char* STAGE = "STAGE";
+
+// statistic event
+constexpr const char* SELECTION_STATISTIC = "SELECTION_STATISTIC";
+// param
+constexpr const char* SELECTION_TRIGGER_COUNT = "SELECTION_TRIGGER_COUNT";
+constexpr const char* FAILED_COUNT = "FAILED_COUNT";
 }
 
 OHOS::sptr<HisyseventAdapter>& HisyseventAdapter::GetInstance()
@@ -65,13 +64,10 @@ void HisyseventAdapter::InitCount()
 
 void HisyseventAdapter::ReportStatisticInfo()
 {
-    int ret = HiSysEventWrite(HiSysEvent::Domain::APPSPAWN, SPAWN_PROCESS_DURATION,
+    int ret = HiSysEventWrite(HiSysEvent::Domain::SELECTIONFWK, SELECTION_STATISTIC,
         HiSysEvent::EventType::STATISTIC,
-        MAXDURATION, failCount_,
-        MINDURATION, failCount_,
-        TOTALDURATION, selectionCount_,
-        EVENTCOUNT, selectionCount_,
-        STAGE, "selection_statistic");
+        SELECTION_TRIGGER_COUNT, selectionCount_,
+        FAILED_COUNT, failCount_);
     if (ret != 0) {
         SELECTION_HILOGE("HiSysEventWrite error, ret: %{public}d", ret);
     }
@@ -80,19 +76,19 @@ void HisyseventAdapter::ReportStatisticInfo()
 
 void HisyseventAdapter::StartHisyseventTimer()
 {
-    timerId_ = reportEventTimer_->Register([this] {this->ReportStatisticInfo();},
-        SELECTION_HISYSEVENT_REPORT_TIME);
-    SELECTION_HILOGI("StartDfxTimer timerId : %{public}u!", timerId_);
+    SelectionFwkTimer::GetInstance()->Register([this] {this->ReportStatisticInfo();},
+        SELECTION_HISYSEVENT_REPORT_TIME)
+    SELECTION_HILOGI("StartDfxTimer");
 }
 
 void HisyseventAdapter::ReportShowPanelFailed(const std::string& bundleName, int32_t errorCode, int32_t failReason)
 {
     AddFailCount();
-    int ret = HiSysEventWrite(HiSysEvent::Domain::APPSPAWN, SPAWN_CHILD_PROCESS_FAIL,
+    int ret = HiSysEventWrite(HiSysEvent::Domain::SELECTIONFWK, SELECTION_PROCESS_ABNORMAL,
         HiSysEvent::EventType::FAULT,
-        PROCESS_NAME, bundleName,
+        BUNDLE_NAME, bundleName,
         ERROR_CODE, errorCode,
-        SPAWN_RESULT, failReason);
+        FAIL_REASON, failReason);
     if (ret != 0) {
         SELECTION_HILOGE("HiSysEventWrite error, ret: %{public}d", ret);
     }

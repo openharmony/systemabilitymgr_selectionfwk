@@ -69,6 +69,7 @@ int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
     ret = selectionDatabase_->Update(changedRows, values, predicates);
     if (ret != SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("Update error: %{public}d", ret);
+        (void)selectionDatabase_->RollBack();
         return ret;
     }
 
