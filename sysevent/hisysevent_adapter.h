@@ -27,25 +27,13 @@ enum class SelectFailedReason : int32_t {
     INJECT_CTRLC_FAILED = 0,
     TEXT_RECEIVE_FAILED,
     CREATE_PANEL_FAILED,
+    CONNECT_EXTENSION_TIMEOUT,
+    DISCONNECT_EXTENSION_TIMEOUT,
 };
 
 class HisyseventAdapter : public RefBase {
 public:
     static OHOS::sptr<HisyseventAdapter>& GetInstance();
-    HisyseventAdapter()
-    {
-        reportEventTimer_ = std::make_unique<Utils::Timer>("DfxReporter", -1);
-        reportEventTimer_->Setup();
-    }
-    ~HisyseventAdapter()
-    {
-        if (reportEventTimer_ != nullptr) {
-            reportEventTimer_->Unregister(timerId_);
-            SELECTION_HILOGI("StopDfxTimer timerId : %{public}u!", timerId_);
-            reportEventTimer_->Shutdown();
-        }
-        SELECTION_HILOGI("reportEventTimer Shutdown successfully!");
-    }
 
     void ReportShowPanelFailed(const std::string& bundleName, int32_t errorCode, int32_t failReason);
     void AddFailCount();
@@ -57,8 +45,6 @@ public:
 private:
     uint32_t failCount_ = 0;
     uint32_t selectionCount_ = 0;
-    std::unique_ptr<Utils::Timer> reportEventTimer_ = nullptr;
-    uint32_t timerId_ = 0;
 };
 }
 

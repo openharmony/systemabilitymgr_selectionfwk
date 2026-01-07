@@ -53,9 +53,7 @@ int32_t SelectionPanel::CreatePanel(
     y_ = panelInfo.y;
     width_ = panelInfo.width;
     height_ = panelInfo.height;
-    SELECTION_HILOGI(
-        "start , panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
-        static_cast<int32_t>(panelType_), x_, y_, width_, height_);
+    SELECTION_HILOGI("start , panelType:%{public}d.", static_cast<int32_t>(panelType_));
 
     sptr<Rosen::WindowOption> baseOp = new Rosen::WindowOption();
     baseOp->SetWindowType(Rosen::WindowType::WINDOW_TYPE_SELECTION);
@@ -230,6 +228,11 @@ bool SelectionPanel::IsShowing(const sptr<OHOS::Rosen::Window>& window)
     return false;
 }
 
+bool SelectionPanel::IsPanelShowing()
+{
+    return IsShowing(GetWindow());
+}
+
 void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
 {
     if (panelStatusListener_ == nullptr) {
@@ -287,8 +290,7 @@ int32_t SelectionPanel::DoHidePanel(const sptr<OHOS::Rosen::Window>& window)
         SELECTION_HILOGE("HidePanel error, err: %{public}d!", ret);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-    SELECTION_HILOGI("success, panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
-        static_cast<int32_t>(panelType_), x_, y_, width_, height_);
+    SELECTION_HILOGI("success, panelType:%{public}d.", static_cast<int32_t>(panelType_));
     PanelStatusChange(SelectionWindowStatus::HIDDEN);
     return ErrorCode::NO_ERROR;
 }
@@ -358,7 +360,7 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     }
 
     WMError ret = window->MoveWindowToGlobalDisplay(x, y);
-    SELECTION_HILOGI("x/y: %{public}d/%{public}d, ret = %{public}d", x, y, ret);
+    SELECTION_HILOGI("Moveto finish, ret = %{public}d", ret);
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
 }
 

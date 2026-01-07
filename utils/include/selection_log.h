@@ -49,6 +49,21 @@ extern "C" {
     ((void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
                       SELECTIONFWK_FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 
+#define SELECTION_CHECK_ONLY_LOG(ret, expected, log_msg, ...) \
+    do { \
+        if ((ret) != (expected)) { \
+            SELECTION_HILOGE(log_msg, ##__VA_ARGS__); \
+        } \
+    } while (0)
+
+#define SELECTION_CHECK(retCode, exper, fmt, ...) \
+    do { \
+        if (!(retCode)) { \
+            SELECTION_HILOGE(fmt, ##__VA_ARGS__); \
+            exper; \
+        } \
+    } while (0)
+
 namespace ErrorCode {
 // Error Code definition in the input method management system
 enum {

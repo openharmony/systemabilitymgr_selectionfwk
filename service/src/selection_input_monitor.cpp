@@ -15,22 +15,23 @@
 
 #include "selection_service.h"
 
+#include <condition_variable>
+#include <mutex>
+#include <input_manager.h>
 #include "selection_common.h"
 #include "selection_log.h"
-#include <input_manager.h>
 #include "common_event_manager.h"
 #include "pasteboard_client.h"
 #include "selection_config.h"
 #include "selection_input_monitor.h"
+#include "selection_errors.h"
+#include "hisysevent_adapter.h"
+#include "selection_timer.h"
 #ifdef SCENE_BOARD_ENABLE
 #include "window_manager_lite.h"
 #else
 #include "window_manager.h"
 #endif
-#include "selection_errors.h"
-#include <mutex>
-#include <condition_variable>
-#include "hisysevent_adapter.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -50,6 +51,8 @@ int32_t g_pasteBoardErrorCode = 0;
 constexpr int32_t PB_ERR_OUT_OF_RANGE = 5;
 constexpr int32_t PB_ERR_CANNOT_GET_CONTENT = 7;
 constexpr int32_t MAX_DELAY_WAIT_FOR_PB = 110;
+constexpr uint32_t DISCONNECT_EXTENSION_TIME = 300 * 1000; // ms
+constexpr uint32_t SECONDS_TO_MILLISECONDS = 1000;
 
 static int64_t GetCurrentTimeMillis()
 {
@@ -76,8 +79,8 @@ const SelectionInfo& BaseSelectionInputMonitor::GetSelectionInfo() const
 void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
     SELECTION_HILOGD("Before keyEvent, curSelectState: %{public}d, subSelectState: %{public}d; "
-        "keyCode: %{public}d, keyAction: %{public}d",
-        curSelectState, subSelectState, keyEvent->GetKeyCode(), keyEvent->GetKeyAction());
+        "keyAction: %{public}d",
+        curSelectState, subSelectState, keyEvent->GetKeyAction());
     ProcessInputEvent(keyEvent);
     SELECTION_HILOGD("After keyEvent, curSelectState: %{public}d, subSelectState: %{public}d",
         curSelectState, subSelectState);
@@ -335,6 +338,11 @@ bool BaseSelectionInputMonitor::IsSelectionDone() const
     return curSelectState == SelectInputState::SELECT_INPUT_DONE;
 }
 
+bool BaseSelectionInputMonitor::IsInputWordEnd() const
+{
+    return curSelectState == SelectInputState::SELECT_INPUT_WORD_END;
+}
+
 bool BaseSelectionInputMonitor::GetCtrlSelectFlag() const
 {
     return MemSelectionConfig::GetInstance().GetTriggered();
@@ -529,6 +537,45 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
     FinishedWordSelection();
 }
 
+void SelectionInputMonitor::CloseTimerAndDisconnectExt() const
+{
+    // Filter current visible windows by bundle name to check if selection panel exists
+    if (SelectionService::GetInstance()->IsAnySelectionPanelShowing()) {
+        SELECTION_HILOGI("there is a panel showing, do not disconnect extention");
+        return;
+    }
+    SELECTION_HILOGI("there is no panel showing, close timer and disconnect extention");
+    if (disconnectTimerId_ != 0) {
+        SELECTION_HILOGI("CloseTimerAndDisconnectExt: unregister timer");
+        SelectionFwkTimer::GetInstance()->UnRegister(disconnectTimerId_);
+        disconnectTimerId_ = 0;
+    }
+    SelectionService::GetInstance()->DisconnectCurrentExtAbility();
+}
+
+uint32_t SelectionInputMonitor::GetTimeout() const
+{
+    return MemSelectionConfig::GetInstance.GetTimeout() * SECONDS_TO_MILLISECONDS; // ms
+}
+
+void SelectionInputMonitor::HandleWordSelected() const
+{
+    DISCONNECT_EXTENSION_TIME = GetTimeout(); // ms
+    if (!SelectionService::GetInstance()->HasExtAbilityConnection()) {
+        int32_t ret = SelectionService::GetInstance()->ConnectExtAbilityFromConfig();
+        if (ret != 0) {
+            SELECTION_HILOGE("start selection extention ability failed");
+        }
+    }
+
+    if (disconnectTimerId_ != 0) {
+        SelectionFwkTimer::GetInstance()->UnRegister(disconnectTimerId_);
+        disconnectTimerId_ = 0;
+    }
+    disconnectTimerId_ = SelectionFwkTimer::GetInstance()->Register([this]() {this->CloseTimerAndDisconnectExt();},
+        DISCONNECT_EXTENSION_TIME);
+}
+
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     HandleWindowFocused(pointerEvent);
@@ -537,6 +584,9 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         SetCanGetSelectionContentFlag(false);
     }
     baseInputMonitor_->OnInputEvent(pointerEvent);
+    if (baseInputMonitor_->IsInputWordEnd()) {
+        HandleWordSelected();
+    }
     FinishedWordSelection();
 }
 
@@ -558,7 +608,7 @@ void SelectionInputMonitor::SetCanGetSelectionContentFlag(bool flag) const
 void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    if (action != PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+    if (action != PointerEvent::POINTER_ACTION_BUTTON_DOWN && action != PointerEvent::POINTER_ACTION_DOWN) {
         return;
     }
     auto windowId = pointerEvent->GetTargetWindowId();
@@ -577,7 +627,7 @@ void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> po
         focusInfo.uid_, windowType, true, FocusChangeSource::InputManager);
     sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
     if (listener == nullptr) {
-        SELECTION_HILOGE("Selection listener is nullptr");
+        SELECTION_HILOGD("Selection listener is nullptr");
         return;
     }
     ErrCode errCode = listener->FocusChange(focusChangeInfo);
@@ -672,7 +722,6 @@ void SelectionInputMonitor::FinishedWordSelection() const
     SelectionInfoData infoData;
     infoData.data = selectionInfo;
 
-    SELECTION_HILOGI("SelectionInfoData: %{public}s.", infoData.ToString().c_str());
     sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
     if (listener == nullptr) {
         SELECTION_HILOGE("Selection listener is nullptr");
@@ -749,6 +798,18 @@ int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent
         g_pasteBoardErrorCode = ERR_OK;
     }
     return ret;
+}
+
+int32_t SelectionInputMonitor::SetPanelShowingStatus(bool status) const
+{
+    SELECTION_HILOGI("set panel showing status: %{public}d", status);
+    isPanelShowing_ = status;
+    return 0;
+}
+
+bool SelectionInputMonitor::GetPanelShowingStatus() const
+{
+    return isPanelShowing_;
 }
 
 int32_t SelectionInputMonitor::InjectCtrlC() const

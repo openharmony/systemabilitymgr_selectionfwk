@@ -48,6 +48,7 @@ ohos_shared_library("selection_service") {
   include_dirs = [
     "./focus_monitor/include",
     "../sysevent",
+    "../utils/include",
   ]
 
   sources = [
@@ -64,6 +65,7 @@ ohos_shared_library("selection_service") {
     "src/selection_common.cpp",
     "src/system_ability_status_change_listener.cpp",
     "../sysevent/hisysevent_adapter.cpp",
+    "../utils/src/selection_timer.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/interfaces/idl:selection_service_interface",
