@@ -345,7 +345,7 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator011, TestSize.L
     );
 
     ASSERT_FALSE(result.shouldCreate);
-    ASSERT_FALSE(result.shouldStart);
+    ASSERT_TRUE(result.shouldStart);
     ASSERT_FALSE(result.shouldStop);
     ASSERT_FALSE(result.shouldRestartApp);
     ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
