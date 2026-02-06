@@ -104,7 +104,7 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
         if (!sysSelectionConfig.GetEnable()) {
             result.shouldStop = true;
         } else if (!connectedAbilityInfo.has_value()) {
-            result.shouldStart = false;
+            result.shouldStart = true;
         }
         return result;
     }

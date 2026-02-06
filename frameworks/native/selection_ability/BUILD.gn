@@ -47,10 +47,6 @@ ohos_shared_library("selection_ability") {
   ]
   configs = [ ":selection_listener_config", ]
 
-  include_dirs = [
-    "${selection_fwk_root_path}/interfaces/inner_kits/selection_client/include",
-  ]
-
   sources = [
     "src/selection_ability.cpp",
     "src/selection_listener_impl.cpp",
@@ -65,7 +61,6 @@ ohos_shared_library("selection_ability") {
     "${selection_fwk_root_path}/common:selection_common",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_interface",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_stub",
-    "${selection_fwk_root_path}/interfaces/inner_kits/selection_client:selection_client",
   ]
 
   external_deps = [
@@ -95,10 +90,6 @@ ohos_shared_library("selection_ability") {
   ]
 
   defines = []
-
-  if (selectionfwk_support_pass_windowId) {
-    defines += [ "SELECTIONFWK_SUPPORT_PASS_WINDOWID" ]
-  }
 
   if (window_manager_use_sceneboard) {
     defines += [ "SCENE_BOARD_ENABLE" ]
