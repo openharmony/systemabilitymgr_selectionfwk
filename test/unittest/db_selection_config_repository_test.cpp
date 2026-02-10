@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
+#include "db_selection_config_repository.h"
+
 #include <optional>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-
-#include "db_selection_config_repository.h"
 #include "selection_config_database.h"
 
 namespace OHOS {
