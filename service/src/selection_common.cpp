@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 #include <string>
-#include "selection_common.h"
 #include "selection_log.h"
+#include "selection_common.h"
 namespace OHOS {
 namespace SelectionFwk {
 static const unsigned int UTF8_2BYTE_LEN = 2;
