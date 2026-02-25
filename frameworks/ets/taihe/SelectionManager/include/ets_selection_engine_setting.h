@@ -28,10 +28,10 @@ public:
     static void UnSubscribe(const std::string &type, const callbackTypePara &cb);
     static void UnSubscribe(const std::string &type);
     int32_t OnSelectionEvent(const SelectionInfo &selectionInfo);
+    static SFErrorCode Register();
 
 private:
     EtsSelectionEngineSetting() = default;
-    static SFErrorCode Register();
     static std::shared_ptr<EtsSelectionEngineSetting> GetEtsSelectionEngineSetting();
     void RegisterListener(const std::string &type, callbackTypePara &&cb);
     void UnRegisterListener(const std::string &type, const callbackTypePara &cb);
