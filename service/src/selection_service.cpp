@@ -92,7 +92,10 @@ void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementN
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
     auto curAppInfo = selectionConfig.GetApplicationInfo();
     if (selectionConfig.GetEnable() && needReconnectWithException && curAppInfo == disconnectAppInfo) {
-        SELECTION_HILOGE("do not restart app [%{public}s] even it disconnected abnormally.", curAppInfo.c_str());
+        SELECTION_HILOGE("Restart app [%{public}s] because it may have disconnected abnormally.", curAppInfo.c_str());
+        auto ret = SelectionService::GetInstance()->ConnectNewExtAbility(element.GetBundleName(),
+            element.GetAbilityName());
+        SELECTION_HILOGI("Reconnect extension ability ret = %{public}d", ret);
     }
     SELECTION_HILOGI("OnAbilityDisconnectDone end.");
 }
@@ -232,18 +235,6 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
     return ret;
 }
 
-ErrCode SelectionService::SetPanelShowingStatus(bool status)
-{
-    SELECTION_HILOGI("[SelectionService] SetPanelShowingStatus in");
-
-    if (!inputMonitor_) {
-        return SelectionServiceError::INVALID_DATA;
-    }
-
-    auto ret = inputMonitor_->SetPanelShowingStatus(status);
-    return ret;
-}
-
 int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     SELECTION_HILOGI("Dump start.");
@@ -321,29 +312,8 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
         SELECTION_HILOGI("Do not reconnect ability because switch is off.");
         return;
     }
-    SELECTION_HILOGI("app switch, disconnect current extAbility");
-    selectionService->DisconnectCurrentExtAbility();
-}
-
-static uint32_t StrToUint(const std::string &value)
-{
-    errno = 0;
-    char *pEnd = nullptr;
-    uint64_t result = std::strtoul(value.c_str(), &pEnd, 0);
-    if (pEnd == value.c_str() || result > SELECTION_UINT32_MAX || errno == ERANGE) {
-        return 0;
-    }
-    return static_cast<uint32_t>(result);
-}
-
-static void WatchTimeoutChange(const char *key, const char *value, void *context)
-{
-    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
-    SELECTION_HILOGI("WatchTimeoutChange begin, %{public}s: value=%{public}s", key, value);
-    const std::string timeoutStr(value);
-    uint32_t timeout = StrToUint(timeoutStr);
-    SELECTION_CHECK(timeout != 0, return, "Invild timeout");
-    MemSelectionConfig::GetInstance().SetTimeout(timeout);
+    auto ret = selectionService->ReconnectExtAbility(std::get<0>(appInfo.value()), std::get<1>(appInfo.value()));
+    SELECTION_HILOGI("ReconnectExtAbility ret = %{public}d", ret);
 }
 
 void SelectionService::PersistSelectionConfig()
@@ -447,79 +417,9 @@ void SelectionService::DoDisconnectCurrentExtAbility()
     SELECTION_HILOGI("[selectevent] DisconnectAbility success.");
 }
 
-bool SelectionService::HasExtAbilityConnection() const
-{
-    if (connectInner_ != nullptr && connectInner_->connectedAbilityInfo.has_value()) {
-        return true;
-    }
-    SELECTION_HILOGI("No selection extension is connected");
-    return false;
-}
-
-int SelectionService::GetCurrentSelectionAppInfo(std::string &bundleName, std::string &abilityName)
-{
-    const std::string appInfoStr = MemSelectionConfig::GetInstance().GetApplicationInfo();
-    auto appInfo = ParseAppInfo(appInfoStr);
-    if (!appInfo.has_value()) {
-        return -1;
-    }
-    bundleName = std::get<0>(appInfo.value());
-    abilityName = std::get<1>(appInfo.value());
-    return 0;
-}
-
-bool SelectionService::IsAnySelectionPanelShowing()
-{
-    std::vector<sptr<OHOS::Rosen::WindowVisibilityInfo>> windowVisibilityInfos;
-#ifdef SCENE_BOARD_ENABLE
-    Rosen::WMError ret = Rosen::WindowManagerLite::GetInstance().GetVisibilityWindowInfo(windowVisibilityInfos);
-#else
-    Rosen::WMError ret = Rosen::WindowManager::GetInstance().GetVisibilityWindowInfo(windowVisibilityInfos);
-#endif
-    SELECTION_CHECK(ret == OHOS::Rosen::WMError::WM_OK, return false,
-        "GetVisibilityWindowInfo error, ret is: %{public}d", ret);
-
-    std::string currentBundleName;
-    std::string currentAbilityName;
-    SELECTION_CHECK(GetCurrentSelectionAppInfo(currentBundleName, currentAbilityName) == 0, return false,
-        "current appInfo is empty");
-    SELECTION_CHECK(currentBundleName != "" && currentAbilityName != "", return false,
-        "bundleName or ability is empty string");
-
-    for (auto windowVisibilityInfo : windowVisibilityInfos) {
-        if (currentBundleName == windowVisibilityInfo->GetBundleName() ||
-            currentAbilityName == windowVisibilityInfo->GetAbilityName()) {
-            SELECTION_HILOGI("the panel is showing");
-            return true;
-        }
-    }
-    SELECTION_HILOGI("there is no panel showing");
-    return false;
-}
-
-int SelectionService::ConnectExtAbilityFromConfig()
-{
-    std::string bundleName;
-    std::string abilityName;
-    SELECTION_CHECK(GetCurrentSelectionAppInfo(bundleName, abilityName) == 0, return -1, "current appInfo is empty");
-    std::lock_guard<std::mutex> lockGuard(connectMutex_);
-    int ret = DoConnectNewExtAbility(bundleName, abilityName);
-    SELECTION_HILOGI("ConnectExtAbilityFromConfig ret = %{public}d", ret);
-    return ret;
-}
-
 int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName)
 {
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
-    AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr &&
-        connectInner_->connectedAbilityInfo.has_value() &&
-        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
-        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
-            "has been connected.",
-            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
-        return 0;
-    }
     return DoConnectNewExtAbility(bundleName, abilityName);
 }
 
@@ -537,9 +437,9 @@ int32_t SelectionService::ReconnectExtAbility(const std::string& bundleName, con
         return 0;
     }
     DoDisconnectCurrentExtAbility();
-    /* no need to connect extension ability, the function name should change */
+    auto ret = DoConnectNewExtAbility(bundleName, abilityName);
     SELECTION_HILOGI("ReconnectExtAbility end.");
-    return 0;
+    return ret;
 }
 
 void SelectionService::DisconnectCurrentExtAbility()
@@ -561,9 +461,6 @@ void SelectionService::WatchParams()
     }
     if (WatchParameter(SYS_SELECTION_APP, WatchAppSwitch, this) != 0) {
         SELECTION_HILOGE("Failed to watch SYS_SELECTION_APP");
-    }
-    if (WatchParameter(SYS_SELECTION_TIMEOUT, WatchTimeoutChange, this) != 0) {
-        SELECTION_HILOGE("Failed to watch SYS_SELECTION_TIMEOUT");
     }
     SELECTION_HILOGI("WatchParams end");
 }
@@ -641,6 +538,7 @@ void SelectionService::SynchronizeSelectionConfig()
 
     if (result.shouldStart) {
         SELECTION_HILOGI("result.shouldStart");
+        ConnectNewExtAbility(std::get<0>(appInfo.value()), std::get<1>(appInfo.value()));
     }
 
     if (result.shouldRestartApp) {
@@ -676,7 +574,7 @@ void SelectionService::WatchExtAbilityInstalled(const std::string& bundleName, c
         bundleName.c_str(), abilityName.c_str(), targetBundleName.c_str(), targetAbilityName.c_str());
 
     if (targetBundleName == bundleName) {
-        SELECTION_HILOGI("user is installing the selection extension app: %{public}s", bundleName.c_str());
+        DoConnectNewExtAbility(targetBundleName, targetAbilityName);
     }
 }
 
