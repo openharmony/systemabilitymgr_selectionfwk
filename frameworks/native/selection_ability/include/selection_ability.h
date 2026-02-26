@@ -38,9 +38,6 @@ public:
     int32_t ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     int32_t HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     void Dispose(uint32_t winId);
-#ifdef SELECTIONFWK_SUPPORT_PASS_WINDOWID
-    void NotifyPanelShowingStatusChange();
-#endif
 
 private:
     void PushPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
@@ -51,11 +48,7 @@ private:
     static sptr<SelectionAbility> instance_;
 
     std::mutex panelsMutex_;
-    std::deque<std::shared_ptr<SelectionPanel>> panels_;
-
-#ifdef SELECTIONFWK_SUPPORT_PASS_WINDOWID
-    bool isPanelShowing_ = false;
-#endif
+    std::queue<std::shared_ptr<SelectionPanel>> panels_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

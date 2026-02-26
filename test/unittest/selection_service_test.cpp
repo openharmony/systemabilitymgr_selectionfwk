@@ -114,7 +114,7 @@ HWTEST_F(SelectionServiceTest, SelectionService002, TestSize.Level0)
 {
     SelectionService::GetInstance()->DisconnectCurrentExtAbility();
     int32_t ret = SelectionService::GetInstance()->ReconnectExtAbility("a", "b");
-    ASSERT_EQ(ret, 0);
+    ASSERT_NE(ret, 0);
     SelectionService::GetInstance()->DisconnectCurrentExtAbility();
 }
 

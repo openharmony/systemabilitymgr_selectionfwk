@@ -41,7 +41,6 @@ constexpr const char *BOOTEVENT_BOOT_COMPLETED = "bootevent.boot.completed";
 constexpr const char *SYS_SELECTION_SWITCH = "sys.selection.switch";
 constexpr const char *SYS_SELECTION_TRIGGER = "sys.selection.trigger";
 constexpr const char *SYS_SELECTION_APP = "sys.selection.app";
-constexpr const char *SYS_SELECTION_TIMEOUT = "sys.selection.timeout";
 constexpr const char *DEFAULT_SWITCH = "on";
 constexpr const char *DEFAULT_TRIGGER = "ctrl";
 
@@ -93,16 +92,11 @@ public:
     ErrCode UnregisterListener(const sptr<ISelectionListener>& listener) override;
     ErrCode IsCurrentSelectionApp(int pid, bool &resultValue) override;
     ErrCode GetSelectionContent(std::string& selectionContent) override;
-    ErrCode SetPanelShowingStatus(bool status) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
     int32_t ReconnectExtAbility(const std::string& bundleName, const std::string& abilityName);
     void DisconnectCurrentExtAbility();
     void UnloadService();
-    bool HasExtAbilityConnection() const;
-    int ConnectExtAbilityFromConfig();
-    int GetCurrentSelectionAppInfo(std::string &bundleName, std::string &abilityName);
-    bool IsAnySelectionPanelShowing();
 
     sptr<ISelectionListener> GetListener();
     void PersistSelectionConfig();

@@ -31,8 +31,6 @@ public:
     void SetTriggered(bool isTriggered);
     void SetApplicationInfo(const std::string &applicationInfo);
     void SetUid(int uid);
-    uint32_t GetTimeout() const;
-    void SetTimeout(uint32_t timeout);
 
     std::string ToString() const;
 
@@ -40,7 +38,6 @@ private:
     bool isEnabled_ = false;
     bool isTriggered_ = false;
     int uid_ = -1;
-    uint32_t timeout_ = 5 * 60; // s
     std::string applicationInfo_ = "com.selection.selectionapplication/SelectionExtensionAbility";
 };
 
@@ -56,8 +53,6 @@ public:
     void SetEnabled(bool enabled);
     void SetTriggered(bool isTriggered);
     void SetApplicationInfo(const std::string &applicationInfo);
-    uint32_t GetTimeout() const;
-    void SetTimeout(uint32_t timeout);
 
 private:
     MemSelectionConfig() = default;
