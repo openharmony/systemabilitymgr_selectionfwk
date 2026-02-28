@@ -857,7 +857,7 @@ int32_t SelectionInputMonitor::InjectCtrlC() const
 void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
 {
     SELECTION_HILOGW("[selectevent] Pasteboard call sa. Selection event id is %{public}u. Text received "
-        "length: %{public}u, errCode: %{public}d.", selSeqId.load(), text.length(), errCode);
+        "length: %{public}zu, errCode: %{public}d.", selSeqId.load(), text.length(), errCode);
 
     if (!baseInputMonitor_) {
         return;
