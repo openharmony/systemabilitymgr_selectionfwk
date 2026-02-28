@@ -21,6 +21,8 @@
 #else
 #error "ani.h not found. Please ensure the Ani SDK is correctly installed."
 #endif
+#include "ets_selection_engine_setting.h"
+#include "selection_app_validator.h"
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result) {
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
@@ -28,9 +30,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result) {
     }
     ani_status status = ANI_OK;
     if (ANI_OK != ohos::selectionInput::selectionManager::ANIRegister(env)) {
-        std::cerr << "Error from ohos::selectionInput::selectionManager::ANIRegister" << std::endl;
+        std::cerr << "Error from ohos::osInput::selectionManager::ANIRegister" << std::endl;
         status = ANI_ERROR;
     }
+    if (OHOS::SelectionFwk::EtsSelectionEngineSetting::Register() != OHOS::SelectionFwk::EXCEPTION_SUCCESS) {
+        std::cerr << "Failed to register listener to service!" << std::endl;
+    }
+    OHOS::SelectionFwk::SelectionAppValidator::GetInstance().SetValid();
     *result = ANI_VERSION_1;
     return status;
 }
