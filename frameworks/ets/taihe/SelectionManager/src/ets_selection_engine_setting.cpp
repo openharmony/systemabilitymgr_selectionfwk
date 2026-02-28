@@ -66,11 +66,6 @@ void EtsSelectionEngineSetting::Subscribe(const std::string &type, callbackTypeP
         return;
     }
 
-    if (Register() != EXCEPTION_SUCCESS) {
-        SELECTION_HILOGE("Failed to register lister to service!");
-        return;
-    }
-
     engine->RegisterListener(type, std::forward<callbackTypePara>(cb));
 }
 void EtsSelectionEngineSetting::UnSubscribe(const std::string &type, const callbackTypePara &cb)

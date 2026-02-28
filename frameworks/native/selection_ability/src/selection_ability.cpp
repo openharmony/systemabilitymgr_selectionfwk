@@ -60,7 +60,11 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     
-    SELECTION_HILOGI("without validate");
+    SELECTION_HILOGD("Check SelectionAppValidator");
+    if (!SelectionAppValidator::GetInstance().Validate()) {
+        SELECTION_HILOGE("bundleName is not valid");
+        return ErrorCode::ERROR_INVALID_OPERATION;
+    }
 
     auto panel = std::make_shared<SelectionPanel>();
     if (panel == nullptr) {
