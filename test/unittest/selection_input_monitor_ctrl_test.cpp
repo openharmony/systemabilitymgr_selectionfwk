@@ -419,7 +419,7 @@ HWTEST_F(BaseSelectionInputMonitorCtrlTest, SelectInputMonitorCtrl022, TestSize.
 
 /**
  * @tc.name: SelectInputMonitorCtrl023
- * @tc.desc: test anther key to interrupt word selection
+ * @tc.desc: test another key to interrupt word selection
  * @tc.type: FUNC
  */
 HWTEST_F(BaseSelectionInputMonitorCtrlTest, SelectInputMonitorCtrl023, TestSize.Level0)
