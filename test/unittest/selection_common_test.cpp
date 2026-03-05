@@ -54,7 +54,7 @@ void SelectionCommonTest::TearDown()
 
 /**
  * @tc.name: SelectionCommon001
- * @tc.desc: test the IsAllWhitespace method with null characters
+ * @tc.desc: test IsAllWhitespace method with null characters
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionCommonTest, SelectionCommon001, TestSize.Level0)
@@ -72,7 +72,7 @@ HWTEST_F(SelectionCommonTest, SelectionCommon001, TestSize.Level0)
 
 /**
  * @tc.name: SelectionCommon002
- * @tc.desc: test the IsAllWhitespace method with non-null characters
+ * @tc.desc: test IsAllWhitespace method with non-null characters
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionCommonTest, SelectionCommon002, TestSize.Level0)
@@ -85,7 +85,7 @@ HWTEST_F(SelectionCommonTest, SelectionCommon002, TestSize.Level0)
 
 /**
  * @tc.name: SelectionCommon003
- * @tc.desc: test the IsNumber method with characters
+ * @tc.desc: test IsNumber method with characters
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionCommonTest, SelectionCommon003, TestSize.Level0)
@@ -101,7 +101,7 @@ HWTEST_F(SelectionCommonTest, SelectionCommon003, TestSize.Level0)
 
 /**
  * @tc.name: SelectionCommon004
- * @tc.desc: test the ParseAppInfo method with strings
+ * @tc.desc: test ParseAppInfo method with strings
  * @tc.type: FUNC
  */
 HWTEST_F(SelectionCommonTest, SelectionCommon004, TestSize.Level0)
