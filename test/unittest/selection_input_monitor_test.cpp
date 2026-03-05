@@ -71,7 +71,7 @@ void SelectionInputMonitorTest::TearDown()
  */
 HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level0)
 {
-    std::cout << "SelectInputMonitorCtrl001 start" << std::endl;
+    std::cout << "SelectInputMonitor001 start" << std::endl;
     LEFT_BUTTON_CLICK(inputMonitor);
     LEFT_BUTTON_CLICK(inputMonitor);
     LEFT_BUTTON_CLICK(inputMonitor);
