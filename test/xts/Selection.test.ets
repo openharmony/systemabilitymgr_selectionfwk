@@ -29,368 +29,1185 @@ let domain: int = 0x0000; //日志标识,0x0000作为测试框架的业务标识
 let tag: string = 'testTag'; //日志标识字符串,作为tag标识当前runner类下的测试行为
 
 export default function selectionTest() {
+  describe("selectionTest", (): void => {
+    hilog.info(domain, tag, '%{public}s', 'describe start');
 
-    describe("selectionTest", (): void => {
-        hilog.info(domain, tag, '%{public}s', 'describe start');
-        /*
-         * @tc.number: selectionfwk_on_selectionCompleted_003
-         * @tc.name: Test should success, when parameters are valid.
-         * @tc.desc:  Function test
-         * @tc.level: LEVEL0
-         * @tc.size: MEDIUMTEST
-         * @tc.type: FUNCTION
-        */
-        it("selectionfwk_on_selectionCompleted_001", TestType.FUNCTION|Size.MEDIUMTEST|Level.LEVEL0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_on_selectionCompleted_001*************');
-            try {
-                 selectionManager.onSelectionCompleted((info: selectionManager.SelectionInfo) => {
-                     console.info(`selectionfwk_on_selectionCompleted_001 callback enter`);
-                     expect(info != null).assertTrue();
-
-                 });
-                console.info('************* selectionfwk_on_selectionCompleted_001 Test end*************');
-                done();
-             } catch(error) {
-                 console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
-                 console.info('************* selectionfwk_on_selectionCompleted_001 Test end*************');
-                 done();
-             }
-        })
-
-        /*
-         * @tc.number  selectionfwk_createPanel_002
-         * @tc.name    Test should throw BusinessError 401 when parameters are invalid.
-         * @tc.desc    Function test
-         * @tc.level   0
-        */
-        it('selectionfwk_createPanel_001', TestType.FUNCTION|Size.MEDIUMTEST|Level.LEVEL0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_createPanel_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode= true;
-            try {
-                let panelInfo: PanelInfo = {
-                    panelType: PanelType.MENU_PANEL,
-                    x: 0,
-                    y: 0,
-                    width: 100,
-                    height: 100
-                }
-                let panel: selectionManager.Panel = await selectionManager.createPanel(context, panelInfo)
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    expect(true).assertTrue();
-                    console.info('************* selectionfwk_createPanel_001 Test end*************');
-                    done();
-                }
-                done();
-            } catch (error) {
-                console.info(`selectionfwk_createPanel_001 throw error: [${error.code}, ${error.message}]`);
-                expect(false).assertTrue();
-                console.info('************* selectionfwk_createPanel_001 Test end*************');
-                done();
-            }
-        });
-
-
-        /*
-     * @tc.number  selectionfwk_panel_setUiContent_001
-     * @tc.name    verify ERROR code 401 of setUiContent.
-     * @tc.desc    Function test
-     * @tc.level   0
+    /**
+     * @tc.name   selectionfwk_onSelectionComplete_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0100
+     * @tc.desc   verify onSelectionComplete result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
      */
-        it('selectionfwk_panel_setUiContent_001', 0, async (done: () => void): Promise<void> =>  {
-            console.info('************* selectionfwk_panel_setUiContent_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MAIN_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-
-            let panel: selectionManager.Panel | undefined = undefined;
-            let bDestroyed = false;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    bDestroyed = true;
-                    await panel.setUiContent('page1');
-                    console.info(`selectionfwk_panel_setUiContent_001 promise failed`);
-                    expect(false).assertTrue();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_panel_setUiContent_001 result: [${error.code}, ${error.message}]`);
-                expect(error.code).assertEqual(33600002);
-            } finally {
-                if (!bDestroyed) {
-                    if (panel !== undefined) {
-                        await selectionManager.destroyPanel(panel);
-                    }
-                }
-                console.info('************* selectionfwk_panel_setUiContent_001 Test end*************');
-                done();
-            }
+    it("selectionfwk_onSelectionComplete_001", TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_onSelectionComplete_001*************');
+      try {
+        selectionManager.onSelectionComplete((info: selectionManager.SelectionInfo) => {
+        console.info(`selectionfwk_onSelectionComplete_001 callback enter`);
+        expect(info != null).assertTrue();
         });
-
-        /*
-     * @tc.number  selectionfwk_panel_moveTo_001
-     * @tc.name    verify function of the panel moveTo.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_panel_moveTo_001', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_panel_moveTo_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MENU_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            let panel: selectionManager.Panel | undefined = undefined;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await panel.moveTo(20, 20);
-                    console.info(`selectionfwk_panel_moveTo_001 promise success`);
-                    await selectionManager.destroyPanel(panel);
-                    panel = undefined;
-                    expect(true).assertTrue();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_panel_moveTo_001 throw error: [${error.code}, ${error.message}]`);
-                expect(false).assertTrue();
-            } finally {
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                }
-                console.info('************* selectionfwk_panel_moveTo_001 Test end*************');
-                done();
-            }
-        });
-
-        /*
-     * @tc.number  selectionfwk_panel_moveTo_002
-     * @tc.name    verify ERROR code 33600002 of the panel hide.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_panel_moveTo_002', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_panel_moveTo_002 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MENU_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            let panel: selectionManager.Panel | undefined = undefined;
-            let bDestroyed = false;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    bDestroyed = true;
-                    await panel.moveTo(20, 20);
-                    expect(false).assertTrue();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_panel_moveTo_002 throw error: [${error.code}, ${error.message}]`);
-                expect(error.code).assertEqual(33600002);
-            } finally {
-                if (!bDestroyed) {
-                    if (panel !== undefined) {
-                        await selectionManager.destroyPanel(panel);
-                    }
-                }
-                console.info('************* selectionfwk_panel_moveTo_002 Test end*************');
-                done();
-            }
-        });
-
-        /*
-     * @tc.number  selectionfwk_panel_hide_001
-     * @tc.name    verify ERROR code 33600002 of the panel hide.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_panel_hide_001', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_panel_hide_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MENU_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            let panel: selectionManager.Panel | undefined = undefined;
-            let bDestroyed = false;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    bDestroyed = true;
-                    await panel.hide();
-                    expect(false).assertTrue();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_panel_hide_001 throw error: [${error.code}, ${error.message}]`);
-                expect(error.code).assertEqual(33600002);
-            } finally {
-                if (!bDestroyed) {
-                    if (panel !== undefined) {
-                        await selectionManager.destroyPanel(panel);
-                    }
-                }
-                console.info('************* selectionfwk_panel_hide_001 Test end*************');
-                done();
-            }
-
-        });
-
-        /*
-     * @tc.number  selectionfwk_panel_startmoving_001
-     * @tc.name    verify ERROR code 33600002 of the panel hide.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_panel_startmoving_001', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_panel_startmoving_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MENU_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            let panel: selectionManager.Panel | undefined = undefined;
-            let bDestroyed = false;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    bDestroyed = true;
-                    await panel.startMoving();
-                    expect(false).assertTrue();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_panel_startmoving_001 throw error: [${error.code}, ${error.message}]`);
-                expect(error.code).assertEqual(33600002);
-            } finally {
-                if (!bDestroyed) {
-                    if (panel !== undefined) {
-                        await selectionManager.destroyPanel(panel);
-                    }
-                }
-                console.info('************* selectionfwk_panel_startmoving_001 Test end*************');
-                done();
-            }
-
-        });
-
-        /*
-     * @tc.number  selectionfwk_panel_show_001
-     * @tc.name    verify ERROR code 33600002 of the panel hide.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_panel_show_001', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_panel_show_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MAIN_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            let panel: selectionManager.Panel | undefined = undefined;
-            let bDestroyed = false;
-            try {
-                panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    bDestroyed = true;
-                    await panel.show();
-                    expect(false).assertTrue();
-                }
-
-            } catch (error) {
-                console.info(`selectionfwk_panel_show_001 throw error: [${error.code}, ${error.message}]`);
-                expect(error.code).assertEqual(33600002);
-            } finally {
-                if (!bDestroyed) {
-                    if (panel !== undefined) {
-                        await selectionManager.destroyPanel(panel);
-                    }
-                }
-                console.info('************* selectionfwk_panel_show_001 Test end*************');
-                done();
-            }
-
-        });
-
-        /*
-     * @tc.number  selectionfwk_destroyPanel_001
-     * @tc.name    verify method of destroyPanel.
-     * @tc.desc    Function test
-     * @tc.level   0
-     */
-        it('selectionfwk_destroyPanel_001', 0, async (done: () => void): Promise<void> => {
-            console.info('************* selectionfwk_destroyPanel_001 Test start*************');
-            let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
-            abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
-            let context = abilityDelegator.getAppContext();
-            context.stageMode = true;
-            let panelInfo: PanelInfo = {
-                panelType: PanelType.MAIN_PANEL,
-                x: 0,
-                y: 0,
-                width: 100,
-                height: 100
-            }
-            try {
-                let panel: selectionManager.Panel = await selectionManager.createPanel(context, panelInfo);
-                if (panel !== undefined) {
-                    await selectionManager.destroyPanel(panel);
-                    console.info(`selectionfwk_destroyPanel_001 promise success`);
-                    expect(true).assertTrue();
-                    console.info('************* selectionfwk_destroyPanel_001 Test end*************');
-                    done();
-                }
-            } catch (error) {
-                console.info(`selectionfwk_destroyPanel_001 throw error: [${error.code}, ${error.message}]`);
-                expect(false).assertTrue();
-                console.info('************* selectionfwk_destroyPanel_001 Test end*************');
-                done();
-            }
-        });
+        console.info('************* selectionfwk_onSelectionComplete_001 Test end*************');
+        done();
+       } catch(error) {
+        console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
+        console.info('************* selectionfwk_onSelectionComplete_001 Test end*************');
+        done();
+       }
     })
 
+    /**
+     * @tc.name   selectionfwk_offSelectionComplete_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0200
+     * @tc.desc   verify offSelectionComplete result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_offSelectionComplete_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> =>  {
+      console.info('************* selectionfwk_offSelectionComplete_001*************');
+      try {
+        selectionManager.onSelectionComplete((info: selectionManager.SelectionInfo) => {
+            console.info(`selectionfwk_offSelectionComplete_001 callback enter`);
+            expect(info != null).assertTrue();
+        });
+        selectionManager.offSelectionComplete();
+        console.info(`selectionfwk_off_selectionCompleted_001 is success`);
+        console.info('************* selectionfwk_offSelectionComplete_001 Test end*************');
+        done();
+      } catch(error) {
+        console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        console.info('************* selectionfwk_offSelectionComplete_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_createPanel_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0300
+     * @tc.desc   verify createPanel result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_createPanel_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_createPanel_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode= true;
+      try {
+        let panelInfo: PanelInfo = {
+          panelType: PanelType.MENU_PANEL,
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100
+        }
+        let panel: selectionManager.Panel = await selectionManager.createPanel(context, panelInfo)
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+          console.info('************* selectionfwk_createPanel_001 Test end*************');
+          done();
+        }
+        done();
+      } catch (error) {
+        console.info(`selectionfwk_createPanel_001 throw error: [${error.code}, ${error.message}]`);
+        expect(false).assertTrue();
+        console.info('************* selectionfwk_createPanel_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_setUiContent_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0400
+     * @tc.desc   verify setUiContent result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_setUiContent_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> =>  {
+      console.info('************* selectionfwk_panel_setUiContent_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+
+      let panel: selectionManager.Panel | undefined = undefined;
+      let bDestroyed = false;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+            bDestroyed = true;
+            await panel.setUiContent('page1');
+            console.info(`selectionfwk_panel_setUiContent_001 promise failed`);
+            expect(false).assertTrue();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_setUiContent_001 result: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600002);
+      } finally {
+        if (!bDestroyed) {
+            if (panel !== undefined) {
+                await selectionManager.destroyPanel(panel);
+            }
+        }
+        console.info('************* selectionfwk_panel_setUiContent_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_moveToGlobalDisplay_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0500
+     * @tc.desc   verify moveToGlobalDisplay result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_moveToGlobalDisplay_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_moveToGlobalDisplay_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+            await panel.moveToGlobalDisplay(20, 20);
+            console.info(`selectionfwk_panel_moveToGlobalDisplay_001 promise success`);
+            await selectionManager.destroyPanel(panel);
+            panel = undefined;
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_moveToGlobalDisplay_001 throw error: [${error.code}, ${error.message}]`);
+        expect(false).assertTrue();
+      } finally {
+        if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+        }
+        console.info('************* selectionfwk_panel_moveToGlobalDisplay_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_moveToGlobalDisplay_002
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0600
+     * @tc.desc   verify moveToGlobalDisplay errorcode 33600002
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL3
+     */
+    it('selectionfwk_panel_moveToGlobalDisplay_002', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL3, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_moveToGlobalDisplay_002 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      let bDestroyed = false;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+          bDestroyed = true;
+          await panel.moveToGlobalDisplay(20, 20);
+          expect(false).assertTrue();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_moveToGlobalDisplay_002 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600002);
+      } finally {
+        if (!bDestroyed) {
+          if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+          }
+        }
+        console.info('************* selectionfwk_panel_moveToGlobalDisplay_002 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_hide_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0700
+     * @tc.desc   verify hide errorcode 33600002
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL3
+     */
+    it('selectionfwk_panel_hide_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL3, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_hide_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      let bDestroyed = false;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+          bDestroyed = true;
+          await panel.hide();
+          expect(false).assertTrue();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_hide_001 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600002);
+      } finally {
+        if (!bDestroyed) {
+          if (panel !== undefined) {
+              await selectionManager.destroyPanel(panel);
+          }
+        }
+        console.info('************* selectionfwk_panel_hide_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_startmoving_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0800
+     * @tc.desc   verify startmoving errorcode 33600002
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL3
+     */
+    it('selectionfwk_panel_startmoving_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL3, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_startmoving_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      let bDestroyed = false;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+            bDestroyed = true;
+            await panel.startMoving();
+            expect(false).assertTrue();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_startmoving_001 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600002);
+      } finally {
+        if (!bDestroyed) {
+            if (panel !== undefined) {
+                await selectionManager.destroyPanel(panel);
+            }
+        }
+        console.info('************* selectionfwk_panel_startmoving_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_show_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_0900
+     * @tc.desc   verify panel show errorcode 33600002
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL3
+     */
+    it('selectionfwk_panel_show_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL3, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_show_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      let bDestroyed = false;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+            bDestroyed = true;
+            await panel.show();
+            expect(false).assertTrue();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_panel_show_001 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600002);
+      } finally {
+        if (!bDestroyed) {
+          if (panel !== undefined) {
+            await selectionManager.destroyPanel(panel);
+          }
+        }
+        console.info('************* selectionfwk_panel_show_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_destroyPanel_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1000
+     * @tc.desc   verify destroyPanel result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_destroyPanel_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_destroyPanel_001 Test start*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      try {
+        let panel: selectionManager.Panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+          console.info(`selectionfwk_destroyPanel_001 promise success`);
+          console.info('************* selectionfwk_destroyPanel_001 Test end*************');
+          done();
+        }
+      } catch (error) {
+        console.info(`selectionfwk_destroyPanel_001 throw error: [${error.code}, ${error.message}]`);
+        expect(false).assertTrue();
+        console.info('************* selectionfwk_destroyPanel_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_on_destroyed_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1100
+     * @tc.desc   verify panel on destroyPanel result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_on_destroyed_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_on_destroyed_001*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          panel.onDestroy(()=>{
+              console.info(`selectionfwk_panel_on_destroyed_001`);
+          });
+          expect().assertTrue();
+        }
+      } catch(error) {
+        console.info(`selectionfwk_panel_on_destroyed_001 throw error: [${error.code}, ${error.message}]`);
+      } finally {
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+        }
+        console.info('************* selectionfwk_panel_on_destroyed_001 Test end*************');
+        done()
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_off_destroyed_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1200
+     * @tc.desc   verify panel off destroyPanel result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_off_destroyed_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_off_destroyed_001*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          panel.onDestroy(() => {
+              console.info('selectionfwk_panel_off_destroyed_001 callback enter');
+          });
+          panel.offDestroy();
+          await selectionManager.destroyPanel(panel);
+          panel = undefined;
+        }
+      } catch(error) {
+        console.info(`selectionfwk_destroyPanel_001 throw error: [${error.code}, ${error.message}]`);
+        expect(false).assertTrue();
+      } finally {
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+        }
+        console.info('************* selectionfwk_panel_off_destroyed_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_on_hidden_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1300
+     * @tc.desc   verify panel on hidden result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_on_hidden_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_on_hidden_001*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      try {
+        if (panel !== undefined) {
+          panel = await selectionManager.createPanel(context, panelInfo);
+          panel.onHide(()=>{
+            console.info(`selectionfwk_panel_on_hidden_001`);
+          })
+          expect(false).assertTrue();
+        }
+      } catch(error) {
+        console.info(`selectionfwk_destroyPanel_001 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(401);
+      } finally {
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+        }
+        console.info('************* selectionfwk_panel_on_hidden_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_panel_off_hidden_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1400
+     * @tc.desc   verify panel off hidden result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_panel_off_hidden_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_panel_off_hidden_001*************');
+      let abilityDelegator: abilityDelegatorRegistry.AbilityDelegator;
+      abilityDelegator = abilityDelegatorRegistry.getAbilityDelegator();
+      let context = abilityDelegator.getAppContext();
+      context.stageMode = true;
+      let panelInfo: PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }
+      let panel: selectionManager.Panel | undefined = undefined;
+      try {
+        panel = await selectionManager.createPanel(context, panelInfo);
+        if (panel !== undefined) {
+          panel.onHide(()=>{});
+          panel.offHide();
+        }
+      } catch(error) {
+        console.info(`selectionfwk_panel_off_hidden_001 throw error: [${error.code}, ${error.message}]`);
+        expect(false).assertTrue();
+      } finally {
+        if (panel !== undefined) {
+          await selectionManager.destroyPanel(panel);
+        }
+        console.info('************* selectionfwk_panel_off_hidden_001 Test end*************');
+        done();
+      }
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_002
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1600
+     * @tc.desc   verify SelectionInfo selectionType  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_002', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_002 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.selectionType == selectionManager.SelectionType.MOUSE_MOVE).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_002 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_003
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1700
+     * @tc.desc   verify SelectionInfo startDisplayX  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_003', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_003 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.startDisplayX == 10).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_003 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_004
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1800
+     * @tc.desc   verify SelectionInfo startDisplayY  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_004', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_004 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.startDisplayY == 10).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_004 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_005
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_1900
+     * @tc.desc   verify SelectionInfo endDisplayX  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_005', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_005 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.endDisplayX == 510).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_005 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_006
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2000
+     * @tc.desc   verify SelectionInfo endDisplayY  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_006', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_006 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.endDisplayY == 610).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_006 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_007
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2100
+     * @tc.desc   verify SelectionInfo startWindowX  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_007', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_007 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.startWindowX == 0).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_007 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_008
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2200
+     * @tc.desc   verify SelectionInfo startWindowY  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_008', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_008 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.startWindowY == 0).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_008 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_009
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2300
+     * @tc.desc   verify SelectionInfo endWindowX  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_009', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_009 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.endWindowX == 500).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_009 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_010
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2400
+     * @tc.desc   verify SelectionInfo endWindowY  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_010', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_010 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.endWindowY == 600).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_010 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_011
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2500
+     * @tc.desc   verify SelectionInfo displayID  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_011', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_011 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.displayID == 100).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_011 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_012
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2600
+     * @tc.desc   verify SelectionInfo windowID  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_012', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_012 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.windowID == 101).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_012 Test end*************');
+      done();
+    });
+
+   /**
+     * @tc.name   selectionfwk_SelectionInfo_013
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2700
+     * @tc.desc   verify SelectionInfo bundleName  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_013', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_013 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.MOUSE_MOVE,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.bundleName == "com.acts.selection.test").assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_013 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_014
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2800
+     * @tc.desc   verify selectionType DOUBLE_CLICK  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_014', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_014 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.DOUBLE_CLICK,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.selectionType == selectionManager.SelectionType.DOUBLE_CLICK).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_014 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_SelectionInfo_015
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_2900
+     * @tc.desc   verify selectionType TRIPLE_CLICK  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_SelectionInfo_015', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_SelectionInfo_015 Test start*************');
+      let sel : selectionManager.SelectionInfo = {
+        selectionType: selectionManager.SelectionType.TRIPLE_CLICK,
+        startDisplayX: 10,
+        startDisplayY: 10,
+        endDisplayX: 510,
+        endDisplayY: 610,
+        startWindowX: 0,
+        startWindowY: 0,
+        endWindowX: 500,
+        endWindowY: 600,
+        displayID: 100,
+        windowID: 101,
+        bundleName: "com.acts.selection.test"
+      }
+      expect(sel.selectionType == selectionManager.SelectionType.TRIPLE_CLICK).assertTrue();
+      console.info('************* selectionfwk_SelectionInfo_015 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_001
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3000
+     * @tc.desc   verify MENU_PANEL  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_001 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.panelType == PanelType.MENU_PANEL).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_001 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_002
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3100
+     * @tc.desc   verify MAIN_PANEL  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_002', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_002 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MAIN_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.panelType == PanelType.MAIN_PANEL).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_002 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_003
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3200
+     * @tc.desc   verify panel x  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_003', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_003 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.x == 10).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_003 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_004
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3300
+     * @tc.desc   verify panel y  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_004', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_004 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.y == 10).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_004 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_005
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3400
+     * @tc.desc   verify panel width  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_005', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_005 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.width == 400).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_005 Test end*************');
+      done();
+    });
+
+    /**
+     * @tc.name   selectionfwk_PanelInfo_006
+     * @tc.number SUB_Driver_Seletion_StaticAPIFunc_3500
+     * @tc.desc   verify panel height  result
+     * @tc.type   FUNCTION
+     * @tc.size   MEDIUMTEST
+     * @tc.level  LEVEL0
+     */
+    it('selectionfwk_PanelInfo_006', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_PanelInfo_006 Test start*************');
+      let panel : PanelInfo = {
+        panelType: PanelType.MENU_PANEL,
+        x: 10,
+        y: 10,
+        width: 400,
+        height: 600
+      }
+      expect(panel.height == 600).assertTrue();
+      console.info('************* selectionfwk_PanelInfo_006 Test end*************');
+      done();
+    });
+
+    /*
+    * @tc.number  selectionfwk_get_selection_content_001
+    * @tc.name    The code 31400005 is returned when the word content is obtained without the word division operation.
+    * @tc.desc    Function test
+    * @tc.level   0
+    */
+    it('selectionfwk_get_selection_content_001', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_get_selection_content_001 Test start*************');
+      try {
+        let content: string = await selectionManager.getSelectionContent();
+        expect().assertFail();
+      } catch (error) {
+        console.info(`selectionfwk_get_selection_content_001 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600005);
+      }
+      await Utils.msSleep(500);
+      console.info('************* selectionfwk_get_selection_content_001 Test end*************');
+      done();
+    });
+
+    /*
+    * @tc.number  selectionfwk_get_selection_content_002
+    * @tc.name    If getSelectionContent is invoked for multiple times without word division, the error code 31400004 is returned.
+    * @tc.desc    Function test
+    * @tc.level   0
+    */
+    it('selectionfwk_get_selection_content_002', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_get_selection_content_002 Test start*************');
+      for (let i = 0; i < 50; ++i) {
+        try {
+          let content: string = await selectionManager.getSelectionContent();
+          expect().assertFail();
+        } catch (error) {
+          console.info(`selectionfwk_get_selection_content_002 throw error: [${error.code}, ${error.message}]`);
+          expect(error.code).assertEqual(33600005);
+        }
+      }
+      try {
+        let content: string = await selectionManager.getSelectionContent();
+        expect().assertFail();
+      } catch (error) {
+        console.info(`selectionfwk_get_selection_content_002 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600004);
+      }
+      await Utils.msSleep(500);
+      console.info('************* selectionfwk_get_selection_content_002 Test end*************');
+      done();
+    });
+
+    /*
+    * @tc.number  selectionfwk_get_selection_content_003
+    * @tc.name    If getSelectionContent is invoked for multiple times without word division,31400005 is returned after the delay is added.
+    * @tc.desc    Function test
+    * @tc.level   0
+    */
+    it('selectionfwk_get_selection_content_003', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async (done: () => void): Promise<void> => {
+      console.info('************* selectionfwk_get_selection_content_003 Test start*************');
+      for (let i = 0; i < 50; ++i) {
+        try {
+          let content: string = await selectionManager.getSelectionContent();
+          expect().assertFail();
+        } catch (error) {
+          console.info(`selectionfwk_get_selection_content_003 throw error: [${error.code}, ${error.message}]`);
+          expect(error.code).assertEqual(33600005);
+        }
+      }
+      await Utils.msSleep(500);
+      try {
+        let content: string = await selectionManager.getSelectionContent();
+        expect().assertFail();
+      } catch (error) {
+        console.info(`selectionfwk_get_selection_content_003 throw error: [${error.code}, ${error.message}]`);
+        expect(error.code).assertEqual(33600005);
+      }
+      await Utils.msSleep(500);
+      console.info('************* selectionfwk_get_selection_content_003 Test end***`**********');
+      done();
+    });
+  })
 }
