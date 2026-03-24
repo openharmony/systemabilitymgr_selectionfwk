@@ -22,6 +22,10 @@
 #include "selection_app_validator.h"
 #include "selection_system_ability_utils.h"
 
+#ifdef SELECTIONFWK_SUPPORT_PASS_WINDOWID
+#include "selection_client.h"
+#endif
+
 namespace OHOS {
 namespace SelectionFwk {
 sptr<SelectionAbility> SelectionAbility::instance_;
@@ -99,8 +103,35 @@ int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selec
     }
 
     PushPanel(selectionPanel);
+#ifdef SELECTIONFWK_SUPPORT_PASS_WINDOWID
+    NotifyPanelShowingStatusChange();
+#endif
     return ErrorCode::NO_ERROR;
 }
+
+#ifdef SELECTIONFWK_SUPPORT_PASS_WINDOWID
+void SelectionAbility::NotifyPanelShowingStatusChange()
+{
+    {
+        std::lock_guard<std::mutex> lock(panelsMutex_);
+        if (panels_.empty()) {
+            SELECTION_HILOGI("the panel deque is empty");
+            isPanelShowing_ = false;
+        } else {
+            for (auto panel : panels_) {
+                if (panel != nullptr && panel->IsPanelShowing()) {
+                    SELECTION_HILOGI("the panel is showing");
+                    isPanelShowing_ = true;
+                    break;
+                }
+                isPanelShowing_ = false;
+                SELECTION_HILOGI("the panel is not showing");
+            }
+        }
+    }
+    SelectionClient::GetInstance().SetPanelShowingStatus(isPanelShowing_);
+}
+#endif
 
 int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
 {
@@ -143,7 +174,7 @@ void SelectionAbility::Dispose(uint32_t winId)
 void SelectionAbility::PushPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
 {
     std::lock_guard<std::mutex> lock(panelsMutex_);
-    panels_.push(selectionPanel);
+    panels_.push_back(selectionPanel);
 }
 
 std::optional<std::shared_ptr<SelectionPanel>> SelectionAbility::PopPanel()
@@ -156,7 +187,7 @@ std::optional<std::shared_ptr<SelectionPanel>> SelectionAbility::PopPanel()
 
     auto selectionPanel = panels_.front();
 
-    panels_.pop();
+    panels_.pop_front();
     return selectionPanel;
 }
 } // namespace SelectionFwk

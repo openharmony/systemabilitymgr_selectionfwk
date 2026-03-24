@@ -259,6 +259,11 @@ bool SelectionPanel::IsShowing(const sptr<OHOS::Rosen::Window>& window)
     return false;
 }
 
+bool SelectionPanel::IsPanelShowing()
+{
+    return IsShowing(GetWindow());
+}
+
 void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
 {
     if (panelStatusListener_ == nullptr) {
