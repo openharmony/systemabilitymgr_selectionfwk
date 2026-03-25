@@ -15,6 +15,7 @@
 
 #include "selection_input_monitor_common_test.h"
 #include "selection_input_monitor.h"
+#include "selection_errors.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -26,6 +27,9 @@ using namespace testing::ext;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::Mock;
+
+constexpr int32_t PB_ERR_OUT_OF_RANGE = 5;
+constexpr int32_t PB_ERR_CANNOT_GET_CONTENT = 7;
 
 class MockBaseSelectionInputMonitor : public BaseSelectionInputMonitor {
 public:
@@ -142,6 +146,117 @@ HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level0)
 
     MemSelectionConfig::GetInstance().SetEnabled(true);
     ASSERT_EQ(MemSelectionConfig::GetInstance().GetEnable(), true);
+}
+
+/**
+ * @tc.name: SelectInputMonitor004
+ * @tc.desc: test PasteBoardErrorCodeToSelectionService with ERR_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor004, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor004 start" << std::endl;
+    int32_t ret = inputMonitor->PasteBoardErrorCodeToSelectionService(ERR_OK);
+    ASSERT_EQ(ret, SelectionServiceError::GET_CONTENT_TIMEOUT);
+}
+
+/**
+ * @tc.name: SelectInputMonitor005
+ * @tc.desc: test PasteBoardErrorCodeToSelectionService with PB_ERR_OUT_OF_RANGE
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor005, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor005 start" << std::endl;
+    int32_t ret = inputMonitor->PasteBoardErrorCodeToSelectionService(PB_ERR_OUT_OF_RANGE);
+    ASSERT_EQ(ret, SelectionServiceError::CONTENT_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.name: SelectInputMonitor006
+ * @tc.desc: test PasteBoardErrorCodeToSelectionService with PB_ERR_CANNOT_GET_CONTENT
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor006, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor006 start" << std::endl;
+    int32_t ret = inputMonitor->PasteBoardErrorCodeToSelectionService(PB_ERR_CANNOT_GET_CONTENT);
+    ASSERT_EQ(ret, SelectionServiceError::CANNOT_GET_CONTENT);
+}
+
+/**
+ * @tc.name: SelectInputMonitor007
+ * @tc.desc: test PasteBoardErrorCodeToSelectionService with unknown error code
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor007, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor007 start" << std::endl;
+    int32_t ret = inputMonitor->PasteBoardErrorCodeToSelectionService(-1);
+    ASSERT_EQ(ret, SelectionServiceError::INVALID_DATA);
+
+    ret = inputMonitor->PasteBoardErrorCodeToSelectionService(999);
+    ASSERT_EQ(ret, SelectionServiceError::INVALID_DATA);
+}
+
+/**
+ * @tc.name: SelectInputMonitor008
+ * @tc.desc: test SetPanelShowingStatus with true
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor008, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor008 start" << std::endl;
+    int32_t ret = inputMonitor->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), true);
+}
+
+/**
+ * @tc.name: SelectInputMonitor009
+ * @tc.desc: test SetPanelShowingStatus with false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor009, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor009 start" << std::endl;
+    int32_t ret = inputMonitor->SetPanelShowingStatus(false);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), false);
+}
+
+/**
+ * @tc.name: SelectInputMonitor010
+ * @tc.desc: test GetPanelShowingStatus default value
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor010, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor010 start" << std::endl;
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), false);
+}
+
+/**
+ * @tc.name: SelectInputMonitor011
+ * @tc.desc: test SetPanelShowingStatus and GetPanelShowingStatus with multiple changes
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor011, TestSize.Level0)
+{
+    std::cout << "SelectInputMonitor011 start" << std::endl;
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), false);
+
+    int32_t ret = inputMonitor->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), true);
+
+    ret = inputMonitor->SetPanelShowingStatus(false);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), false);
+
+    ret = inputMonitor->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(inputMonitor->GetPanelShowingStatus(), true);
 }
 } // namespace SelectionFwk
 } // namespace OHOS

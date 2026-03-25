@@ -729,7 +729,7 @@ void SelectionInputMonitor::FinishedWordSelection() const
     listener->OnSelectionChange(infoData);
 }
 
-int32_t PasteBoardErrorCodeToSelectionService(int32_t pasteBoardErrCode)
+int32_t SelectionInputMonitor::PasteBoardErrorCodeToSelectionService(int32_t pasteBoardErrCode) const
 {
     int32_t ret = ERR_OK;
     switch (pasteBoardErrCode) {
