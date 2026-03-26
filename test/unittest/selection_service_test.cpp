@@ -26,6 +26,7 @@
 #include "selection_config.h"
 #include "selection_service.h"
 #include "selection_app_validator.h"
+#include "selection_errors.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -493,6 +494,169 @@ HWTEST_F(SelectionServiceTest, SelectionService018, TestSize.Level0)
     std::string selectionContent;
     ret = mockObj.GetSelectionContent(selectionContent);
     ASSERT_EQ(ret, 3);
+}
+
+/**
+ * @tc.name: SelectionService019
+ * @tc.desc: test SetPanelShowingStatus with true
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService019, TestSize.Level0)
+{
+    std::cout << "SelectionService019 start" << std::endl;
+    auto ret = SelectionService::GetInstance()->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(SelectionService::GetInstance()->inputMonitor_->GetPanelShowingStatus(), true);
+}
+
+/**
+ * @tc.name: SelectionService020
+ * @tc.desc: test SetPanelShowingStatus with false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService020, TestSize.Level0)
+{
+    std::cout << "SelectionService020 start" << std::endl;
+    auto ret = SelectionService::GetInstance()->SetPanelShowingStatus(false);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(SelectionService::GetInstance()->inputMonitor_->GetPanelShowingStatus(), false);
+}
+
+/**
+ * @tc.name: SelectionService021
+ * @tc.desc: test SetPanelShowingStatus with null inputMonitor
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService021, TestSize.Level0)
+{
+    std::cout << "SelectionService021 start" << std::endl;
+    auto inputMonitor = SelectionService::GetInstance()->inputMonitor_;
+    SelectionService::GetInstance()->inputMonitor_ = nullptr;
+
+    auto ret = SelectionService::GetInstance()->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, SelectionServiceError::INVALID_DATA);
+
+    SelectionService::GetInstance()->inputMonitor_ = inputMonitor;
+}
+
+/**
+ * @tc.name: SelectionService022
+ * @tc.desc: test SetPanelShowingStatus with multiple changes
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService022, TestSize.Level0)
+{
+    std::cout << "SelectionService022 start" << std::endl;
+    auto ret = SelectionService::GetInstance()->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(SelectionService::GetInstance()->inputMonitor_->GetPanelShowingStatus(), true);
+
+    ret = SelectionService::GetInstance()->SetPanelShowingStatus(false);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(SelectionService::GetInstance()->inputMonitor_->GetPanelShowingStatus(), false);
+
+    ret = SelectionService::GetInstance()->SetPanelShowingStatus(true);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(SelectionService::GetInstance()->inputMonitor_->GetPanelShowingStatus(), true);
+}
+
+/**
+ * @tc.name: SelectionService023
+ * @tc.desc: test HasExtAbilityConnection without connection
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService023, TestSize.Level0)
+{
+    std::cout << "SelectionService023 start" << std::endl;
+    SelectionService::GetInstance()->DisconnectCurrentExtAbility();
+    bool hasConnection = SelectionService::GetInstance()->HasExtAbilityConnection();
+    ASSERT_EQ(hasConnection, false);
+}
+
+/**
+ * @tc.name: SelectionService024
+ * @tc.desc: test HasExtAbilityConnection with connection
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService024, TestSize.Level0)
+{
+    std::cout << "SelectionService024 start" << std::endl;
+    auto connectInner = SelectionService::GetInstance()->connectInner_;
+    SelectionService::GetInstance()->connectInner_ = sptr<SelectionExtensionAbilityConnection>::MakeSptr(1001);
+    SelectionService::GetInstance()->connectInner_->connectedAbilityInfo = {100, "a", "b"};
+
+    bool hasConnection = SelectionService::GetInstance()->HasExtAbilityConnection();
+    ASSERT_EQ(hasConnection, true);
+
+    SelectionService::GetInstance()->connectInner_ = connectInner;
+}
+
+/**
+ * @tc.name: SelectionService025
+ * @tc.desc: test HasExtAbilityConnection with null connectInner
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService025, TestSize.Level0)
+{
+    std::cout << "SelectionService025 start" << std::endl;
+    auto connectInner = SelectionService::GetInstance()->connectInner_;
+    SelectionService::GetInstance()->connectInner_ = nullptr;
+
+    bool hasConnection = SelectionService::GetInstance()->HasExtAbilityConnection();
+    ASSERT_EQ(hasConnection, false);
+
+    SelectionService::GetInstance()->connectInner_ = connectInner;
+}
+
+/**
+ * @tc.name: SelectionService026
+ * @tc.desc: test GetCurrentSelectionAppInfo with valid config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService026, TestSize.Level0)
+{
+    std::cout << "SelectionService026 start" << std::endl;
+    MemSelectionConfig::GetInstance().SetApplicationInfo(
+        "com.selection.selectionapplication/SelectionExtensionAbility");
+
+    std::string bundleName;
+    std::string abilityName;
+    int ret = SelectionService::GetInstance()->GetCurrentSelectionAppInfo(bundleName, abilityName);
+    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(bundleName, "com.selection.selectionapplication");
+    ASSERT_EQ(abilityName, "SelectionExtensionAbility");
+}
+
+/**
+ * @tc.name: SelectionService027
+ * @tc.desc: test GetCurrentSelectionAppInfo with invalid config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService027, TestSize.Level0)
+{
+    std::cout << "SelectionService027 start" << std::endl;
+    MemSelectionConfig::GetInstance().SetApplicationInfo("invalid_format");
+
+    std::string bundleName;
+    std::string abilityName;
+    int ret = SelectionService::GetInstance()->GetCurrentSelectionAppInfo(bundleName, abilityName);
+    ASSERT_EQ(ret, -1);
+}
+
+/**
+ * @tc.name: SelectionService028
+ * @tc.desc: test GetCurrentSelectionAppInfo with empty config
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService028, TestSize.Level0)
+{
+    std::cout << "SelectionService028 start" << std::endl;
+    MemSelectionConfig::GetInstance().SetApplicationInfo("");
+
+    std::string bundleName;
+    std::string abilityName;
+    int ret = SelectionService::GetInstance()->GetCurrentSelectionAppInfo(bundleName, abilityName);
+    ASSERT_EQ(ret, -1);
 }
 }
 }

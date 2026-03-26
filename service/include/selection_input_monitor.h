@@ -138,6 +138,7 @@ private:
     void CloseTimerAndDisconnectExt() const;
     void HandleWordSelected() const;
     uint32_t GetTimeout() const;
+    int32_t PasteBoardErrorCodeToSelectionService(int32_t pasteBoardErrCode) const;
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
