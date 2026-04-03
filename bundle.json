@@ -51,7 +51,8 @@
         "memmgr",
         "resource_schedule_service",
         "hiappevent",
-        "runtime_core"
+        "runtime_core",
+        "udmf"
       ],
       "third_party": [
       ]
