@@ -75,6 +75,7 @@ ohos_unittest("selection_service_unit_test") {
     "samgr:samgr_proxy",
     "window_manager:libdm_lite",
     "window_manager:libwsutils",
+    "udmf:udmf_client",
   ]
 
   defines = []
