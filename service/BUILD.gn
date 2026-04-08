@@ -92,8 +92,8 @@ ohos_shared_library("selection_service") {
     "input:libmmi-client",
     "os_account:os_account_innerkits",
     "relational_store:native_rdb",
-    "udmf:udmf_client",
     "hisysevent:libhisysevent",
+    "udmf:udmf_client",
   ]
 
   defines = []
