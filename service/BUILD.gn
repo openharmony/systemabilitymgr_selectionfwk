@@ -93,6 +93,7 @@ ohos_shared_library("selection_service") {
     "os_account:os_account_innerkits",
     "relational_store:native_rdb",
     "hisysevent:libhisysevent",
+    "udmf:udmf_client",
   ]
 
   defines = []
