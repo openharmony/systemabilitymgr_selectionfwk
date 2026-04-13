@@ -27,7 +27,7 @@ SystemAbilityStatusChangeListener::SystemAbilityStatusChangeListener(
 void SystemAbilityStatusChangeListener::OnAddSystemAbility(int32_t systemAbilityId,
     const std::string &deviceId)
 {
-    SELECTION_HILOGI("SystemAbility [%{public}d] is added on [%{public}s]!", systemAbilityId, deviceId.c_str());
+    SELECTION_HILOGI("SystemAbility [%{public}d] is added!", systemAbilityId);
     if (func_ == nullptr) {
         return;
     }
@@ -37,7 +37,7 @@ void SystemAbilityStatusChangeListener::OnAddSystemAbility(int32_t systemAbility
 void SystemAbilityStatusChangeListener::OnRemoveSystemAbility(int32_t systemAbilityId,
     const std::string &deviceId)
 {
-    SELECTION_HILOGW("SystemAbility [%{public}d] is removed on [%{public}s]!", systemAbilityId, deviceId.c_str());
+    SELECTION_HILOGW("SystemAbility [%{public}d] is removed!", systemAbilityId);
 }
 
 }
