@@ -64,6 +64,7 @@
         "//foundation/systemabilitymgr/selectionfwk/etc/para:selection_para",
         "//foundation/systemabilitymgr/selectionfwk/etc/para:selection_para_dac",
         "//foundation/systemabilitymgr/selectionfwk/service:selection_service",
+        "//foundation/systemabilitymgr/selectionfwk/service/plugins:selection_plugins_impl",
         "//foundation/systemabilitymgr/selectionfwk/sa_profile:selection_service_sa_profile",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_panel:selectionpanel_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_extension_ability:selectionextensionability_napi",

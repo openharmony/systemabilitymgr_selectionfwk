@@ -45,6 +45,19 @@ enum SelectionServiceError {
     GET_CONTENT_TIMEOUT,
 };
 
+// 插件加载相关错误码
+enum PluginLoaderError {
+    PLUGIN_LOAD_OK = 0,
+    PLUGIN_LOAD_FAILED_DLOPEN = -100,       // dlopen 失败
+    PLUGIN_LOAD_FAILED_SYMBOL = -101,       // dlsym 查找符号失败
+    PLUGIN_LOAD_FAILED_CREATE = -102,       // CreatePlugin 返回 nullptr
+    PLUGIN_LOAD_FAILED_INIT = -103,         // 插件初始化失败
+    PLUGIN_LOAD_FAILED_TYPE_MISMATCH = -104, // 类型不匹配
+    PLUGIN_NOT_LOADED = -105,               // 插件未加载
+    PLUGIN_UNLOAD_FAILED = -106,            // 插件卸载失败
+    PLUGIN_SO_NOT_FOUND = -107,             // .so 文件不存在
+};
+
 } // namespace SelectionFwk
 } // namespace OHOS
 #endif // SELECTION_ERRORS_H

@@ -14,10 +14,12 @@
  */
 
 #include <sstream>
-#include "db_selection_config_repository.h"
+#include "selection_errors.h"
+#include "selection_config.h"
 #include "selection_config_comparator.h"
 #include "sys_selection_config_repository.h"
 #include "selection_log.h"
+#include "selection_service.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -44,15 +46,30 @@ SelectionConfigComparator& SelectionConfigComparator::GetInstance()
 
 void SelectionConfigComparator::Init()
 {
-    auto selectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(DEFAULT_UID);
-    if (!selectionConfig.has_value()) {
-        selectionConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
-        DbSelectionConfigRepository::GetInstance()->Save(DEFAULT_UID, selectionConfig.value());
-        SELECTION_HILOGI("There is no default selectionConfig in DB, initialize it using sys parameters %{public}s.",
-            selectionConfig.value().ToString().c_str());
+    SELECTION_HILOGI("========== SelectionConfigComparator::Init: Start ==========");
+
+    // 通过 SelectionService 获取数据库配置
+    SelectionConfig configBuffer;
+    int ret = SelectionService::GetInstance()->GetDatabaseConfig(DEFAULT_UID, configBuffer);
+    if (ret == 0) {
+        // 数据库中有配置
+        Init(configBuffer);
+        SELECTION_HILOGI("Initialized from database: %{public}s", configBuffer.ToString().c_str());
+    } else {
+        // 数据库中没有配置，使用系统默认配置
+        SelectionConfig defaultConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
+        Init(defaultConfig);
+
+        // 保存默认配置到数据库
+        int saveRet = SelectionService::GetInstance()->SaveDatabaseConfig(DEFAULT_UID, defaultConfig);
+        if (saveRet != SELECTION_CONFIG_OK) {
+            SELECTION_HILOGW("Failed to save default config to database, ret=%{public}d", saveRet);
+        }
+        SELECTION_HILOGI("Initialized from sys parameters (no DB config): %{public}s",
+            defaultConfig.ToString().c_str());
     }
-    Init(selectionConfig.value());
-    SELECTION_HILOGI("Initialized default selection config as %{public}s.", defaultSelectionConfig_.ToString().c_str());
+
+    SELECTION_HILOGI("========== SelectionConfigComparator::Init: End ==========");
 }
 
 void SelectionConfigComparator::Init(const SelectionConfig& defaultSelectionConfig)
@@ -124,5 +141,6 @@ ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionC
 
     return result;
 }
+
 } // namespace SelectionFwk
 } // namespace OHOS

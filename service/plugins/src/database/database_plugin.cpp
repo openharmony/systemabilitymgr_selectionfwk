@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,49 +13,60 @@
  * limitations under the License.
  */
 
-#include "db_selection_config_repository.h"
-
-#include <string>
-
-#include "selection_errors.h"
+#include "database_plugin_impl.h"
 #include "selection_config_database.h"
+#include "selection_errors.h"
 #include "selection_log.h"
 
 using namespace OHOS::NativeRdb;
 
 namespace OHOS {
 namespace SelectionFwk {
-std::shared_ptr<DbSelectionConfigRepository> DbSelectionConfigRepository::instance_ = nullptr;
 
-DbSelectionConfigRepository::DbSelectionConfigRepository()
+bool DatabasePluginImpl::Initialize()
 {
+    SELECTION_HILOGI("DatabasePluginImpl::Initialize called");
     selectionDatabase_ = SelectionConfigDataBase::GetInstance();
+    bool success = selectionDatabase_ != nullptr;
+    SELECTION_HILOGI("DatabasePluginImpl::Initialize %{public}s", success ? "succeeded" : "failed");
+    return success;
 }
 
-std::shared_ptr<DbSelectionConfigRepository> DbSelectionConfigRepository::GetInstance()
+void DatabasePluginImpl::Cleanup()
 {
-    static std::mutex instanceMutex;
-    std::lock_guard<std::mutex> guard(instanceMutex);
-    if (instance_ == nullptr) {
-        SELECTION_HILOGI("reset to new DbSelectionConfigRepository instance");
-        instance_.reset(new DbSelectionConfigRepository());
-    }
-    return instance_;
+    SELECTION_HILOGI("DatabasePluginImpl::Cleanup called");
+    selectionDatabase_.reset();
+    SELECTION_HILOGI("DatabasePluginImpl::Cleanup completed");
 }
 
-int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
+const char* DatabasePluginImpl::GetModuleName()
 {
-    std::lock_guard<std::mutex> guard(databaseMutex_);
+    return "Database";
+}
+
+int DatabasePluginImpl::GetModuleVersion()
+{
+    return 1;
+}
+
+int DatabasePluginImpl::Save(int uid, const SelectionConfig &info)
+{
+    SELECTION_HILOGI("DatabasePluginImpl::Save called, uid=%{public}d", uid);
+
     if (selectionDatabase_ == nullptr) {
-        SELECTION_HILOGE("selectionDatabase_ is null");
+        SELECTION_HILOGE("Database not initialized");
         return SELECTION_CONFIG_RDB_NO_INIT;
     }
+
+    std::lock_guard<std::mutex> guard(databaseMutex_);
+
     ValuesBucket values;
     values.Clear();
     values.PutInt("uid", uid);
     values.PutInt("enable", info.GetEnable());
     values.PutInt("trigger", info.GetTriggered());
     values.PutString("bundleName", info.GetApplicationInfo());
+
     int ret = selectionDatabase_->BeginTransaction();
     if (ret < SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("BeginTransaction error: %{public}d", ret);
@@ -81,66 +92,92 @@ int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
             return ret;
         }
     }
+
     ret = selectionDatabase_->Commit();
     if (ret < SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("Commit error: %{public}d", ret);
         (void)selectionDatabase_->RollBack();
         return ret;
     }
-    SELECTION_HILOGI("add success: enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
+
+    SELECTION_HILOGI("Save success: enable=%{public}d trigger=%{public}d app=%{public}s",
         info.GetEnable(), info.GetTriggered(), info.GetApplicationInfo().c_str());
     return ret;
 }
 
-std::optional<SelectionConfig> DbSelectionConfigRepository::GetOneByUserId(int uid)
+std::optional<SelectionConfig> DatabasePluginImpl::GetOneByUserId(int uid)
 {
+    SELECTION_HILOGI("DatabasePluginImpl::GetOneByUserId called, uid=%{public}d", uid);
+
     SelectionConfig info;
     std::lock_guard<std::mutex> guard(databaseMutex_);
     std::vector<std::string> columns;
     RdbPredicates rdbPredicates(SELECTION_CONFIG_TABLE_NAME);
     rdbPredicates.EqualTo("uid", std::to_string(uid));
-    if (GetConfigFromDatabase(rdbPredicates, columns, info) != SELECTION_CONFIG_OK) {
+
+    if (selectionDatabase_ == nullptr) {
+        SELECTION_HILOGE("Database not initialized");
         return std::nullopt;
     }
-    SELECTION_HILOGI("enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
-        info.GetEnable(), info.GetTriggered(), info.GetApplicationInfo().c_str());
-    return info;
-}
 
-int DbSelectionConfigRepository::GetConfigFromDatabase(const RdbPredicates &rdbPredicates,
-    const std::vector<std::string> &columns, SelectionConfig &info)
-{
-    if (selectionDatabase_ == nullptr) {
-        SELECTION_HILOGE("rightDatabase_ is null");
-        return SELECTION_CONFIG_RDB_NO_INIT;
-    }
     int ret = selectionDatabase_->BeginTransaction();
     if (ret < SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("BeginTransaction error: %{public}d", ret);
-        return ret;
+        return std::nullopt;
     }
+
     auto resultSet = selectionDatabase_->Query(rdbPredicates, columns);
     if (resultSet == nullptr) {
         SELECTION_HILOGE("Query error");
         (void)selectionDatabase_->RollBack();
-        return SELECTION_CONFIG_RDB_EXECUTE_FAILTURE;
+        return std::nullopt;
     }
+
     ret = selectionDatabase_->Commit();
     if (ret < SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("Commit error: %{public}d", ret);
         (void)selectionDatabase_->RollBack();
-        return ret;
+        return std::nullopt;
     }
+
     int32_t rowCount = 0;
     resultSet->GetRowCount(rowCount);
     if (rowCount == 0) {
-        SELECTION_HILOGI("Can not found uid in selection_config table");
-        return SELECTION_CONFIG_NOT_FOUND;
+        SELECTION_HILOGI("Cannot find uid in selection_config table");
+        return std::nullopt;
     }
-    return ProcessQueryResult(resultSet, info);
+
+    ret = ProcessQueryResult(resultSet, info);
+    if (ret != 0) {
+        SELECTION_HILOGE("ProcessQueryResult error: %{public}d", ret);
+        return std::nullopt;
+    }
+
+    SELECTION_HILOGI("GetOneByUserId success: enable=%{public}d trigger=%{public}d app=%{public}s",
+        info.GetEnable(), info.GetTriggered(), info.GetApplicationInfo().c_str());
+    return info;
 }
 
-int DbSelectionConfigRepository::ProcessQueryResult(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
+bool DatabasePluginImpl::IsAvailable() const
+{
+    return selectionDatabase_ != nullptr;
+}
+
+bool DatabasePluginImpl::HealthCheck() const
+{
+    // 简单健康检查：数据库指针非空
+    return selectionDatabase_ != nullptr;
+}
+
+const char* DatabasePluginImpl::GetStatus() const
+{
+    if (selectionDatabase_ == nullptr) {
+        return "uninitialized";
+    }
+    return "available";
+}
+
+int DatabasePluginImpl::ProcessQueryResult(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
     SelectionConfig &info)
 {
     struct SelectionConfigTableInfo table;
@@ -165,8 +202,8 @@ int DbSelectionConfigRepository::ProcessQueryResult(const std::shared_ptr<OHOS::
             resultSet->GetString(table.applicationInfoIndex, applicationInfo) == E_OK &&
             resultSet->GetInt(table.triggerIndex, trigger) == E_OK &&
             resultSet->GetInt(table.uidIndex, uid) == E_OK) {
-            info.SetEnabled(enable == 1? true : false);
-            info.SetTriggered(trigger  == 1? true: false);
+            info.SetEnabled(enable == 1 ? true : false);
+            info.SetTriggered(trigger == 1 ? true : false);
             info.SetApplicationInfo(applicationInfo);
             info.SetUid(uid);
         }
@@ -174,29 +211,27 @@ int DbSelectionConfigRepository::ProcessQueryResult(const std::shared_ptr<OHOS::
             enable, trigger, applicationInfo.c_str());
     }
 
-    int position = 0;
-    resultSet->GetRowIndex(position);
-    resultSet->IsEnded(endFlag);
-    SELECTION_HILOGI("row=%{public}d col=%{public}d pos=%{public}d end=%{public}s",
-        table.rowCount, table.columnCount, position, (endFlag ? "yes" : "no"));
     return 0;
 }
 
-int DbSelectionConfigRepository::RetrieveResultSetMetadata(
-    const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, struct SelectionConfigTableInfo &table)
+int DatabasePluginImpl::RetrieveResultSetMetadata(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+    struct SelectionConfigTableInfo &table)
 {
     if (resultSet == nullptr) {
         SELECTION_HILOGE("resultSet is null");
         return SELECTION_CONFIG_RDB_EXECUTE_FAILTURE;
     }
+
     int32_t rowCount = 0;
     int32_t columnCount = 0;
     std::vector<std::string> columnNames;
-    if (resultSet->GetRowCount(rowCount) != E_OK || resultSet->GetColumnCount(columnCount) != E_OK ||
+    if (resultSet->GetRowCount(rowCount) != E_OK ||
+        resultSet->GetColumnCount(columnCount) != E_OK ||
         resultSet->GetAllColumnNames(columnNames) != E_OK) {
         SELECTION_HILOGE("get table info failed");
         return SELECTION_CONFIG_RDB_EXECUTE_FAILTURE;
     }
+
     int32_t columnNamesCount = static_cast<int32_t>(columnNames.size());
     for (int32_t i = 0; i < columnNamesCount; i++) {
         std::string &columnName = columnNames.at(i);
@@ -219,12 +254,15 @@ int DbSelectionConfigRepository::RetrieveResultSetMetadata(
             table.shortcutKeysIndex = i;
         }
     }
+
     table.rowCount = rowCount;
     table.columnCount = columnCount;
     SELECTION_HILOGI("info[%{public}d/%{public}d]: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d/%{public}d",
-        rowCount, columnCount, table.primaryKeyIndex, table.uidIndex, table.enableIndex, table.applicationInfoIndex,
-        table.triggerIndex, table.shortcutKeysIndex);
+        rowCount, columnCount, table.primaryKeyIndex, table.uidIndex, table.enableIndex,
+        table.applicationInfoIndex, table.triggerIndex, table.shortcutKeysIndex);
     return SELECTION_CONFIG_OK;
 }
+
 } // namespace SelectionFwk
 } // namespace OHOS
+

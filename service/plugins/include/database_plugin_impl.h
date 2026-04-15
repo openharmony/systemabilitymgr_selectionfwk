@@ -13,32 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef DB_SELECTION_CONFIG_REPOSITORY_H
-#define DB_SELECTION_CONFIG_REPOSITORY_H
+#ifndef DATABASE_PLUGIN_IMPL_H
+#define DATABASE_PLUGIN_IMPL_H
 
 #include <mutex>
-#include <optional>
-#include <string>
-
-#include "data_ability_predicates.h"
-#include "rdb_errno.h"
-#include "rdb_helper.h"
-#include "rdb_open_callback.h"
-#include "rdb_predicates.h"
-#include "rdb_store.h"
-#include "result_set.h"
+#include <memory>
 #include "selection_config.h"
-#include "selection_config_database.h"
-#include "value_object.h"
 
 namespace OHOS {
+namespace NativeRdb {
+class ResultSet;
+} // namespace NativeRdb
+
 namespace SelectionFwk {
 
-class DbSelectionConfigRepository {
+// 数据库插件实现类（内部使用，通过C函数导出）
+class DatabasePluginImpl {
 public:
-    static std::shared_ptr<DbSelectionConfigRepository> GetInstance();
+    DatabasePluginImpl() = default;
+    ~DatabasePluginImpl() = default;
+
+    bool Initialize();
+    void Cleanup();
+    const char* GetModuleName();
+    int GetModuleVersion();
+
     int Save(int uid, const SelectionConfig &info);
     std::optional<SelectionConfig> GetOneByUserId(int uid);
+    bool IsAvailable() const;
+    bool HealthCheck() const;
+    const char* GetStatus() const;
 
 private:
     struct SelectionConfigTableInfo {
@@ -52,21 +56,16 @@ private:
         int32_t shortcutKeysIndex;
     };
 
-private:
-    DbSelectionConfigRepository();
-    DISALLOW_COPY_AND_MOVE(DbSelectionConfigRepository);
-    int GetConfigFromDatabase(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
-        const std::vector<std::string> &columns, SelectionConfig &info);
-    int ProcessQueryResult(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-        SelectionConfig &info);
-    int RetrieveResultSetMetadata(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-        struct SelectionConfigTableInfo &table);
-
-    static std::shared_ptr<DbSelectionConfigRepository> instance_;
     std::mutex databaseMutex_;
-    std::shared_ptr<SelectionConfigDataBase> selectionDatabase_;
+    std::shared_ptr<class SelectionConfigDataBase> selectionDatabase_;
+
+    int ProcessQueryResult(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+        SelectionConfig &info);
+    int RetrieveResultSetMetadata(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+        struct SelectionConfigTableInfo &table);
 };
+
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif // DB_SELECTION_CONFIG_REPOSITORY_H
+#endif // DATABASE_PLUGIN_IMPL_H

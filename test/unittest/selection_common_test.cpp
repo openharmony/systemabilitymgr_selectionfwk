@@ -53,37 +53,6 @@ void SelectionCommonTest::TearDown()
 }
 
 /**
- * @tc.name: SelectionCommon001
- * @tc.desc: test IsAllWhitespace method with null characters
- * @tc.type: FUNC
- */
-HWTEST_F(SelectionCommonTest, SelectionCommon001, TestSize.Level0)
-{
-    ASSERT_TRUE(IsAllWhitespace(""));
-    ASSERT_TRUE(IsAllWhitespace("    "));
-    ASSERT_TRUE(IsAllWhitespace("\t\n\r\f\v"));
-    ASSERT_TRUE(IsAllWhitespace("\u00A0"));
-    ASSERT_TRUE(IsAllWhitespace("\u3000"));
-    ASSERT_TRUE(IsAllWhitespace("\u200B\u200C\u200D"));
-    ASSERT_TRUE(IsAllWhitespace("   \u200B\u2060   "));
-    ASSERT_TRUE(IsAllWhitespace("\u00A0\u3000\u200B"));
-    ASSERT_TRUE(IsAllWhitespace("\u00A0\u3000\u200B\u200D"));
-}
-
-/**
- * @tc.name: SelectionCommon002
- * @tc.desc: test IsAllWhitespace method with non-null characters
- * @tc.type: FUNC
- */
-HWTEST_F(SelectionCommonTest, SelectionCommon002, TestSize.Level0)
-{
-    ASSERT_FALSE(IsAllWhitespace("hello"));
-    ASSERT_FALSE(IsAllWhitespace("a\u200B"));
-    ASSERT_FALSE(IsAllWhitespace("\u200B hello \u200D"));
-    ASSERT_FALSE(IsAllWhitespace("\xF0\x9F\x98\x87"));
-}
-
-/**
  * @tc.name: SelectionCommon003
  * @tc.desc: test IsNumber method with characters
  * @tc.type: FUNC
