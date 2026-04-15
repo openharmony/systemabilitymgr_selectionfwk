@@ -21,19 +21,20 @@
 #include <linux/uinput.h>
 #include <string>
 #include <unordered_set>
+#include <memory>
 #include <i_input_event_consumer.h>
 #include "selection_interface.h"
-#include "pasteboard_disposable_observer.h"
 
 namespace OHOS::SelectionFwk {
 using namespace MMI;
-using namespace OHOS::MiscServices;
 
-constexpr const uint32_t DOUBLE_CLICK_TIME = 550;
-constexpr const uint32_t TRIPLE_CLICK_TIME = 300;
-constexpr const uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
-constexpr const uint32_t BYTES_PER_CHINESE_CHAR = 3;  // In UTF-8, common Chinese characters occupy 3 bytes.
-constexpr const uint32_t MAX_POSITION_CHANGE_OFFSET = 10;
+constexpr const uint32_t DOUBLE_CLICK_TIME = 550;          // 双击识别时间间隔（毫秒）
+constexpr const uint32_t TRIPLE_CLICK_TIME = 300;          // 三击识别时间间隔（毫秒）
+constexpr const uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000; // 剪贴板文本最大长度
+constexpr const uint32_t BYTES_PER_CHINESE_CHAR = 3;       // UTF-8中中文字符占用字节数
+constexpr const uint32_t MAX_POSITION_CHANGE_OFFSET = 10;  // 位置变化最大偏移量（像素）
+constexpr const uint32_t DISCONNECT_TIMER_RETRY_MS = 5000; // 断开连接重试间隔（毫秒）
+constexpr const uint32_t DEFAULT_UNLOAD_TIMEOUT_MS = 300000; // 默认卸载超时（5分钟）
 
 enum class SelectInputState : uint32_t {
     SELECT_INPUT_INITIAL = 0,
@@ -99,19 +100,6 @@ private:
     mutable SelectionInfo selectionInfo_;
 };
 
-class SelectionPasteboardDisposableObserver : public PasteboardDisposableObserver {
-public:
-    SelectionPasteboardDisposableObserver(const std::shared_ptr<BaseSelectionInputMonitor> &baseInputMonitor)
-        : baseInputMonitor_(baseInputMonitor) {
-    }
-    virtual ~SelectionPasteboardDisposableObserver() = default;
-
-    void OnTextReceived(const std::string &text, int32_t errCode) override;
-
-private:
-    std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
-};
-
 class SelectionInputMonitor : public IInputEventConsumer {
 public:
     SelectionInputMonitor();
@@ -130,9 +118,7 @@ public:
     bool GetPanelShowingStatus() const;
 
 private:
-    void InitUidev();
     void FinishedWordSelection() const;
-    int32_t InjectCtrlC() const;
     void HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const;
     bool IsAppInBlocklist(const std::string& bundleName) const;
     void CloseTimerAndDisconnectExt() const;
@@ -142,11 +128,8 @@ private:
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
-    mutable sptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
-    int fd_ = -1;
-    struct uinput_user_dev uidev_;
+
     mutable bool canGetSelectionContentFlag_ = false;
-    mutable uint32_t disconnectTimerId_ = 0;
     mutable bool isPanelShowing_ = false;
 };
 }

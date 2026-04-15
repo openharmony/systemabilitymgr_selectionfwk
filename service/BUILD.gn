@@ -47,19 +47,17 @@ ohos_shared_library("selection_service") {
 
   include_dirs = [
     "./focus_monitor/include",
+    "./plugins/include",
     "../sysevent",
     "../utils/include",
   ]
 
   sources = [
-    "src/db_selection_config_repository.cpp",
     "src/selection_service.cpp",
     "src/selection_input_monitor.cpp",
     "focus_monitor/src/focus_change_listener.cpp",
     "focus_monitor/src/focus_monitor_manager.cpp",
     "src/selection_app_validator.cpp",
-    "src/selection_config.cpp",
-    "src/selection_config_database.cpp",
     "src/sys_selection_config_repository.cpp",
     "src/selection_config_comparator.cpp",
     "src/selection_common.cpp",
@@ -68,8 +66,8 @@ ohos_shared_library("selection_service") {
     "../utils/src/selection_timer.cpp",
   ]
   deps = [
+    "plugins:selection_config_static",
     "${selection_fwk_root_path}/interfaces/idl:selection_service_interface",
-    "${selection_fwk_root_path}/common:selection_common",
     "${selection_fwk_root_path}/interfaces/idl:selection_service_stub",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
   ]
@@ -77,7 +75,7 @@ ohos_shared_library("selection_service") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_connect_callback_stub",
-    "ability_runtime:ability_manager",
+    # ability_runtime:ability_manager - 移除：已解耦到插件
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_core",
@@ -85,15 +83,12 @@ ohos_shared_library("selection_service") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "init:libbeget_proxy",
+    "init:libbegetutil",
     "input:libmmi-client",
-    "pasteboard:pasteboard_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "input:libmmi-client",
     "os_account:os_account_innerkits",
-    "relational_store:native_rdb",
     "hisysevent:libhisysevent",
-    "udmf:udmf_client",
   ]
 
   defines = []
