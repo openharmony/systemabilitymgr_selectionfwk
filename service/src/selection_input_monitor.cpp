@@ -583,9 +583,6 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         SetCanGetSelectionContentFlag(false);
     }
     baseInputMonitor_->OnInputEvent(pointerEvent);
-    if (baseInputMonitor_->IsInputWordEnd()) {
-        HandleWordSelected();
-    }
     FinishedWordSelection();
 }
 
@@ -697,6 +694,8 @@ void SelectionInputMonitor::FinishedWordSelection() const
     if (!baseInputMonitor_->IsSelectionTriggered()) {
         return;
     }
+
+    HandleWordSelected();
 
     if (SelectionService::GetInstance()->GetScreenLockedFlag()) {
         SELECTION_HILOGW("The screen is locked, skip notifying selection info.");
