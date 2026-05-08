@@ -67,6 +67,7 @@ ohos_unittest("selection_service_unit_test") {
     "googletest:gtest_main",
     "napi:ace_napi",
     "hilog:libhilog",
+    "image_framework:image",
     "ipc:ipc_single",
     "init:libbeget_proxy",
     "input:libmmi-client",
