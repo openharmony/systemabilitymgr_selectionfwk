@@ -28,6 +28,7 @@
         "safwk",
         "hilog",
         "hitrace",
+        "image_framework",
         "samgr",
         "init",
         "input",
