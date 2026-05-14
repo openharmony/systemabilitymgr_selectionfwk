@@ -68,10 +68,7 @@ class SelectionExtensionContext extends ExtensionContext {
 
   native nativeStartAbility(want: Want, callback: AsyncCallbackWrapper<void>): void;
 
-  native nativeCheckWant(want: Want): void;
-
   startAbility(want: Want): Promise<void> {
-    this.nativeCheckWant(want);
     return new Promise<void>((resolve: (data: undefined) => void, reject: (err: BusinessError) => void): void => {
       let myCall = new AsyncCallbackWrapper<void>((err: BusinessError | null) => {
         if (err == null || err.code == 0) {

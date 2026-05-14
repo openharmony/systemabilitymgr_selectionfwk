@@ -25,7 +25,7 @@ static { loadLibrary("selectionManager_taihe_native.z") }
 """)
 
 union UndefinedType {
-  @undefined undefined;
+  undefined: @undefined unit;
 }
 
 enum SelectionType: i32 {
