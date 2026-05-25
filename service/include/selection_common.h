@@ -30,7 +30,6 @@ struct AbilityRuntimeInfo {
 };
 
 bool IsNumber(const std::string& str);
-bool IsAllWhitespace(const std::string &text);
 std::optional<std::tuple<std::string, std::string>> ParseAppInfo(const std::string& appInfo);
 } // namespace SelectionFwk
 } // namespace OHOS

@@ -17,8 +17,10 @@
 #define SELECTION_CONFIG_DATABASE_H
 
 #include <pthread.h>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "data_ability_predicates.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -68,7 +70,10 @@ public:
 private:
     SelectionConfigDataBase() = default;
     SelectionConfigDataBase(const std::shared_ptr<OHOS::NativeRdb::RdbStore>& store);
-    DISALLOW_COPY_AND_MOVE(SelectionConfigDataBase);
+    SelectionConfigDataBase(const SelectionConfigDataBase&) = delete;
+    SelectionConfigDataBase& operator=(const SelectionConfigDataBase&) = delete;
+    SelectionConfigDataBase(SelectionConfigDataBase&&) = delete;
+    SelectionConfigDataBase& operator=(SelectionConfigDataBase&&) = delete;
 
     static std::shared_ptr<OHOS::NativeRdb::RdbStore> CreateStore();
 

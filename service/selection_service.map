@@ -11,11 +11,10 @@
       OHOS::SelectionFwk::IsAllWhitespace*;
       OHOS::SelectionFwk::IsNumber*;
       OHOS::SelectionFwk::ParseAppInfo*;
-      OHOS::SelectionFwk::DbSelectionConfigRepository*;
+      OHOS::SelectionFwk::SelectionDatabaseLoader::*;
       OHOS::SelectionFwk::SelectionAppValidator::GetInstance*;
       OHOS::SelectionFwk::SelectionAppValidator::Validate*;
       OHOS::SelectionFwk::SelectionAppValidator::GetCurrentBundleName*;
-      OHOS::SelectionFwk::SelectionConfigDataBase*;
       OHOS::SelectionFwk::SysSelectionConfigRepository*;
       OHOS::SelectionFwk::FocusMonitorManager::GetInstance*;
       OHOS::SelectionFwk::FocusMonitorManager::RegisterFocusChangedListener*;

@@ -20,7 +20,6 @@
 #include "selection_common.h"
 #include "selection_log.h"
 #include "common_event_manager.h"
-#include "pasteboard_client.h"
 #include "selection_config.h"
 #include "selection_input_monitor.h"
 #include "selection_errors.h"
@@ -39,19 +38,7 @@ using namespace OHOS::MMI;
 using namespace OHOS::EventFwk;
 
 std::atomic<uint32_t> selSeqId = 0;
-const unsigned int SLEEP_USEC_AFTER_CTRL_DOWN = 1000;
-const unsigned int SLEEP_USEC_AFTER_C_DOWN = 1000;
-const unsigned int SLEEP_USEC_AFTER_C_UP = 60000;
 const std::unordered_set<std::string> appBlocklist = {};
-std::mutex mtx;
-std::condition_variable cv;
-std::string g_selectionContent = "";
-int32_t g_pasteBoardErrorCode = 0;
-uint32_t g_disconnectExtensionTime = 300 * 1000; // ms
-constexpr int32_t PB_ERR_OUT_OF_RANGE = 5;
-constexpr int32_t PB_ERR_CANNOT_GET_CONTENT = 7;
-constexpr int32_t MAX_DELAY_WAIT_FOR_PB = 110;
-constexpr uint32_t SECONDS_TO_MILLISECONDS = 1000;
 
 static int64_t GetCurrentTimeMillis()
 {
@@ -514,20 +501,11 @@ void BaseSelectionInputMonitor::ResetState() const
 SelectionInputMonitor::SelectionInputMonitor()
 {
     baseInputMonitor_ = std::make_shared<BaseSelectionInputMonitor>();
-    pasteboardObserver_ = sptr<SelectionPasteboardDisposableObserver>::MakeSptr(baseInputMonitor_);
-    InitUidev();
 }
 
 SelectionInputMonitor::~SelectionInputMonitor()
 {
-    if (fd_ == -1) {
-        return;
-    }
-    if (ioctl(fd_, UI_DEV_DESTROY) < 0) {
-        SELECTION_HILOGW("Failed to destroy virtual device.");
-    }
-    close(fd_);
-    fd_ = -1;
+    SELECTION_HILOGI("~SelectionInputMonitor called");
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
@@ -536,43 +514,15 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) con
     FinishedWordSelection();
 }
 
-void SelectionInputMonitor::CloseTimerAndDisconnectExt() const
-{
-    // Filter current visible windows by bundle name to check if selection panel exists
-    if (SelectionService::GetInstance()->IsAnySelectionPanelShowing()) {
-        SELECTION_HILOGI("there is a panel showing, do not disconnect extension");
-        return;
-    }
-    SELECTION_HILOGI("there is no panel showing, close timer and disconnect extension");
-    if (disconnectTimerId_ != 0) {
-        SELECTION_HILOGI("CloseTimerAndDisconnectExt: unregister timer");
-        SelectionFwkTimer::GetInstance()->UnRegister(disconnectTimerId_);
-        disconnectTimerId_ = 0;
-    }
-    SelectionService::GetInstance()->DisconnectCurrentExtAbility();
-}
-
-uint32_t SelectionInputMonitor::GetTimeout() const
-{
-    return MemSelectionConfig::GetInstance().GetTimeout() * SECONDS_TO_MILLISECONDS; // ms
-}
-
 void SelectionInputMonitor::HandleWordSelected() const
 {
-    g_disconnectExtensionTime = GetTimeout(); // ms
     if (!SelectionService::GetInstance()->HasExtAbilityConnection()) {
         int32_t ret = SelectionService::GetInstance()->ConnectExtAbilityFromConfig();
         if (ret != 0) {
             SELECTION_HILOGE("start selection extension ability failed");
         }
     }
-
-    if (disconnectTimerId_ != 0) {
-        SelectionFwkTimer::GetInstance()->UnRegister(disconnectTimerId_);
-        disconnectTimerId_ = 0;
-    }
-    disconnectTimerId_ = SelectionFwkTimer::GetInstance()->Register([this]() {this->CloseTimerAndDisconnectExt();},
-        g_disconnectExtensionTime);
+    SelectionService::GetInstance()->ResetPluginUnloadTimer();
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
@@ -580,7 +530,6 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
     HandleWindowFocused(pointerEvent);
     if (pointerEvent->GetPointerAction() == PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         SELECTION_HILOGD("Detect multimode event: POINTER_ACTION_BUTTON_DOWN");
-        SetCanGetSelectionContentFlag(false);
     }
     baseInputMonitor_->OnInputEvent(pointerEvent);
     FinishedWordSelection();
@@ -593,12 +542,12 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) c
 
 bool SelectionInputMonitor::GetCanGetSelectionContentFlag() const
 {
-    return canGetSelectionContentFlag_;
+    return SelectionService::GetInstance()->CanGetPasteboardContent();
 }
 
 void SelectionInputMonitor::SetCanGetSelectionContentFlag(bool flag) const
 {
-    canGetSelectionContentFlag_ = flag;
+    SelectionService::GetInstance()->SetPasteboardFlag(flag);
 }
 
 void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const
@@ -635,58 +584,6 @@ void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> po
 bool SelectionInputMonitor::IsAppInBlocklist(const std::string& bundleName) const
 {
     return std::find(appBlocklist.begin(), appBlocklist.end(), bundleName) != appBlocklist.end();
-}
-
-void SelectionInputMonitor::InitUidev()
-{
-    SELECTION_HILOGI("Begin to init uidev.");
-    fd_ = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd_ < 0) {
-        SELECTION_HILOGE("Failed to open /dev/uinput.");
-        return;
-    }
-    SELECTION_HILOGI("Opened /dev/uinput with fd %{public}d.", fd_);
-
-    if (ioctl(fd_, UI_SET_EVBIT, EV_KEY) < 0) {
-        SELECTION_HILOGE("Unable to set EV_KEY event bit.");
-        goto CLEAN;
-    }
-
-    if (ioctl(fd_, UI_SET_KEYBIT, KEY_LEFTCTRL) < 0) {
-        SELECTION_HILOGE("Unable to set KEY_LEFTCTRL event bit.");
-        goto CLEAN;
-    }
-    if (ioctl(fd_, UI_SET_KEYBIT, KEY_C) < 0) {
-        SELECTION_HILOGE("Unable to set KEY_C event bit.");
-        goto CLEAN;
-    }
-
-    memset_s(&uidev_, sizeof(uidev_), 0, sizeof(uidev_));
-    if (snprintf_s(uidev_.name, UINPUT_MAX_NAME_SIZE, UINPUT_MAX_NAME_SIZE, "Selection VKeyboard") < 0) {
-        SELECTION_HILOGE("Invalid arguments passed to snprintf_s.");
-        goto CLEAN;
-    }
-    uidev_.id.bustype = BUS_USB;
-    uidev_.id.vendor  = 0x1;
-    uidev_.id.product = 0x1;
-    uidev_.id.version = 1;
-
-    if (write(fd_, &uidev_, sizeof(uidev_)) < 0) {
-        SELECTION_HILOGE("Failed to write device config.");
-        goto CLEAN;
-    }
-
-    if (ioctl(fd_, UI_DEV_CREATE) < 0) {
-        SELECTION_HILOGE("Failed to create virtual device.");
-        goto CLEAN;
-    }
-    SELECTION_HILOGI("End up init uidev.");
-    return;
-
-CLEAN:
-    SELECTION_HILOGE("Failed to init uidev, clean up fd now.");
-    close(fd_);
-    fd_ = -1;
 }
 
 void SelectionInputMonitor::FinishedWordSelection() const
@@ -728,29 +625,6 @@ void SelectionInputMonitor::FinishedWordSelection() const
     listener->OnSelectionChange(infoData);
 }
 
-int32_t SelectionInputMonitor::PasteBoardErrorCodeToSelectionService(int32_t pasteBoardErrCode) const
-{
-    int32_t ret = ERR_OK;
-    switch (pasteBoardErrCode) {
-        case ERR_OK:
-            SELECTION_HILOGI("Pasteboard called OnTextReceived timeout.");
-            ret = SelectionServiceError::GET_CONTENT_TIMEOUT;
-            break;
-        case PB_ERR_OUT_OF_RANGE:
-            SELECTION_HILOGE("Selection content out of range");
-            ret = SelectionServiceError::CONTENT_OUT_OF_RANGE;
-            break;
-        case PB_ERR_CANNOT_GET_CONTENT:
-            SELECTION_HILOGE("Current application forbiden to copy.");
-            ret = SelectionServiceError::CANNOT_GET_CONTENT;
-            break;
-        default:
-            SELECTION_HILOGE("Some other error when receive content from pasteboard.");
-            ret = SelectionServiceError::INVALID_DATA;
-    }
-    return ret;
-}
-
 int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent)
 {
     SELECTION_HILOGI("SelectionInputMonitor::GetSelectionContent start");
@@ -762,39 +636,8 @@ int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent
     HisyseventAdapter::GetInstance()->AddSelectionCount();
     SetCanGetSelectionContentFlag(false);
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
-    int32_t ret = PasteboardClient::GetInstance()->SubscribeDisposableObserver(pasteboardObserver_,
-        selectionInfo.windowId, DisposableType::PLAIN_TEXT, MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR);
-    SELECTION_HILOGW("[selectevent] Call pasteboard interface. Selection event id is %{public}u. "
-        "Error code is %{public}d.", selSeqId.load(), ret);
-    if (ret != ERR_OK) {
-        SELECTION_HILOGE("Failed to SubscribeDisposableObserver, ret: %{public}d.", ret);
-        return SelectionServiceError::INVALID_DATA;
-    }
 
-    SELECTION_HILOGI("Start to inject Ctrl+C. Selection event id is %{public}u.", selSeqId.load());
-    ret = InjectCtrlC();
-    if (ret != ERR_OK) {
-        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(selectionInfo.bundleName, ret,
-            static_cast<int32_t>(SelectFailedReason::INJECT_CTRLC_FAILED));
-        SELECTION_HILOGE("Failed to inject Ctrl+C");
-        return SelectionServiceError::INVALID_DATA;
-    }
-    SELECTION_HILOGW("[selectevent] Inject Ctrl+C. Selection event id is %{public}u.", selSeqId.load());
-
-    std::unique_lock<std::mutex> lock(mtx);
-    SELECTION_HILOGI("Start wait for pasteboard OnTextReceived");
-    if (cv.wait_for(lock, std::chrono::milliseconds(MAX_DELAY_WAIT_FOR_PB), [] {
-        return !g_selectionContent.empty();
-    })) {
-        selectionContent = g_selectionContent;
-        g_selectionContent = "";
-        ret = ERR_OK;
-    } else {
-        SELECTION_HILOGE("SelectionInputMonitor::GetSelectionContent: receive content from pasteboard failed");
-        ret = PasteBoardErrorCodeToSelectionService(g_pasteBoardErrorCode);
-        g_pasteBoardErrorCode = ERR_OK;
-    }
-    return ret;
+    return SelectionService::GetInstance()->GetPasteboardContent(selectionContent, selectionInfo.windowId);
 }
 
 int32_t SelectionInputMonitor::SetPanelShowingStatus(bool status) const
@@ -807,73 +650,4 @@ int32_t SelectionInputMonitor::SetPanelShowingStatus(bool status) const
 bool SelectionInputMonitor::GetPanelShowingStatus() const
 {
     return isPanelShowing_;
-}
-
-int32_t SelectionInputMonitor::InjectCtrlC() const
-{
-    SELECTION_HILOGI("InjectCtrlC to /dev/uinput using fd %{public}d.", fd_);
-    if (fd_ == -1) {
-        SELECTION_HILOGE("fd of /dev/uinput is invalid, skip injecting ctrl c.");
-        return SelectionServiceError::INVALID_DATA;
-    }
-
-    struct input_event ev;
-    auto sendEvent = [&](int type, int code, int value) {
-        memset_s(&ev, sizeof(ev), 0, sizeof(ev));
-        struct timeval time{};
-        gettimeofday(&time, NULL);
-        ev.input_event_sec = time.tv_sec;
-        ev.input_event_usec = time.tv_usec;
-        ev.type = type;
-        ev.code = code;
-        ev.value = value;
-        if (write(fd_, &ev, sizeof(ev)) < 0) {
-            SELECTION_HILOGE("Failed to send event {type=%{public}d, code=%{public}d, value=%{public}d}",
-                type, code, value);
-        }
-    };
-
-    sendEvent(EV_KEY, KEY_LEFTCTRL, 1);
-    sendEvent(EV_SYN, SYN_REPORT, 0);
-    usleep(SLEEP_USEC_AFTER_CTRL_DOWN);
-
-    sendEvent(EV_KEY, KEY_C, 1);
-    sendEvent(EV_SYN, SYN_REPORT, 0);
-    usleep(SLEEP_USEC_AFTER_C_DOWN);
-
-    sendEvent(EV_KEY, KEY_C, 0);
-    sendEvent(EV_SYN, SYN_REPORT, 0);
-    usleep(SLEEP_USEC_AFTER_C_UP);
-
-    sendEvent(EV_KEY, KEY_LEFTCTRL, 0);
-    sendEvent(EV_SYN, SYN_REPORT, 0);
-
-    SELECTION_HILOGI("End up InjectCtrlC to /dev/uinput.");
-    return ERR_OK;
-}
-
-void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
-{
-    SELECTION_HILOGW("[selectevent] Pasteboard call sa. Selection event id is %{public}u. Text received "
-        "length: %{public}zu, errCode: %{public}d.", selSeqId.load(), text.length(), errCode);
-
-    if (!baseInputMonitor_) {
-        return;
-    }
-
-    if (errCode != 0) {
-        auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
-        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(selectionInfo.bundleName, errCode,
-            static_cast<int32_t>(SelectFailedReason::TEXT_RECEIVE_FAILED));
-        SELECTION_HILOGE("Error receiving text, errCode: %{public}d", errCode);
-    }
-
-    if (IsAllWhitespace(text)) {
-        SELECTION_HILOGI("Received empty text or all whitespaces.");
-    }
-    SELECTION_HILOGI("Notify SelectionInputMonitor return text");
-    std::lock_guard<std::mutex> lock(mtx);
-    g_selectionContent = text;
-    g_pasteBoardErrorCode = errCode;
-    cv.notify_one();
 }

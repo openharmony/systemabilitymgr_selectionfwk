@@ -19,7 +19,7 @@
 #include "gmock/gmock.h"
 
 #include "common_event_support.h"
-#include "db_selection_config_repository.h"
+#include "selection_config_database.h"
 #include "parameter.h"
 #include "iselection_listener.h"
 #include "iservice_registry.h"
@@ -286,8 +286,8 @@ HWTEST_F(SelectionServiceTest, SelectionService011, TestSize.Level0)
  */
 HWTEST_F(SelectionServiceTest, SelectionService012, TestSize.Level0)
 {
-    auto selectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(100);
-    ASSERT_NE(selectionConfig, std::nullopt);
+    auto selectionConfig = SelectionService::GetInstance()->LoadDatabaseSelectionConfig();
+    ASSERT_TRUE(selectionConfig.has_value());
 
     auto store = SelectionConfigDataBase::GetInstance()->store_;
     SelectionConfigDataBase::GetInstance()->store_ = nullptr;
@@ -295,7 +295,7 @@ HWTEST_F(SelectionServiceTest, SelectionService012, TestSize.Level0)
     SelectionConfigDataBase::GetInstance()->store_ = store;
 
     int ret = SetParameter("sys.selection.uid", "1011");
-    std::string appInfo = selectionConfig->GetApplicationInfo();
+    std::string appInfo = selectionConfig.value().GetApplicationInfo();
     ret = SetParameter("sys.selection.app", appInfo.c_str());
     ASSERT_EQ(ret, 0);
     SelectionService::GetInstance()->SynchronizeSelectionConfig();

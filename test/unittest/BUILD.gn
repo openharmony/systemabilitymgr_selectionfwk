@@ -37,12 +37,16 @@ ohos_unittest("selection_service_unit_test") {
     "${target_gen_dir}",
     "${selection_fwk_root_path}/service/include",
     "${selection_fwk_root_path}/service/focus_monitor/include",
+    "${selection_fwk_root_path}/service/plugins/include",
     "${selection_fwk_root_path}/utils/include",
   ]
 
   sources = [
-    "db_selection_config_repository_test.cpp",
+    "ability_manager_plugin_impl_test.cpp",
+    "database_plugin_impl_test.cpp",
     "focus_monitor_test.cpp",
+    "pasteboard_plugin_impl_test.cpp",
+    "plugin_exports_test.cpp",
     "selection_app_validator_test.cpp",
     "selection_common_test.cpp",
     "selection_config_comparator_test.cpp",
@@ -50,12 +54,14 @@ ohos_unittest("selection_service_unit_test") {
     "selection_config_test.cpp",
     "selection_input_monitor_ctrl_test.cpp",
     "selection_input_monitor_test.cpp",
+    "selection_pasteboard_manager_test.cpp",
     "selection_service_test.cpp",
     "sys_selection_config_repository_test.cpp",
     "system_ability_status_change_listener_test.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service",
+    "${selection_fwk_root_path}/service/plugins:selection_plugins_impl",
     "${selection_fwk_root_path}/common:selection_common",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
   ]
