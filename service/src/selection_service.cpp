@@ -19,9 +19,9 @@
 #include <chrono>
 #include <thread>
 #include <ipc_skeleton.h>
+#include <dlfcn.h>  // 用于 dlopen/dlsym
 
-#include "ability_manager_client.h"
-#include "db_selection_config_repository.h"
+// #include "ability_manager_client.h"  // 移除：已解耦到插件
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "selection_errors.h"
@@ -29,7 +29,6 @@
 #include <input_manager.h>
 #include "parameter.h"
 #include "common_event_manager.h"
-#include "selection_config_comparator.h"
 #include "selection_input_monitor.h"
 #include "selection_interface.h"
 #include "if_system_ability_manager.h"
@@ -353,8 +352,24 @@ void SelectionService::PersistSelectionConfig()
         return;
     }
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
-    int ret = DbSelectionConfigRepository::GetInstance()->Save(GetUserId(), selectionConfig);
-    SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
+    SELECTION_HILOGI("========== PersistSelectionConfig: Start ==========");
+
+    // 🔧 使用简化的插件加载方式
+    if (!LoadPluginSo()) {
+        SELECTION_HILOGW("Using in-memory config as fallback, service continues to run");
+        return;
+    }
+
+    if (databaseSave_) {
+        int ret = databaseSave_(GetUserId(), &selectionConfig);
+        if (ret != SELECTION_CONFIG_OK) {
+            SELECTION_HILOGE("Save database failed. ret = %{public}d", ret);
+        }
+    } else {
+        SELECTION_HILOGE("DatabaseSaveConfig function not available");
+    }
+
+    SELECTION_HILOGI("========== PersistSelectionConfig: End ==========");
 }
 
 void SelectionService::HandleCommonEvent(const CommonEventData &data)
@@ -404,7 +419,15 @@ int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, 
         SELECTION_HILOGE("new(std::nothrow) SelectionExtensionAbilityConnection() failed!");
         return SELECTION_CONFIG_FAILURE;
     }
-    auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, connectInner_, userId);
+
+    // 🔧 使用简化的插件加载方式
+    if (!LoadPluginSo() || !abilityConnect_) {
+        SELECTION_HILOGE("Ability manager plugin not available");
+        connectInner_ = nullptr;
+        return SELECTION_CONFIG_FAILURE;
+    }
+
+    auto ret = abilityConnect_(&want, &connectInner_, userId);
     if (ret != 0) {
         SELECTION_HILOGE("[selectevent] StartExtensionAbility failed. error code is %{public}d.", ret);
         connectInner_ = nullptr;
@@ -429,7 +452,16 @@ void SelectionService::DoDisconnectCurrentExtAbility()
 
     connectInner_->needReconnectWithException = false;
     connectInner_->InitDisconnectPromise();
-    int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(connectInner_);
+
+    // 如果插件已卸载，直接清理连接对象，不重新加载插件
+    if (!abilityDisconnect_) {
+        SELECTION_HILOGW("Ability manager plugin not available, clean up connection only");
+        connectInner_->DestroyDisconnectPromise();
+        connectInner_ = nullptr;
+        return;
+    }
+
+    int32_t ret = abilityDisconnect_(&connectInner_);
     if (ret != ERR_OK) {
         connectInner_->DestroyDisconnectPromise();
         SELECTION_HILOGE("DisconnectServiceAbility failed, ret: %{public}d", ret);
@@ -599,50 +631,112 @@ void SelectionService::SynchronizeSelectionConfig()
         SELECTION_HILOGW("No selection config sync because user is not logged in.");
         return;
     }
+
     SelectionConfig sysSelectionConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
     SELECTION_HILOGI("sysSelectionConfig: %{public}s", sysSelectionConfig.ToString().c_str());
-    auto dbSelectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(userId_.load());
+
+    // 从数据库加载配置
+    auto dbSelectionConfig = LoadDatabaseSelectionConfig();
+
+    // 比较配置
     ComparisionResult result;
     {
         std::lock_guard<std::mutex> lockGuard(connectMutex_);
-        auto result = SelectionConfigComparator::GetInstance().Compare(userId_.load(), sysSelectionConfig,
+        result = SelectionConfigComparator::GetInstance().Compare(userId_.load(), sysSelectionConfig,
             dbSelectionConfig, (connectInner_ ? connectInner_->connectedAbilityInfo : std::nullopt));
     }
     MemSelectionConfig::GetInstance().SetSelectionConfig(result.selectionConfig);
 
+    // 根据方向同步配置
     if (result.direction == SyncDirection::FromDbToSys) {
-        SELECTION_HILOGI("FromDbToSys result: %{public}s", result.ToString().c_str());
-        SysSelectionConfigRepository::GetInstance()->SetSysParameters(result.selectionConfig);
+        SyncConfigToSystem(result.selectionConfig);
     } else if (result.direction == SyncDirection::FromSysToDb) {
-        SELECTION_HILOGI("FromSysToDb result: %{public}s", result.ToString().c_str());
-        auto ret = DbSelectionConfigRepository::GetInstance()->Save(userId_.load(), result.selectionConfig);
-        SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
+        SyncConfigToDatabase(userId_.load(), result.selectionConfig);
     }
 
+    // 处理需要创建的情况
     if (result.shouldCreate) {
         SELECTION_HILOGI("result.shouldCreate");
-        auto ret = DbSelectionConfigRepository::GetInstance()->Save(userId_.load(), result.selectionConfig);
-        SELECTION_CHECK_ONLY_LOG(ret, SELECTION_CONFIG_OK, "Add database failed. ret = %{public}d", ret);
+        SyncConfigToDatabase(userId_.load(), result.selectionConfig);
         SELECTION_HILOGI("result.selectionConfig.isEnable = %{public}d", result.selectionConfig.GetEnable());
-        SysSelectionConfigRepository::GetInstance()->SetSysParameters(result.selectionConfig);
+        SyncConfigToSystem(result.selectionConfig);
     }
 
+    // 处理同步结果
+    ProcessSyncResult(result);
+}
+
+std::optional<SelectionConfig> SelectionService::LoadDatabaseSelectionConfig()
+{
+    // 🔧 使用简化的插件加载方式
+    if (!LoadPluginSo()) {
+        SELECTION_HILOGW("Using system default config as fallback");
+        return std::nullopt;
+    }
+
+    if (!databaseGet_) {
+        SELECTION_HILOGE("Database_GetConfig function not available");
+        return std::nullopt;
+    }
+
+    SelectionConfig config;
+    int ret = databaseGet_(userId_.load(), &config);
+    if (ret == 0) {
+        return config;
+    } else if (ret == SELECTION_CONFIG_NOT_FOUND) {
+        SELECTION_HILOGI("No config found in database for user %{public}d", userId_.load());
+        return std::nullopt;
+    } else {
+        SELECTION_HILOGE("Failed to get config, error=%{public}d", ret);
+        return std::nullopt;
+    }
+}
+
+void SelectionService::SyncConfigToSystem(const SelectionConfig& config)
+{
+    SELECTION_HILOGI("SyncConfigToSystem: %{public}s", config.ToString().c_str());
+    SysSelectionConfigRepository::GetInstance()->SetSysParameters(config);
+}
+
+void SelectionService::SyncConfigToDatabase(int32_t userId, const SelectionConfig& config)
+{
+    SELECTION_HILOGI("SyncConfigToDatabase: %{public}s", config.ToString().c_str());
+
+    // 🔧 使用简化的插件加载方式
+    if (!LoadPluginSo() || !databaseSave_) {
+        SELECTION_HILOGW("Config saved to system params as fallback");
+        return;
+    }
+
+    auto ret = databaseSave_(userId, &config);
+    if (ret != SELECTION_CONFIG_OK) {
+        SELECTION_HILOGE("Save database failed. ret = %{public}d", ret);
+    }
+}
+
+void SelectionService::ProcessSyncResult(const ComparisionResult& result)
+{
+    // 处理需要停止服务的情况
     if (result.shouldStop) {
         SELECTION_HILOGI("result.shouldStop");
         SysSelectionConfigRepository::GetInstance()->DisableSAService();
         UnloadService();
+        return;
     }
 
+    // 解析应用信息
     auto appInfoStr = result.selectionConfig.GetApplicationInfo();
     auto appInfo = ParseAppInfo(appInfoStr);
     if (!appInfo.has_value()) {
         return;
     }
 
+    // 处理需要启动的情况
     if (result.shouldStart) {
         SELECTION_HILOGI("result.shouldStart");
     }
 
+    // 处理需要重启应用的情况
     if (result.shouldRestartApp) {
         SELECTION_HILOGI("result.shouldRestartApp");
         ReconnectExtAbility(std::get<0>(appInfo.value()), std::get<1>(appInfo.value()));
@@ -700,6 +794,7 @@ void SelectionService::OnStop()
 {
     SELECTION_HILOGI("[selectevent][SelectionService][OnStop]begin");
     Shutdown();
+    UnloadPluginSo();
     SELECTION_HILOGI("[selectevent][SelectionService][OnStop]end.");
 }
 
@@ -884,4 +979,187 @@ void SelectionService::PerformParamBootCompleted(const char* key, const char* va
     }
 
     Init();
+}
+
+// 🔧 插件加载辅助方法实现（简化版：直接使用 dlopen）
+bool SelectionService::LoadPluginSo()
+{
+    std::lock_guard<std::mutex> lock(pluginMutex_);
+    if (pluginSo_) {
+        return true;  // 已加载
+    }
+
+    pluginSo_ = dlopen(PLUGIN_SO_PATH, RTLD_LAZY);
+    if (!pluginSo_) {
+        SELECTION_HILOGE("Failed to dlopen %{public}s: %{public}s", PLUGIN_SO_PATH, dlerror());
+        return false;
+    }
+
+    // 加载数据库函数
+    databaseSave_ = (DatabaseSaveConfigFunc)dlsym(pluginSo_, "DatabaseSaveConfig");
+    databaseGet_ = (DatabaseGetConfigFunc)dlsym(pluginSo_, "DatabaseGetConfig");
+    databaseAvailable_ = (DatabaseIsAvailableFunc)dlsym(pluginSo_, "DatabaseIsAvailable");
+
+    // 加载能力管理函数
+    abilityConnect_ = (AbilityManagerConnectFunc)dlsym(pluginSo_, "AbilityManagerConnectAbility");
+    abilityDisconnect_ = (AbilityManagerDisconnectFunc)dlsym(pluginSo_, "AbilityManagerDisconnectAbility");
+    abilityAvailable_ = (AbilityManagerIsAvailableFunc)dlsym(pluginSo_, "AbilityManagerIsAvailable");
+
+    // 加载剪贴板函数
+    pasteboardGetContent_ = (PasteboardGetContentFunc)dlsym(pluginSo_, "PasteboardGetSelectionContent");
+    pasteboardCanGetContent_ = (PasteboardCanGetContentFunc)dlsym(pluginSo_, "PasteboardCanGetSelectionContent");
+    pasteboardSetFlag_ = (PasteboardSetFlagFunc)dlsym(pluginSo_, "PasteboardSetCanGetSelectionContentFlag");
+    if (!databaseSave_ || !databaseGet_ || !databaseAvailable_ ||
+        !abilityConnect_ || !abilityDisconnect_ || !abilityAvailable_ ||
+        !pasteboardGetContent_ || !pasteboardCanGetContent_ || !pasteboardSetFlag_) {
+        SELECTION_HILOGE("Failed to load plugin functions");
+        dlclose(pluginSo_);
+        pluginSo_ = nullptr;
+        return false;
+    }
+
+    SELECTION_HILOGI("Plugin so loaded successfully");
+    ResetPluginUnloadTimer();  // 启动/重置5分钟卸载定时器
+    return true;
+}
+
+void SelectionService::UnloadPluginSo()
+{
+    // 取消卸载定时器
+    if (pluginUnloadTimerId_ != 0) {
+        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
+        pluginUnloadTimerId_ = 0;
+    }
+
+    if (pluginSo_) {
+        // 调用清理函数
+        auto cleanupFunc = (void(*)())dlsym(pluginSo_, "PluginCleanupAll");
+        if (cleanupFunc) {
+            cleanupFunc();
+        }
+
+        // 延时等待依赖的so完成清理，避免dlclose时crash
+        std::this_thread::sleep_for(std::chrono::milliseconds(CLEANUP_DELAY_TIME));
+
+        dlclose(pluginSo_);
+        pluginSo_ = nullptr;
+    }
+
+    databaseSave_ = nullptr;
+    databaseGet_ = nullptr;
+    databaseAvailable_ = nullptr;
+    abilityConnect_ = nullptr;
+    abilityDisconnect_ = nullptr;
+    abilityAvailable_ = nullptr;
+    pasteboardGetContent_ = nullptr;
+    pasteboardCanGetContent_ = nullptr;
+    pasteboardSetFlag_ = nullptr;
+}
+
+void SelectionService::ResetPluginUnloadTimer()
+{
+    // 取消旧的定时器
+    if (pluginUnloadTimerId_ != 0) {
+        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
+        pluginUnloadTimerId_ = 0;
+    }
+
+    // 启动新的定时器：5分钟后自动卸载插件
+    pluginUnloadTimerId_ = SelectionFwkTimer::GetInstance()->Register([this]() {
+        OnPluginUnloadTimer();
+    }, PLUGIN_UNLOAD_TIMEOUT_MS);
+
+    SELECTION_HILOGI("Plugin unload timer reset: %{public}d ms", PLUGIN_UNLOAD_TIMEOUT_MS);
+}
+
+void SelectionService::OnPluginUnloadTimer()
+{
+    SELECTION_HILOGI("Plugin unload timer triggered, unloading plugin");
+    // 如果有划词扩展的弹窗在显示，则不断开扩展也不卸载插件
+    if (IsAnySelectionPanelShowing()) {
+        SELECTION_HILOGI("OnPluginUnloadTimer: Selection panel is showing, keep plugin and extension");
+        return;
+    }
+    // 先断开扩展应用连接（如果存在），避免插件卸载后无法断开连接
+    if (HasExtAbilityConnection()) {
+        SELECTION_HILOGI("Disconnecting extension ability before unloading plugin");
+        DisconnectCurrentExtAbility();
+    }
+    UnloadPluginSo();
+    pluginUnloadTimerId_ = 0;
+}
+
+int SelectionService::GetDatabaseConfig(int32_t uid, SelectionConfig& config)
+{
+    if (!LoadPluginSo() || !databaseGet_) {
+        SELECTION_HILOGE("Database plugin not available");
+        return SELECTION_CONFIG_RDB_NO_INIT;
+    }
+
+    SelectionConfig* configPtr = &config;
+    int ret = databaseGet_(uid, configPtr);
+    if (ret != 0) {
+        SELECTION_HILOGE("DatabaseGetConfig failed, ret=%{public}d", ret);
+    }
+    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
+    return ret;
+}
+
+int SelectionService::SaveDatabaseConfig(int32_t uid, const SelectionConfig& config)
+{
+    if (!LoadPluginSo() || !databaseSave_) {
+        SELECTION_HILOGE("Database plugin not available");
+        return SELECTION_CONFIG_RDB_NO_INIT;
+    }
+
+    int ret = databaseSave_(uid, &config);
+    if (ret != 0) {
+        SELECTION_HILOGE("DatabaseSaveConfig failed, ret=%{public}d", ret);
+    }
+    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
+    return ret;
+}
+
+bool SelectionService::IsDatabaseAvailable()
+{
+    if (!LoadPluginSo() || !databaseAvailable_) {
+        return false;
+    }
+    return databaseAvailable_() != 0;
+}
+
+int SelectionService::GetPasteboardContent(std::string& content, uint32_t windowId)
+{
+    constexpr uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
+
+    if (!LoadPluginSo() || !pasteboardGetContent_) {
+        SELECTION_HILOGE("Pasteboard plugin not available");
+        return SelectionServiceError::INVALID_DATA;
+    }
+
+    char buffer[MAX_PASTERBOARD_TEXT_LENGTH] = {0};
+    int ret = pasteboardGetContent_(buffer, MAX_PASTERBOARD_TEXT_LENGTH, windowId);
+    if (ret == 0) {
+        content = buffer;
+    }
+    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
+    return ret;
+}
+
+bool SelectionService::CanGetPasteboardContent()
+{
+    if (!LoadPluginSo() || !pasteboardCanGetContent_) {
+        return false;
+    }
+    bool result = pasteboardCanGetContent_() != 0;
+    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
+    return result;
+}
+
+void SelectionService::SetPasteboardFlag(bool flag)
+{
+    if (LoadPluginSo() && pasteboardSetFlag_) {
+        pasteboardSetFlag_(flag ? 1 : 0);
+        ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
+    }
 }

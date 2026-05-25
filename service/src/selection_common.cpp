@@ -17,9 +17,6 @@
 #include "selection_common.h"
 namespace OHOS {
 namespace SelectionFwk {
-static const unsigned int UTF8_2BYTE_LEN = 2;
-static const unsigned int UTF8_3BYTE_LEN = 3;
-static const unsigned int UTF8_4BYTE_LEN = 4;
 
 bool AbilityRuntimeInfo::operator==(const AbilityRuntimeInfo& other) const
 {
@@ -49,45 +46,6 @@ bool IsNumber(const std::string& str)
     }
 
     return false;
-}
-
-bool IsAllWhitespace(const std::string &str)
-{
-    static const std::string invisibleChars =
-        " \t\n\r\f\v"
-        "\u00A0\u1680\u180E"
-        "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A"
-        "\u200B\u200C\u200D\u200E\u200F"
-        "\u2028\u2029\u202A\u202B\u202C\u202D\u202E"
-        "\u205F\u2060\u2061\u2062\u2063\u2064"
-        "\u3000\uFEFF";
-
-    for (size_t i = 0; i < str.size();) {
-        if (static_cast<unsigned char>(str[i]) < 0x80) {
-            if (invisibleChars.find(str[i]) == std::string::npos) {
-                return false;
-            }
-            ++i;
-        } else {
-            uint32_t len = 0;
-            if ((str[i] & 0xE0) == 0xC0) {
-                len = UTF8_2BYTE_LEN;
-            } else if ((str[i] & 0xF0) == 0xE0) {
-                len = UTF8_3BYTE_LEN;
-            } else if ((str[i] & 0xF8) == 0xF0) {
-                len = UTF8_4BYTE_LEN;
-            }
-
-            std::string utf8Char = str.substr(i, len);
-            if (invisibleChars.find(utf8Char) == std::string::npos) {
-                return false;
-            }
-
-            i += len;
-        }
-    }
-
-    return true;
 }
 
 std::optional<std::tuple<std::string, std::string>> ParseAppInfo(const std::string& appInfo)
