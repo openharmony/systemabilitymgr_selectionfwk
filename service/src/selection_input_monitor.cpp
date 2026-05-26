@@ -637,7 +637,8 @@ int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent
     SetCanGetSelectionContentFlag(false);
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
 
-    return SelectionService::GetInstance()->GetPasteboardContent(selectionContent, selectionInfo.windowId);
+    return SelectionService::GetInstance()->GetPasteboardContent(selectionContent, selectionInfo.windowId,
+        selectionInfo.bundleName);
 }
 
 int32_t SelectionInputMonitor::SetPanelShowingStatus(bool status) const

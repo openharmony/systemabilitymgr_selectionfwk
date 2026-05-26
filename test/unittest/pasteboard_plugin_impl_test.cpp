@@ -205,7 +205,7 @@ HWTEST_F(PasteboardPluginImplTest, PasteboardPluginImpl014, TestSize.Level0)
     PasteboardPluginImpl newPlugin;
 
     std::string content;
-    int32_t ret = newPlugin.GetSelectionContent(content, 100);
+    int32_t ret = newPlugin.GetSelectionContent(content, 100, "test.bundle");
     ASSERT_EQ(ret, -1);
 }
 

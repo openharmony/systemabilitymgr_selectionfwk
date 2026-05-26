@@ -36,7 +36,7 @@ public:
     int GetModuleVersion();
 
     bool InitPasteboard();
-    int32_t GetSelectionContent(std::string& content, uint32_t windowId);
+    int32_t GetSelectionContent(std::string& content, uint32_t windowId, const std::string& bundleName);
     bool CanGetSelectionContent() const;
     void SetCanGetSelectionContentFlag(bool flag);
     bool IsAvailable() const;

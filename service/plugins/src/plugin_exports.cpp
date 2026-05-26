@@ -125,7 +125,7 @@ int DatabaseIsAvailable()
 
 // ==================== 剪贴板模块函数 ====================
 
-int PasteboardGetSelectionContent(char* buffer, int bufferSize, uint32_t windowId)
+int PasteboardGetSelectionContent(char* buffer, int bufferSize, uint32_t windowId, const char* bundleName)
 {
     if (!buffer || bufferSize <= 0) {
         SELECTION_HILOGE("PasteboardGetSelectionContent: invalid buffer");
@@ -135,7 +135,8 @@ int PasteboardGetSelectionContent(char* buffer, int bufferSize, uint32_t windowI
         return -1;
     }
     std::string content;
-    int ret = g_pasteboardPlugin->GetSelectionContent(content, windowId);
+    std::string bundleNameStr = bundleName ? bundleName : "";
+    int ret = g_pasteboardPlugin->GetSelectionContent(content, windowId, bundleNameStr);
     if (ret == 0) {
         int copyLen = std::min(bufferSize - 1, static_cast<int>(content.size()));
         errno_t err = memcpy_s(buffer, bufferSize, content.c_str(), copyLen);

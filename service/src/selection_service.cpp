@@ -1128,17 +1128,19 @@ bool SelectionService::IsDatabaseAvailable()
     return databaseAvailable_() != 0;
 }
 
-int SelectionService::GetPasteboardContent(std::string& content, uint32_t windowId)
+int SelectionService::GetPasteboardContent(std::string& content, uint32_t windowId, const std::string& bundleName)
 {
     constexpr uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
+    constexpr uint32_t BYTES_PER_CHINESE_CHAR = 3;
+    constexpr uint32_t bufferSize = MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR + 1;
 
     if (!LoadPluginSo() || !pasteboardGetContent_) {
         SELECTION_HILOGE("Pasteboard plugin not available");
         return SelectionServiceError::INVALID_DATA;
     }
 
-    char buffer[MAX_PASTERBOARD_TEXT_LENGTH] = {0};
-    int ret = pasteboardGetContent_(buffer, MAX_PASTERBOARD_TEXT_LENGTH, windowId);
+    char buffer[bufferSize] = {0};
+    int ret = pasteboardGetContent_(buffer, bufferSize, windowId, bundleName.c_str());
     if (ret == 0) {
         content = buffer;
     }
