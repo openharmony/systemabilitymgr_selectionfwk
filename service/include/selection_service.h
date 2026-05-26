@@ -114,7 +114,7 @@ public:
     void WatchExtAbilityInstalled(const std::string& bundleName, const std::string& abilityName);
 
     // 剪贴板操作方法（供 SelectionInputMonitor 调用）
-    int GetPasteboardContent(std::string& content, uint32_t windowId);
+    int GetPasteboardContent(std::string& content, uint32_t windowId, const std::string& bundleName);
     bool CanGetPasteboardContent();
     void SetPasteboardFlag(bool flag);
 
@@ -164,7 +164,7 @@ private:
     using DatabaseIsAvailableFunc = int(*)();
 
     // 剪贴板函数指针类型
-    using PasteboardGetContentFunc = int(*)(char*, int, uint32_t);
+    using PasteboardGetContentFunc = int(*)(char*, int, uint32_t, const char*);
     using PasteboardCanGetContentFunc = int(*)();
     using PasteboardSetFlagFunc = void(*)(int);
 

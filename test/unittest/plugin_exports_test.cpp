@@ -33,7 +33,7 @@ extern "C" {
     int DatabaseGetConfig(int uid, OHOS::SelectionFwk::SelectionConfig* config);
     int DatabaseIsAvailable();
 
-    int PasteboardGetSelectionContent(char* buffer, int bufferSize, uint32_t windowId);
+    int PasteboardGetSelectionContent(char* buffer, int bufferSize, uint32_t windowId, const char* bundleName);
     int PasteboardCanGetSelectionContent();
     void PasteboardSetCanGetSelectionContentFlag(int flag);
     int PasteboardIsAvailable();
@@ -223,7 +223,7 @@ HWTEST_F(PluginExportsTest, PluginExports009, TestSize.Level0)
  */
 HWTEST_F(PluginExportsTest, PluginExports010, TestSize.Level0)
 {
-    int ret = PasteboardGetSelectionContent(nullptr, 100, 0);
+    int ret = PasteboardGetSelectionContent(nullptr, 100, 0, "test.bundle");
     ASSERT_EQ(ret, -1);
 }
 
@@ -235,7 +235,7 @@ HWTEST_F(PluginExportsTest, PluginExports010, TestSize.Level0)
 HWTEST_F(PluginExportsTest, PluginExports011, TestSize.Level0)
 {
     char buffer[100];
-    int ret = PasteboardGetSelectionContent(buffer, 0, 0);
+    int ret = PasteboardGetSelectionContent(buffer, 0, 0, "test.bundle");
     ASSERT_EQ(ret, -1);
 }
 
@@ -247,7 +247,7 @@ HWTEST_F(PluginExportsTest, PluginExports011, TestSize.Level0)
 HWTEST_F(PluginExportsTest, PluginExports012, TestSize.Level0)
 {
     char buffer[100];
-    int ret = PasteboardGetSelectionContent(buffer, -1, 0);
+    int ret = PasteboardGetSelectionContent(buffer, -1, 0, "test.bundle");
     ASSERT_EQ(ret, -1);
 }
 
@@ -310,7 +310,7 @@ HWTEST_F(PluginExportsTest, PluginExports017, TestSize.Level0)
     buffer[0] = 'X';
     buffer[99] = 'Y';
 
-    int ret = PasteboardGetSelectionContent(buffer, sizeof(buffer), 100);
+    int ret = PasteboardGetSelectionContent(buffer, sizeof(buffer), 100, "test.bundle");
     // In test environment, the function may timeout and return error, but should:
     // 1. Not crash
     // 2. Properly null-terminate the buffer even on failure

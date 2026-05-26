@@ -33,8 +33,12 @@ public:
     SelectionPasteboardDisposableObserver();
     virtual ~SelectionPasteboardDisposableObserver() = default;
 
+    void SetBundleName(const std::string& bundleName);
     void OnTextReceived(const std::string &text, int32_t errCode) override;
     bool IsAllWhitespace(const std::string &str);
+
+private:
+    std::string bundleName_;
 };
 
 // Main manager class - encapsulates all pasteboard functionality
@@ -47,7 +51,7 @@ public:
     bool Initialize();
 
     // Get selection content from pasteboard
-    int32_t GetSelectionContent(std::string& selectionContent, uint32_t windowId);
+    int32_t GetSelectionContent(std::string& selectionContent, uint32_t windowId, const std::string& bundleName);
 
     // Check if can get selection content
     bool CanGetSelectionContent() const;
