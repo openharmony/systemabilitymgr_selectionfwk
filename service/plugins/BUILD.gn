@@ -20,6 +20,7 @@ config("selection_plugins_config") {
         "../include",
         "../../utils/include",
         "../../common/include",
+        "../../sysevent",
     ]
 }
 
@@ -61,6 +62,8 @@ ohos_shared_library("selection_plugins_impl") {
         "src/pasteboard/selection_pasteboard_manager.cpp",
         "src/ability/ability_manager_plugin_impl.cpp",
         "src/plugin_exports.cpp",
+        "../../sysevent/hisysevent_adapter.cpp",
+        "../../utils/src/selection_timer.cpp",
     ]
 
     deps = [
@@ -78,6 +81,7 @@ ohos_shared_library("selection_plugins_impl") {
         "ability_runtime:ability_connect_callback_stub",
         "ability_base:want",
         "udmf:udmf_client",
+        "hisysevent:libhisysevent",
     ]
 
     part_name = "selectionfwk"

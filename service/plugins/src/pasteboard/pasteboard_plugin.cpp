@@ -60,14 +60,15 @@ bool PasteboardPluginImpl::InitPasteboard()
     return true;
 }
 
-int32_t PasteboardPluginImpl::GetSelectionContent(std::string& content, uint32_t windowId)
+int32_t PasteboardPluginImpl::GetSelectionContent(std::string& content, uint32_t windowId,
+    const std::string& bundleName)
 {
     SELECTION_HILOGI("PasteboardPluginImpl::GetSelectionContent called, windowId=%{public}u", windowId);
     if (pasteboardManager_ == nullptr) {
         SELECTION_HILOGE("PasteboardManager not initialized");
         return -1;
     }
-    return pasteboardManager_->GetSelectionContent(content, windowId);
+    return pasteboardManager_->GetSelectionContent(content, windowId, bundleName);
 }
 
 bool PasteboardPluginImpl::CanGetSelectionContent() const

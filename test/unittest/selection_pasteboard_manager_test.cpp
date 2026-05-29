@@ -204,7 +204,7 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager012, TestSize
     SelectionPasteboardManager manager;
 
     std::string content;
-    int32_t ret = manager.GetSelectionContent(content, 100);
+    int32_t ret = manager.GetSelectionContent(content, 100, "test.bundle");
     ASSERT_EQ(ret, SelectionServiceError::INVALID_DATA);
 }
 

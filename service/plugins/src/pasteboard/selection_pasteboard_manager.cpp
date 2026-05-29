@@ -15,6 +15,7 @@
 
 #include "selection_pasteboard_manager.h"
 #include "selection_common.h"
+#include "hisysevent_adapter.h"
 #include <sys/time.h>
 #include <cstring>
 #include <chrono>
@@ -29,6 +30,11 @@ namespace OHOS::SelectionFwk {
 
 // SelectionPasteboardDisposableObserver implementation
 SelectionPasteboardDisposableObserver::SelectionPasteboardDisposableObserver() = default;
+
+void SelectionPasteboardDisposableObserver::SetBundleName(const std::string& bundleName)
+{
+    bundleName_ = bundleName;
+}
 
 // Constants moved from original module
 constexpr const uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
@@ -94,7 +100,11 @@ bool SelectionPasteboardDisposableObserver::IsAllWhitespace(const std::string &s
  
 void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
 {
+    SELECTION_HILOGW("[selectevent] Pasteboard call sa. Text received "
+        "length: %{public}zu, errCode: %{public}d.", text.length(), errCode);
     if (errCode != 0) {
+        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName_, errCode,
+            static_cast<int32_t>(SelectFailedReason::TEXT_RECEIVE_FAILED));
         SELECTION_HILOGE("Error receiving text, errCode: %{public}d", errCode);
     }
 
@@ -279,14 +289,16 @@ int32_t SelectionPasteboardManager::PasteBoardErrorCodeToSelectionService(int32_
     return ret;
 }
  
-int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionContent, uint32_t windowId)
+int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionContent, uint32_t windowId,
+    const std::string& bundleName)
 {
     SELECTION_HILOGI("SelectionPasteboardManager::GetSelectionContent start");
     if (!initialized_) {
         SELECTION_HILOGE("SelectionPasteboardManager not initialized is nullptr");
         return SelectionServiceError::INVALID_DATA;
     }
- 
+
+    pasteboardObserver_->SetBundleName(bundleName);
     int32_t ret = PasteboardClient::GetInstance()->SubscribeDisposableObserver(pasteboardObserver_,
         windowId, DisposableType::PLAIN_TEXT, MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR);
     if (ret != ERR_OK) {
@@ -296,6 +308,8 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
  
     ret = InjectCtrlC();
     if (ret != ERR_OK) {
+        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName, ret,
+            static_cast<int32_t>(SelectFailedReason::INJECT_CTRLC_FAILED));
         SELECTION_HILOGE("Failed to inject Ctrl+C");
         return SelectionServiceError::INVALID_DATA;
     }
@@ -308,6 +322,7 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
         selectionContent = g_selectionContent;
         g_selectionContent = "";
         ret = ERR_OK;
+        SELECTION_HILOGI("receive text success");
     } else {
         SELECTION_HILOGE("SelectionPasteboardManager::GetSelectionContent: receive content from pasteboard failed");
         ret = PasteBoardErrorCodeToSelectionService(g_pasteBoardErrorCode);
