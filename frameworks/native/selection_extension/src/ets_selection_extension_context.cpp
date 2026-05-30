@@ -198,10 +198,8 @@ bool BindNativeMethods(ani_env *env, ani_class &cls)
 ani_object CreateEtsSelectionExtensionContext(ani_env *env, std::shared_ptr<SelectionExtensionContext> context)
 {
     SELECTION_HILOGI("CreateEtsSelectionExtensionContext begin");
-    if (env == nullptr || context == nullptr) {
-        SELECTION_HILOGE("CreateEtsSelectionExtensionContext: null env or context");
-        return nullptr;
-    }
+    SELECTION_CHECK(env != nullptr && context != nullptr, return nullptr,
+        "CreateEtsSelectionExtensionContext: null env or context");
     ani_class cls = nullptr;
     ani_status status = ANI_ERROR;
     ani_method method = nullptr;
@@ -220,31 +218,32 @@ ani_object CreateEtsSelectionExtensionContext(ani_env *env, std::shared_ptr<Sele
     }
     std::unique_ptr<EtsSelectionExtensionContext> workContext =
         std::make_unique<EtsSelectionExtensionContext>(context);
-    if (workContext == nullptr) {
-        SELECTION_HILOGE("Failed to create etsSelectionExtensionContext");
-        return nullptr;
-    }
+    SELECTION_CHECK(workContext != nullptr, return nullptr, "Failed to create etsSelectionExtensionContext");
+
     auto serviceContextPtr = new (std::nothrow)
-        std::weak_ptr<SelectionExtensionContext> (workContext->GetAbilityContext());
+        std::weak_ptr<SelectionExtensionContext>(workContext->GetAbilityContext());
+    SELECTION_CHECK(serviceContextPtr != nullptr, return nullptr, "Failed to create serviceContextPtr");
+
     if ((status = env->Object_New(cls, method, &contextObj, (ani_long)workContext.release())) != ANI_OK ||
         contextObj == nullptr) {
         SELECTION_HILOGE("Failed to create object, status : %{public}d", status);
+        delete serviceContextPtr;
         return nullptr;
     }
     if (!ContextUtil::SetNativeContextLong(env, contextObj, (ani_long)(serviceContextPtr))) {
         SELECTION_HILOGE("Failed to setNativeContextLong");
+        delete serviceContextPtr;
         return nullptr;
     }
     ContextUtil::CreateEtsBaseContext(env, cls, contextObj, context);
     CreateEtsExtensionContext(env, cls, contextObj, context, context->GetAbilityInfo());
     ani_ref *contextGlobalRef = new (std::nothrow) ani_ref;
-    if (contextGlobalRef == nullptr) {
-        SELECTION_HILOGE("new contextGlobalRef failed");
-        return nullptr;
-    }
+    SELECTION_CHECK(contextGlobalRef != nullptr, delete serviceContextPtr; return nullptr,
+        "new contextGlobalRef failed");
     if ((status = env->GlobalReference_Create(contextObj, contextGlobalRef)) != ANI_OK) {
         SELECTION_HILOGE("GlobalReference_Create failed status: %{public}d", status);
         delete contextGlobalRef;
+        delete serviceContextPtr;
         return nullptr;
     }
     context->Bind(contextGlobalRef);
