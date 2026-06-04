@@ -29,6 +29,7 @@
         "hilog",
         "hitrace",
         "samgr",
+        "icu",
         "init",
         "input",
         "napi",
