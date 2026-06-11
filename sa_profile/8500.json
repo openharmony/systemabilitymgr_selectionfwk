@@ -17,11 +17,6 @@
                         "name": "sys.selection.switch",
                         "value": "on"
                     }
-                ],
-                "commonevent": [
-                    {
-                        "name": "usual.event.USER_SWITCHED"
-                    }
                 ]
             },
             "stop-on-demand": {

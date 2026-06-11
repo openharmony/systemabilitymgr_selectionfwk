@@ -42,7 +42,7 @@ constexpr const char *SYS_SELECTION_SWITCH = "sys.selection.switch";
 constexpr const char *SYS_SELECTION_TRIGGER = "sys.selection.trigger";
 constexpr const char *SYS_SELECTION_APP = "sys.selection.app";
 constexpr const char *SYS_SELECTION_TIMEOUT = "sys.selection.timeout";
-constexpr const char *DEFAULT_SWITCH = "on";
+constexpr const char *DEFAULT_SWITCH = "off";
 constexpr const char *DEFAULT_TRIGGER = "ctrl";
 
 class SelectionExtensionAbilityConnection : public OHOS::AAFwk::AbilityConnectionStub {
