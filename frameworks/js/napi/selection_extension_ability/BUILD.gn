@@ -37,6 +37,19 @@ gen_js_obj("selection_extension_ability_abc") {
 ohos_shared_library("selectionextensionability_napi") {
   sources = [ "selection_extension_ability_module.cpp" ]
 
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
+  ]
+
   deps = [
     ":selection_extension_ability_abc",
     ":selection_extension_ability_js",

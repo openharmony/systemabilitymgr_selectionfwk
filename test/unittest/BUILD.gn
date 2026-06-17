@@ -61,8 +61,8 @@ ohos_unittest("selection_service_unit_test") {
     "system_ability_status_change_listener_test.cpp",
   ]
   deps = [
-    "${selection_fwk_root_path}/service:selection_service",
-    "${selection_fwk_root_path}/service/plugins:selection_plugins_impl",
+    "${selection_fwk_root_path}/service:selection_service_src",
+    "${selection_fwk_root_path}/service/plugins:selection_plugins_impl_src",
     "${selection_fwk_root_path}/common:selection_common",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
   ]

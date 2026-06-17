@@ -41,10 +41,12 @@ ohos_shared_library("selection_client") {
     "-ffunction-sections",
     "-Os",
     "-std=c++17",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
 
   version_script = "selection_client.versionscript"
