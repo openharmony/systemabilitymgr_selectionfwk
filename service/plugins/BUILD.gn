@@ -51,7 +51,50 @@ ohos_static_library("selection_config_static") {
     }
 }
 
-# 插件实现库（直接导出 C 函数，供 service 调用）
+ohos_source_set("selection_plugins_impl_src") {
+    configs = [ ":selection_plugins_config" ]
+
+    sources = [
+        "src/database/database_plugin.cpp",
+        "src/database/selection_config_database.cpp",
+        "src/pasteboard/pasteboard_plugin.cpp",
+        "src/pasteboard/selection_pasteboard_manager.cpp",
+        "src/ability/ability_manager_plugin_impl.cpp",
+        "src/plugin_exports.cpp",
+    ]
+
+    deps = [
+        ":selection_config_static",
+        "${selection_fwk_root_path}/common:selection_common",
+        "${selection_fwk_root_path}/service:selection_service_src",
+    ]
+
+    external_deps = [
+        "c_utils:utils",
+        "hilog:libhilog",
+        "ipc:ipc_single",
+        "pasteboard:pasteboard_client",
+        "relational_store:native_rdb",
+        "ability_runtime:ability_manager",
+        "ability_runtime:ability_connect_callback_stub",
+        "ability_base:want",
+        "udmf:udmf_client",
+        "hisysevent:libhisysevent",
+    ]
+
+    sanitize = {
+        boundary_sanitize = true
+        cfi = true
+        cfi_cross_dso = true
+        cfi_vcall_icall_only = true
+        ubsan = true
+        debug = false
+    }
+
+    part_name = "selectionfwk"
+    subsystem_name = "systemabilitymgr"
+}
+
 ohos_shared_library("selection_plugins_impl") {
     configs = [ ":selection_plugins_config" ]
 
@@ -100,11 +143,12 @@ ohos_shared_library("selection_plugins_impl") {
         debug = false
     }
 
-    # 隐藏符号以减小符号表暴露范围
-    cflags_cc = [ "-fvisibility-inlines-hidden" ]
-
-    # 导出工厂函数符号
-    cflags_cc += [ "-fvisibility=default" ]
+    # 隐藏符号以减小符号表暴露范围；plugin_exports.cpp 中的 extern "C" 函数
+    # 通过 __attribute__((visibility("default"))) 单独导出
+    cflags_cc = [
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
+    ]
 
     # 确保CFI相关信息不被strip，并使用立即绑定帮助CFI在加载时完成类型检查
     ldflags = [

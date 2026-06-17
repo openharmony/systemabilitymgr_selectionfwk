@@ -37,6 +37,18 @@ taihe_shared_library("selectionManager_taihe_native") {
     cfi_cross_dso = true
     debug = false
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
+  ]
   taihe_generated_file_path = "${taihe_generated_file_path_selectionManager}"
   part_name = "$part_name"
   subsystem_name = "$subsystem_name"

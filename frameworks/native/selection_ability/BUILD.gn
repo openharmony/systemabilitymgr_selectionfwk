@@ -40,10 +40,12 @@ ohos_shared_library("selection_ability") {
     "-fdata-sections",
     "-ffunction-sections",
     "-Os",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
   configs = [ ":selection_listener_config", ]
 

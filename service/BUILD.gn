@@ -22,6 +22,76 @@ config("selection_sa_config") {
   ]
 }
 
+ohos_source_set("selection_service_src") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  cflags_cc = [ "-std=c++17" ]
+  configs = [ ":selection_sa_config" ]
+
+  include_dirs = [
+    "./focus_monitor/include",
+    "./plugins/include",
+    "../sysevent",
+    "../utils/include",
+  ]
+
+  sources = [
+    "src/selection_service.cpp",
+    "src/selection_input_monitor.cpp",
+    "focus_monitor/src/focus_change_listener.cpp",
+    "focus_monitor/src/focus_monitor_manager.cpp",
+    "src/selection_app_validator.cpp",
+    "src/sys_selection_config_repository.cpp",
+    "src/selection_config_comparator.cpp",
+    "src/selection_common.cpp",
+    "src/system_ability_status_change_listener.cpp",
+    "../sysevent/hisysevent_adapter.cpp",
+    "../utils/src/selection_timer.cpp",
+  ]
+  deps = [
+    "plugins:selection_config_static",
+    "${selection_fwk_root_path}/interfaces/idl:selection_service_interface",
+    "${selection_fwk_root_path}/interfaces/idl:selection_service_stub",
+    "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "init:libbeget_proxy",
+    "init:libbegetutil",
+    "input:libmmi-client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "os_account:os_account_innerkits",
+    "hisysevent:libhisysevent",
+  ]
+
+  defines = []
+  if (window_manager_use_sceneboard) {
+    external_deps += [ "window_manager:libwm_lite" ]
+    defines += [ "SCENE_BOARD_ENABLE" ]
+  } else {
+    external_deps += [ "window_manager:libwm" ]
+  }
+
+  part_name = "selectionfwk"
+  subsystem_name = "systemabilitymgr"
+}
+
 ohos_shared_library("selection_service") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -38,10 +108,13 @@ ohos_shared_library("selection_service") {
     "-ffunction-sections",
     "-Oz",
     "-std=c++17",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
   configs = [ ":selection_sa_config", ]
 
