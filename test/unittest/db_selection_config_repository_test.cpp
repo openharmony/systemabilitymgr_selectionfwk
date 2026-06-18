@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gtest/gtest.h"
@@ -49,7 +50,7 @@ public:
 
 void DbSelectionConfigRepositoryTest::SetUpTestCase()
 {
-    system("param set sys.selection.switch on");
+    std::system("param set sys.selection.switch on");
     std::cout << "DbSelectionConfigRepositoryTest SetUpTestCase" << std::endl;
 }
 

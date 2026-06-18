@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include "selection_input_monitor_common_test.h"
 #include "selection_input_monitor.h"
 
@@ -44,7 +45,7 @@ public:
 
 void SelectionInputMonitorTest::SetUpTestCase()
 {
-    system("param set sys.selection.switch on");
+    std::system("param set sys.selection.switch on");
     std::cout << "SelectionInputMonitorTest SetUpTestCase" << std::endl;
 }
 
