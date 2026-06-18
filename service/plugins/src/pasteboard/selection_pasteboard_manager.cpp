@@ -324,16 +324,16 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
     injectFailed_.store(false);
     injectCtrlCRunning_.store(true);
     injectCtrlCFuture_ = std::async(std::launch::async, [self_weak = self_weak_]() -> int32_t {
-        auto self_shared = self_weak.lock(); // 尝试获取 shared_ptr
-        if (!self_shared) {
+        auto self = self_weak.lock(); // 尝试获取 shared_ptr
+        if (!self) {
             return SelectionServiceError::INVALID_DATA; // 对象已销毁
         }
-        int32_t result = self_shared->InjectCtrlC();
+        int32_t result = self->InjectCtrlC();
         if (result != ERR_OK) {
-            injectFailed_.store(true);
+            self->injectFailed_.store(true);
             cv_.notify_one();
         }
-        injectCtrlCRunning_.store(false);
+        self->injectCtrlCRunning_.store(false);
         return result;
     });
  
