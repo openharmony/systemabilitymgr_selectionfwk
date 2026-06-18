@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gmock/gmock.h"
@@ -42,7 +43,7 @@ public:
 
 void SelectionAppValidatorTest::SetUpTestCase()
 {
-    system("param set sys.selection.switch on");
+    std::system("param set sys.selection.switch on");
     std::cout << "SelectionAppValidatorTest SetUpTestCase" << std::endl;
 }
 
