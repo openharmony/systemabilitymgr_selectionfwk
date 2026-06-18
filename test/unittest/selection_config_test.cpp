@@ -34,6 +34,7 @@ public:
 
 void SelectionConfigTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SelectionConfigTest SetUpTestCase" << std::endl;
 }
 

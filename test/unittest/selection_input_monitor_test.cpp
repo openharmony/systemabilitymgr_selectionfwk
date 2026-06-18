@@ -44,6 +44,7 @@ public:
 
 void SelectionInputMonitorTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SelectionInputMonitorTest SetUpTestCase" << std::endl;
 }
 

@@ -34,6 +34,7 @@ public:
 
 void SystemAbilityStatusChangeListenerTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SystemAbilityStatusChangeListenerTest SetUpTestCase" << std::endl;
 }
 

@@ -49,6 +49,7 @@ public:
 
 void DbSelectionConfigRepositoryTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "DbSelectionConfigRepositoryTest SetUpTestCase" << std::endl;
 }
 
