@@ -34,6 +34,7 @@ public:
 
 void SelectionCommonTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SelectionCommonTest SetUpTestCase" << std::endl;
 }
 

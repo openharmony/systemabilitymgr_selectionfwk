@@ -36,6 +36,7 @@ public:
 
 void SysSelectionConfigRepositoryTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SysSelectionConfigRepositoryTest SetUpTestCase" << std::endl;
 }
 

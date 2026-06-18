@@ -35,6 +35,7 @@ public:
 
 void FocusMonitorTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "FocusMonitorTest SetUpTestCase" << std::endl;
 }
 

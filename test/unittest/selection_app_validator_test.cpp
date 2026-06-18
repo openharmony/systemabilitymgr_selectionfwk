@@ -42,6 +42,7 @@ public:
 
 void SelectionAppValidatorTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "SelectionAppValidatorTest SetUpTestCase" << std::endl;
 }
 

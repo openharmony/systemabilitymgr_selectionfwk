@@ -29,6 +29,7 @@ public:
 
 void BaseSelectionInputMonitorCtrlTest::SetUpTestCase()
 {
+    system("param set sys.selection.switch on");
     std::cout << "BaseSelectionInputMonitorCtrlTest SetUpTestCase" << std::endl;
 }
 
