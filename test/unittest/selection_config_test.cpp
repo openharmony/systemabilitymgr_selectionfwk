@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gtest/gtest.h"
@@ -34,6 +35,7 @@ public:
 
 void SelectionConfigTest::SetUpTestCase()
 {
+    std::system("param set sys.selection.switch on");
     std::cout << "SelectionConfigTest SetUpTestCase" << std::endl;
 }
 

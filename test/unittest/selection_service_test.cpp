@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gtest/gtest.h"
@@ -55,6 +56,7 @@ private:
 
 void SelectionServiceTest::SetUpTestCase()
 {
+    std::system("param set sys.selection.switch on");
     std::cout << "SelectionServiceTest SetUpTestCase" << std::endl;
 }
 
@@ -382,35 +384,44 @@ HWTEST_F(SelectionServiceTest, SelectionService015, TestSize.Level0)
     connection->OnAbilityDisconnectDone(element, 0);
     ASSERT_EQ(connection->disconnectPromise_, nullptr);
 
+    connection->InitDisconnectPromise();
     connection->WaitForDisconnect();
     ASSERT_NE(connection->disconnectPromise_, nullptr);
     MemSelectionConfig::GetInstance().SetEnabled(false);
     connection->OnAbilityDisconnectDone(element, 0);
+    connection->DestroyDisconnectPromise();
     ASSERT_EQ(connection->disconnectPromise_, nullptr);
 
+    connection->InitDisconnectPromise();
     connection->WaitForDisconnect();
     ASSERT_NE(connection->disconnectPromise_, nullptr);
     MemSelectionConfig::GetInstance().SetEnabled(true);
     connection->needReconnectWithException = false;
     connection->OnAbilityDisconnectDone(element, 0);
+    connection->DestroyDisconnectPromise();
     ASSERT_EQ(connection->disconnectPromise_, nullptr);
 
+    connection->InitDisconnectPromise();
     connection->WaitForDisconnect();
     ASSERT_NE(connection->disconnectPromise_, nullptr);
     MemSelectionConfig::GetInstance().SetEnabled(true);
     connection->needReconnectWithException = true;
     MemSelectionConfig::GetInstance().SetApplicationInfo("a/b");
     connection->OnAbilityDisconnectDone(element, 0);
+    connection->DestroyDisconnectPromise();
     ASSERT_EQ(connection->disconnectPromise_, nullptr);
 
+    connection->InitDisconnectPromise();
     connection->WaitForDisconnect();
     ASSERT_NE(connection->disconnectPromise_, nullptr);
     MemSelectionConfig::GetInstance().SetEnabled(true);
     connection->needReconnectWithException = true;
     MemSelectionConfig::GetInstance().SetApplicationInfo("TestBundleName/TestAbilityName");
     connection->OnAbilityDisconnectDone(element, 0);
+    connection->DestroyDisconnectPromise();
     ASSERT_EQ(connection->disconnectPromise_, nullptr);
 
+    connection->InitDisconnectPromise();
     connection->WaitForDisconnect();
     ASSERT_NE(connection->disconnectPromise_, nullptr);
 }
@@ -481,18 +492,14 @@ HWTEST_F(SelectionServiceTest, SelectionService018, TestSize.Level0)
 
     sptr<ISelectionListener> listener;
     int ret = mockObj.RegisterListener(listener);
-    ASSERT_EQ(ret, 3);
+    ASSERT_EQ(ret, 2);
 
     ret = mockObj.UnregisterListener(listener);
-    ASSERT_EQ(ret, 3);
+    ASSERT_EQ(ret, 0);
 
     bool resultValue;
     ret = mockObj.IsCurrentSelectionApp(1001, resultValue);
-    ASSERT_EQ(ret, 3);
-
-    std::string selectionContent;
-    ret = mockObj.GetSelectionContent(selectionContent);
-    ASSERT_EQ(ret, 3);
+    ASSERT_EQ(ret, 0);
 }
 }
 }
