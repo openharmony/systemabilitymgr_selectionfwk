@@ -21,6 +21,9 @@
 #include <chrono>
 #include <atomic>
 #include <fcntl.h>
+#include <future>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include "selection_log.h"
@@ -120,12 +123,13 @@ void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &te
  
 // SelectionPasteboardManager implementation
 SelectionPasteboardManager::SelectionPasteboardManager()
-    : initialized_(false), fd_(-1), canGetSelectionContentFlag_(false)
+    : initialized_(false), fd_(-1), canGetSelectionContentFlag_(false), injectFailed_(false), injectCtrlCRunning_(false)
 {
 }
  
 SelectionPasteboardManager::~SelectionPasteboardManager()
 {
+    WaitForPendingAsync();
     Cleanup();
 }
  
@@ -135,6 +139,7 @@ bool SelectionPasteboardManager::Initialize()
         SELECTION_HILOGI("SelectionPasteboardManager already initialized");
         return true;
     }
+    self_weak_ = shared_from_this(); // 确保对象已构造完成
     pasteboardObserver_ = sptr<SelectionPasteboardDisposableObserver>::MakeSptr();
  
     // Initialize virtual keyboard device (moved from original InitUidev)
@@ -288,7 +293,16 @@ int32_t SelectionPasteboardManager::PasteBoardErrorCodeToSelectionService(int32_
     }
     return ret;
 }
- 
+
+void SelectionPasteboardManager::WaitForPendingAsync()
+{
+    if (injectCtrlCFuture_.valid()) {
+        SELECTION_HILOGI("Waiting for pending async InjectCtrlC to complete.");
+        injectCtrlCFuture_.wait();
+        injectCtrlCRunning_.store(false);
+    }
+}
+
 int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionContent, uint32_t windowId,
     const std::string& bundleName)
 {
@@ -297,7 +311,8 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
         SELECTION_HILOGE("SelectionPasteboardManager not initialized is nullptr");
         return SelectionServiceError::INVALID_DATA;
     }
-
+    // 在开始新的异步注入之前，确保之前的异步注入已完成
+    WaitForPendingAsync();
     pasteboardObserver_->SetBundleName(bundleName);
     int32_t ret = PasteboardClient::GetInstance()->SubscribeDisposableObserver(pasteboardObserver_,
         windowId, DisposableType::PLAIN_TEXT, MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR);
@@ -305,27 +320,52 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
         SELECTION_HILOGE("Failed to SubscribeDisposableObserver, ret: %{public}d.", ret);
         return SelectionServiceError::INVALID_DATA;
     }
- 
-    ret = InjectCtrlC();
-    if (ret != ERR_OK) {
-        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName, ret,
-            static_cast<int32_t>(SelectFailedReason::INJECT_CTRLC_FAILED));
-        SELECTION_HILOGE("Failed to inject Ctrl+C");
-        return SelectionServiceError::INVALID_DATA;
-    }
+    // ---- 异步注入CtrlC ----
+    injectFailed_.store(false);
+    injectCtrlCRunning_.store(true);
+    injectCtrlCFuture_ = std::async(std::launch::async, [self_weak = self_weak_]() -> int32_t {
+        auto self = self_weak.lock(); // 尝试获取 shared_ptr
+        if (!self) {
+            return SelectionServiceError::INVALID_DATA; // 对象已销毁
+        }
+        int32_t result = self->InjectCtrlC();
+        if (result != ERR_OK) {
+            self->injectFailed_.store(true);
+            cv_.notify_one();
+        }
+        self->injectCtrlCRunning_.store(false);
+        return result;
+    });
  
     std::unique_lock<std::mutex> lock(mtx_);
-    SELECTION_HILOGI("Start wait for pasteboard OnTextReceived");
-    if (cv_.wait_for(lock, std::chrono::milliseconds(MAX_DELAY_WAIT_FOR_PB), [this] {
-        return !g_selectionContent.empty();
-    })) {
+    SELECTION_HILOGI("Start wait for pasteboard OnTextReceived (async InjectCtrlC)");
+    bool received = cv_.wait_for(lock, std::chrono::milliseconds(MAX_DELAY_WAIT_FOR_PB),
+        [this] {
+            return !g_selectionContent.empty() || injectFailed_.load();
+        });
+    if (received && !g_selectionContent.empty()) {
         selectionContent = g_selectionContent;
         g_selectionContent = "";
         ret = ERR_OK;
         SELECTION_HILOGI("receive text success");
     } else {
-        SELECTION_HILOGE("SelectionPasteboardManager::GetSelectionContent: receive content from pasteboard failed");
-        ret = PasteBoardErrorCodeToSelectionService(g_pasteBoardErrorCode);
+        // 超时或注入失败
+        if (injectFailed_.load()) {
+            // 注入CtrlC失败—从未来获取错误代码
+            int32_t injectResult = SelectionServiceError::INVALID_DATA;
+            if (injectCtrlCFuture_.valid()) {
+                injectResult = injectCtrlCFuture_.get();
+            }
+            HisyseventAdapter::GetInstance()->ReportShowPanelFailed(
+                bundleName, injectResult,
+                static_cast<int32_t>(SelectFailedReason::INJECT_CTRLC_FAILED));
+            SELECTION_HILOGE("Async InjectCtrlC failed: %{public}d", injectResult);
+            ret = SelectionServiceError::INVALID_DATA;
+        } else {
+            // 等待剪贴板回调超时
+            SELECTION_HILOGE("GetSelectionContent: receive content from pasteboard failed (timeout)");
+            ret = PasteBoardErrorCodeToSelectionService(g_pasteBoardErrorCode);
+        }
         g_pasteBoardErrorCode = ERR_OK;
     }
     return ret;

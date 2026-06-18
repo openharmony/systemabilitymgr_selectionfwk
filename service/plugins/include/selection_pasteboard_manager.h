@@ -23,6 +23,9 @@
 #include "pasteboard_client.h"
 #include <linux/input.h>
 #include <linux/uinput.h>
+#include <future>
+#include <atomic>
+#include <refbase.h>
 
 namespace OHOS::SelectionFwk {
 using namespace OHOS::MiscServices;
@@ -42,7 +45,7 @@ private:
 };
 
 // Main manager class - encapsulates all pasteboard functionality
-class SelectionPasteboardManager {
+class SelectionPasteboardManager : public std::enable_shared_from_this<SelectionPasteboardManager> {
 public:
     SelectionPasteboardManager();
     ~SelectionPasteboardManager();
@@ -67,6 +70,9 @@ private:
     // Inject Ctrl+C using virtual keyboard
     int32_t InjectCtrlC() const;
 
+    // Wait for any pending async InjectCtrlC to complete
+    void WaitForPendingAsync();
+
     // Convert pasteboard error codes to service error codes
     int32_t PasteBoardErrorCodeToSelectionService(int32_t pasteBoardErrCode);
 
@@ -80,6 +86,11 @@ private:
     int32_t fd_;
     struct uinput_user_dev uidev_;
     bool canGetSelectionContentFlag_;
+    // Async injection state
+    std::future<int32_t> injectCtrlCFuture_;
+    std::atomic<bool> injectFailed_;
+    std::atomic<bool> injectCtrlCRunning_;
+    std::weak_ptr<SelectionPasteboardManager> self_weak_;
 };
 
 }
