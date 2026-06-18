@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include "selection_input_monitor_common_test.h"
 
 namespace OHOS {
@@ -29,6 +30,7 @@ public:
 
 void BaseSelectionInputMonitorCtrlTest::SetUpTestCase()
 {
+    std::system("param set sys.selection.switch on");
     std::cout << "BaseSelectionInputMonitorCtrlTest SetUpTestCase" << std::endl;
 }
 

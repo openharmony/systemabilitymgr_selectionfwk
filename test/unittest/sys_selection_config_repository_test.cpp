@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gtest/gtest.h"
@@ -36,6 +37,7 @@ public:
 
 void SysSelectionConfigRepositoryTest::SetUpTestCase()
 {
+    std::system("param set sys.selection.switch on");
     std::cout << "SysSelectionConfigRepositoryTest SetUpTestCase" << std::endl;
 }
 

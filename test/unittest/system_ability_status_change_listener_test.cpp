@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <optional>
 
 #include "gtest/gtest.h"
@@ -34,6 +35,7 @@ public:
 
 void SystemAbilityStatusChangeListenerTest::SetUpTestCase()
 {
+    std::system("param set sys.selection.switch on");
     std::cout << "SystemAbilityStatusChangeListenerTest SetUpTestCase" << std::endl;
 }
 
