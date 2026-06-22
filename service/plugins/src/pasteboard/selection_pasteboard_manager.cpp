@@ -87,13 +87,19 @@ bool SelectionPasteboardDisposableObserver::IsAllWhitespace(const std::string &s
                 len = UTF8_3BYTE_LEN;
             } else if ((str[i] & 0xF8) == 0xF0) {
                 len = UTF8_4BYTE_LEN;
+            } else {
+                return false;
             }
- 
+
+            if (i + len > str.size()) {
+                return false;
+            }
+
             std::string utf8Char = str.substr(i, len);
             if (invisibleChars.find(utf8Char) == std::string::npos) {
                 return false;
             }
- 
+
             i += len;
         }
     }
