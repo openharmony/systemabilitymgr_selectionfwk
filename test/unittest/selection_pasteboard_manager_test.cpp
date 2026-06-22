@@ -273,4 +273,37 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager022, TestSize
     }
 }
 
+/**
+ * @tc.name: SelectionPasteboardManager023
+ * @tc.desc: test SelectionPasteboardDisposableObserver IsAllWhitespace with invalid UTF-8 bytes
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager023, TestSize.Level0)
+{
+    SelectionPasteboardDisposableObserver observer;
+
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(1, '\x80')));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(1, '\xBF')));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(1, '\xF8')));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(1, '\xFF')));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(" \x80")));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string("\x80 ")));
+}
+
+/**
+ * @tc.name: SelectionPasteboardManager024
+ * @tc.desc: test SelectionPasteboardDisposableObserver IsAllWhitespace with truncated UTF-8 sequences
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager024, TestSize.Level0)
+{
+    SelectionPasteboardDisposableObserver observer;
+
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string("\xC2")));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string("\xE0\xA0")));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string("\xF0\x90\x80")));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string(" \xC2")));
+    ASSERT_FALSE(observer.IsAllWhitespace(std::string("\xE0\xA0 ")));
+}
+
 } // namespace OHOS::SelectionFwk
