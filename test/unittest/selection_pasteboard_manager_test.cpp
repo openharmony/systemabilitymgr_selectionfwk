@@ -216,6 +216,7 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager012, TestSize
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager017, TestSize.Level0)
 {
     SelectionPasteboardManager manager;
+
     // Even without Initialize, SetCanGetSelectionContentFlag sets the flag
     manager.SetCanGetSelectionContentFlag(true);
     ASSERT_TRUE(manager.CanGetSelectionContent());
