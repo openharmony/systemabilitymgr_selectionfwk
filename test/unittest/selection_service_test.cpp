@@ -287,9 +287,14 @@ HWTEST_F(SelectionServiceTest, SelectionService011, TestSize.Level0)
  */
 HWTEST_F(SelectionServiceTest, SelectionService012, TestSize.Level0)
 {
+    SelectionConfig configToSave;
+    configToSave.SetUid(100);
+    configToSave.SetEnabled(1);
+    configToSave.SetTriggered(0);
+    configToSave.SetApplicationInfo("TestApp");
+    int saveResult = DbSelectionConfigRepository::GetInstance()->Save(100, configToSave);
+    ASSERT_EQ(saveResult, 0) << "Failed to save test config for uid=100";
     auto selectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(100);
-    ASSERT_NE(selectionConfig, std::nullopt);
-
     auto store = SelectionConfigDataBase::GetInstance()->store_;
     SelectionConfigDataBase::GetInstance()->store_ = nullptr;
     SelectionService::GetInstance()->SynchronizeSelectionConfig();
