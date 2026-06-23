@@ -146,9 +146,9 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager007, TestSize
  */
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager008, TestSize.Level0)
 {
-    SelectionPasteboardManager manager;
+    std::shared_ptr<SelectionPasteboardManager> manager = std::make_shared<SelectionPasteboardManager>();
 
-    ASSERT_TRUE(manager.Initialize());
+    ASSERT_TRUE(manager->Initialize());
 }
 
 /**
@@ -158,10 +158,10 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager008, TestSize
  */
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager009, TestSize.Level0)
 {
-    SelectionPasteboardManager manager;
+    std::shared_ptr<SelectionPasteboardManager> manager = std::make_shared<SelectionPasteboardManager>();
 
-    ASSERT_TRUE(manager.Initialize());
-    ASSERT_TRUE(manager.Initialize());
+    ASSERT_TRUE(manager->Initialize());
+    ASSERT_TRUE(manager->Initialize());
 }
 
 /**
@@ -171,10 +171,10 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager009, TestSize
  */
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager010, TestSize.Level0)
 {
-    SelectionPasteboardManager manager;
+    std::shared_ptr<SelectionPasteboardManager> manager = std::make_shared<SelectionPasteboardManager>();
 
-    manager.Initialize();
-    ASSERT_FALSE(manager.CanGetSelectionContent());
+    manager->Initialize();
+    ASSERT_FALSE(manager->CanGetSelectionContent());
 }
 
 /**
@@ -184,14 +184,14 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager010, TestSize
  */
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager011, TestSize.Level0)
 {
-    SelectionPasteboardManager manager;
+    std::shared_ptr<SelectionPasteboardManager> manager = std::make_shared<SelectionPasteboardManager>();
 
-    manager.Initialize();
-    manager.SetCanGetSelectionContentFlag(true);
-    ASSERT_TRUE(manager.CanGetSelectionContent());
+    manager->Initialize();
+    manager->SetCanGetSelectionContentFlag(true);
+    ASSERT_TRUE(manager->CanGetSelectionContent());
 
-    manager.SetCanGetSelectionContentFlag(false);
-    ASSERT_FALSE(manager.CanGetSelectionContent());
+    manager->SetCanGetSelectionContentFlag(false);
+    ASSERT_FALSE(manager->CanGetSelectionContent());
 }
 
 /**
@@ -261,15 +261,15 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager020, TestSize
  */
 HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager022, TestSize.Level0)
 {
-    SelectionPasteboardManager manager;
-    manager.Initialize();
+    std::shared_ptr<SelectionPasteboardManager> manager = std::make_shared<SelectionPasteboardManager>();
+    manager->Initialize();
 
     for (int i = 0; i < 10; i++) {
-        manager.SetCanGetSelectionContentFlag(true);
-        ASSERT_TRUE(manager.CanGetSelectionContent());
+        manager->SetCanGetSelectionContentFlag(true);
+        ASSERT_TRUE(manager->CanGetSelectionContent());
 
-        manager.SetCanGetSelectionContentFlag(false);
-        ASSERT_FALSE(manager.CanGetSelectionContent());
+        manager->SetCanGetSelectionContentFlag(false);
+        ASSERT_FALSE(manager->CanGetSelectionContent());
     }
 }
 
