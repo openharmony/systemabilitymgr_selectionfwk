@@ -85,6 +85,7 @@ namespace {
 
 // 直接导出 C 函数，供 selection_service 和 selection_input_monitor 调用
 extern "C" {
+#pragma GCC visibility push(default)
 // ==================== 数据库模块函数 ====================
 
 int DatabaseSaveConfig(int uid, const SelectionConfig* config)
@@ -234,4 +235,5 @@ void PluginCleanupAll()
     SELECTION_HILOGI("PluginCleanupAll completed");
 }
 
+#pragma GCC visibility pop
 } // extern "C"

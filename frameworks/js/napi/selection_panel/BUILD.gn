@@ -38,10 +38,13 @@ ohos_shared_library("selectionpanel_napi") {
     "-fdata-sections",
     "-ffunction-sections",
     "-Os",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
   sources = [
     "selection_panel_module.cpp",

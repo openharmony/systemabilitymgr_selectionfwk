@@ -30,10 +30,13 @@ ohos_shared_library("selectionmanager_napi") {
     "-ffunction-sections",
     "-Os",
     "-std=c++17",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
   sources = [
     "js_selection_engine_setting.cpp",
