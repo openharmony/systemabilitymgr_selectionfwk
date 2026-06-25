@@ -29,10 +29,13 @@ ohos_shared_library("selection_extension_ability_native") {
     "-fdata-sections",
     "-ffunction-sections",
     "-Os",
+    "-fvisibility=hidden",
+    "-fvisibility-inlines-hidden",
   ]
   ldflags = [
     "-Wl,--as-needed",
     "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
   ]
 
   include_dirs = [

@@ -34,16 +34,21 @@ ohos_unittest("selection_service_unit_mock_test") {
   ]
   include_dirs = [
     "${selection_fwk_root_path}/service/include",
+    "${selection_fwk_root_path}/service/plugins/include",
     "${selection_fwk_root_path}/utils/include",
+    "${selection_fwk_root_path}/common/include",
   ]
 
   sources = [
     "mock_parameter.cpp",
     "sys_selection_config_repository_mock_test.cpp",
     "${selection_fwk_root_path}/service/src/sys_selection_config_repository.cpp",
+    "${selection_fwk_root_path}/service/src/selection_common.cpp",
   ]
 
-  deps = [ "${selection_fwk_root_path}/service:selection_service", ]
+  deps = [
+    "${selection_fwk_root_path}/service/plugins:selection_config_static",
+  ]
 
   external_deps = [
     "c_utils:utils",
