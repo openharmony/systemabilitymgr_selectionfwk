@@ -14,11 +14,12 @@
  */
 
 #include "sys_selection_config_repository.h"
+#include <charconv>
 #include <cstring>
+#include <system_error>
 #include "parameter.h"
 #include "param_wrapper.h"
 #include "selection_log.h"
-#include "selection_common.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -27,8 +28,6 @@ static const char *SELECTION_TRIGGER = "sys.selection.trigger";
 static const char *SELECTION_APPLICATION = "sys.selection.app";
 static const char *SELECTION_UID = "sys.selection.uid";
 static const int BUFFER_LEN = 200;
-
-#define SELECTION_MAX_UID_LENGTH 11
 
 std::shared_ptr<SysSelectionConfigRepository> SysSelectionConfigRepository::instance_ = nullptr;
 
@@ -111,26 +110,23 @@ int SysSelectionConfigRepository::GetUid()
         return -1;
     }
 
-    if (!IsNumber(uidStr)) {
+    if (uidStr.empty()) {
         SELECTION_HILOGE("uidStr maybe not all of digit!");
         return -1;
     }
 
-    size_t maxLen = (uidStr[0] == '-') ? SELECTION_MAX_UID_LENGTH : SELECTION_MAX_UID_LENGTH - 1;
-
-    if (uidStr.length() > maxLen) {
+    int uid = 0;
+    const char *first = uidStr.data();
+    const char *last = first + uidStr.size();
+    auto [ptr, ec] = std::from_chars(first, last, uid);
+    if (ec == std::errc::result_out_of_range) {
         SELECTION_HILOGE("uidStr exceeds the range of int!");
         return -1;
     }
-
-    if ((uidStr.length() == maxLen) &&
-        ((uidStr[0] != '-' && uidStr > "2147483647") ||
-         (uidStr[0] == '-' && uidStr > "-2147483648"))) {
-        SELECTION_HILOGE("uidStr exceeds the range of int!");
+    if (ec != std::errc() || ptr != last) {
+        SELECTION_HILOGE("uidStr maybe not all of digit!");
         return -1;
     }
-
-    int uid = std::stoi(uidStr);
     return uid;
 }
 
