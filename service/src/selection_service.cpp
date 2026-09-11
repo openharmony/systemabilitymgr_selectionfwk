@@ -65,7 +65,10 @@ void SelectionExtensionAbilityConnection::OnAbilityConnectDone(
 {
     SELECTION_HILOGI("OnAbilityConnectDone, bundle = %{public}s, ability = %{public}s, resultCode = %{public}d",
         element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
-    connectedAbilityInfo = {userId_, element.GetBundleName(), element.GetAbilityName()};
+    {
+        std::lock_guard<std::mutex> infoLock(abilityInfoMutex_);
+        connectedAbilityInfo = {userId_, element.GetBundleName(), element.GetAbilityName()};
+    }
 
     std::lock_guard<std::mutex> lock(connectMutex_);
     if (connectPromise_) {
@@ -79,7 +82,10 @@ void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementN
 {
     SELECTION_HILOGI("OnAbilityDisconnectDone, bundle = %{public}s,ability = %{public}s, resultCode = %{public}d",
         element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
-    connectedAbilityInfo = std::nullopt;
+    {
+        std::lock_guard<std::mutex> infoLock(abilityInfoMutex_);
+        connectedAbilityInfo = std::nullopt;
+    }
 
     std::lock_guard<std::mutex> lock(disconnectMutex_);
     if (disconnectPromise_) {
@@ -470,8 +476,12 @@ void SelectionService::DoDisconnectCurrentExtAbility()
 
 bool SelectionService::HasExtAbilityConnection() const
 {
-    if (connectInner_ != nullptr && connectInner_->connectedAbilityInfo.has_value()) {
-        return true;
+    std::lock_guard<std::mutex> lockGuard(connectMutex_);
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value()) {
+            return true;
+        }
     }
     SELECTION_HILOGI("No selection extension is connected");
     return false;
@@ -533,13 +543,15 @@ int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, co
 {
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
     AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr &&
-        connectInner_->connectedAbilityInfo.has_value() &&
-        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
-        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
-            "has been connected.",
-            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
-        return 0;
+    if (connectInner_ != nullptr){
+        std::lock_guard<std::mutex> infoLock(connectInner->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value() &&
+            newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
+            SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
+                "has been connected.",
+                newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
+            return 0;
+        }
     }
     return DoConnectNewExtAbility(bundleName, abilityName);
 }
@@ -549,13 +561,15 @@ int32_t SelectionService::ReconnectExtAbility(const std::string& bundleName, con
     SELECTION_HILOGI("ReconnectExtAbility start.");
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
     AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr &&
-        connectInner_->connectedAbilityInfo.has_value() &&
-        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
-        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
-            "has been connected.",
-            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
-        return 0;
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value() &&
+            newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
+            SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
+                "has been connected.",
+                newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
+            return 0;
+        }
     }
     DoDisconnectCurrentExtAbility();
     /* no need to connect extension ability, the function name should change */
@@ -628,8 +642,13 @@ void SelectionService::SynchronizeSelectionConfig()
     ComparisionResult result;
     {
         std::lock_guard<std::mutex> lockGuard(connectMutex_);
+        std::optional<AbilityRuntimeInfo> currentAbilityInfo;
+        if (connectInner_ != nullptr) {
+            std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+            currentAbilityInfo = connectInner_->connectedAbilityInfo;
+        }
         result = SelectionConfigComparator::GetInstance().Compare(userId_.load(), sysSelectionConfig,
-            dbSelectionConfig, (connectInner_ ? connectInner_->connectedAbilityInfo : std::nullopt));
+            dbSelectionConfig, currentAbilityInfo);
     }
     MemSelectionConfig::GetInstance().SetSelectionConfig(result.selectionConfig);
 
@@ -838,6 +857,7 @@ void SelectionService::RegisterSystemAbilityStatusChangeListener()
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (isMonitorInitialized_) {
         SELECTION_HILOGE("The monitor has been initialized.");
         return;
@@ -871,6 +891,7 @@ void SelectionService::InputMonitorInit()
 void SelectionService::InputMonitorCancel()
 {
     SELECTION_HILOGI("[SelectionService] input monitor cancel");
+    std::lock_guard<std::mutex> lock(initMutex_);
     InputManager* inputManager = InputManager::GetInstance();
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);

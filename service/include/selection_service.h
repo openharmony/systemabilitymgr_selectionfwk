@@ -65,6 +65,7 @@ public:
 public:
     bool needReconnectWithException = true;
     std::optional<AbilityRuntimeInfo> connectedAbilityInfo;
+    std::mutex abilityInfoMutex_;
 
 private:
     int32_t userId_;
@@ -200,7 +201,7 @@ private:
     mutable std::shared_mutex pluginMutex_;
     static sptr<ISelectionListener> listener_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
-    std::mutex connectMutex_;
+    mutable std::mutex connectMutex_;
     std::atomic<int> pid_ = -1;
     std::atomic<int> userId_ = -1;
     std::shared_ptr<SelectionSysEventReceiver> selectionSysEventReceiver_ {nullptr};
