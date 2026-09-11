@@ -543,8 +543,8 @@ int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, co
 {
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
     AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr){
-        std::lock_guard<std::mutex> infoLock(connectInner->abilityInfoMutex_);
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
         if (connectInner_->connectedAbilityInfo.has_value() &&
             newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
             SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
